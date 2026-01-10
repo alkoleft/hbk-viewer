@@ -27,10 +27,24 @@ export const Breadcrumbs = memo(function Breadcrumbs({ pages, currentPageName, o
   const findPathRecursive = useCallback(async (
     pagesList: PageDto[],
     targetHtmlPath: string,
-    currentPath: PageDto[] = []
+    currentPath: PageDto[] = [],
+    visitedPaths: Set<string> = new Set() // Множество уже посещенных путей (path) для предотвращения циклов
   ): Promise<PageDto[] | null> => {
     for (const page of pagesList) {
+      // Используем path для уникальной идентификации страницы, если он доступен
+      // Это предотвращает циклы при одинаковых htmlPath на разных уровнях
+      const pageKey = page.path && page.path.length > 0 
+        ? page.path.join(',') 
+        : `${page.htmlPath}-${currentPath.length}`; // Fallback на htmlPath с глубиной
+      
+      // Проверяем, не посещали ли мы уже эту страницу (предотвращение циклов)
+      if (visitedPaths.has(pageKey)) {
+        continue; // Пропускаем уже посещенную страницу
+      }
+      
       const newPath = [...currentPath, page];
+      const newVisitedPaths = new Set(visitedPaths);
+      newVisitedPaths.add(pageKey);
       
       // Если это искомая страница, возвращаем путь
       if (page.htmlPath === targetHtmlPath) {
@@ -42,19 +56,25 @@ export const Breadcrumbs = memo(function Breadcrumbs({ pages, currentPageName, o
       
       // Если children пустые, но есть hasChildren, пытаемся загрузить
       if (children.length === 0 && page.hasChildren === true && filename && page.htmlPath) {
+        // Используем уникальный ключ для кэша: path если доступен, иначе htmlPath
+        const cacheKey = page.path && page.path.length > 0 
+          ? `path:${page.path.join(',')}` 
+          : page.htmlPath;
+        
         // Проверяем, не загружены ли уже
-        if (expandedPagesRef.current.has(page.htmlPath)) {
-          children = expandedPagesRef.current.get(page.htmlPath) || [];
+        if (expandedPagesRef.current.has(cacheKey)) {
+          children = expandedPagesRef.current.get(cacheKey) || [];
         } else {
-          // Загружаем children
+          // Загружаем children используя path для уникальной идентификации
           try {
             const loadedChildren = await apiClient.getFileStructureChildren(
               filename,
               page.htmlPath,
+              page.path,
               abortControllerRef.current?.signal
             );
             children = loadedChildren;
-            expandedPagesRef.current.set(page.htmlPath, loadedChildren);
+            expandedPagesRef.current.set(cacheKey, loadedChildren);
           } catch (err) {
             if (!isAbortError(err)) {
               console.error('Ошибка при загрузке дочерних элементов для breadcrumbs:', err);
@@ -65,9 +85,9 @@ export const Breadcrumbs = memo(function Breadcrumbs({ pages, currentPageName, o
         }
       }
       
-      // Ищем в children
-      if (children.length > 0) {
-        const found = await findPathRecursive(children, targetHtmlPath, newPath);
+      // Ищем в children только если они есть и мы не превысили разумный предел глубины
+      if (children.length > 0 && currentPath.length < 50) { // Защита от слишком глубокой рекурсии
+        const found = await findPathRecursive(children, targetHtmlPath, newPath, newVisitedPaths);
         if (found) {
           return found;
         }
@@ -167,10 +187,17 @@ export const Breadcrumbs = memo(function Breadcrumbs({ pages, currentPageName, o
         const pageTitle = page.title.ru || page.title.en;
         const isLast = index === path.length - 1;
         
+        // Используем path для уникальной идентификации, если доступен
+        // Это решает проблему с дублирующимися htmlPath на разных уровнях
+        // В breadcrumbs индекс уже уникален, но добавляем path для большей надежности
+        const uniqueKey = page.path && page.path.length > 0 
+          ? `path-${page.path.join(',')}` 
+          : `${page.htmlPath || 'page'}-${index}`;
+        
         if (isLast) {
           return (
             <Typography 
-              key={`${page.htmlPath}-${index}`} 
+              key={uniqueKey} 
               color="text.primary" 
               variant="body2"
             >
@@ -181,7 +208,7 @@ export const Breadcrumbs = memo(function Breadcrumbs({ pages, currentPageName, o
         
         return (
           <Link
-            key={`${page.htmlPath}-${index}`}
+            key={uniqueKey}
             component="button"
             variant="body2"
             onClick={() => handlePageClick(page.htmlPath)}

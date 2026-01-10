@@ -17,7 +17,7 @@ import {
   MenuItem,
   SelectChangeEvent,
 } from '@mui/material';
-import { InsertDriveFile } from '@mui/icons-material';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import type { BookInfo } from '../types/api';
 import type { SortType } from '../types/common';
 import { formatFileSize } from '../utils/fileUtils';
@@ -155,7 +155,7 @@ export const FileListContent = memo(function FileListContent({
                     },
                   }}
                 >
-                  <InsertDriveFile sx={{ mr: 2 }} aria-hidden="true" />
+                  <AutoStoriesIcon sx={{ mr: 2 }} aria-hidden="true" />
                   <ListItemText
                     primary={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>

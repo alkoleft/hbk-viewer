@@ -10,6 +10,7 @@ export interface DoubleLanguageString {
 export interface PageDto {
   title: DoubleLanguageString;
   htmlPath: string;
+  path?: number[]; // Путь от корня (массив индексов от корня до элемента) для уникальной идентификации элементов с одинаковым htmlPath
   children: PageDto[];
   hasChildren?: boolean; // Флаг наличия дочерних элементов (для оптимизации)
 }

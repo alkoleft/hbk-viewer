@@ -42,13 +42,17 @@ export class HbkApiClient {
   /**
    * Получает структуру (оглавление) HBK файла
    * @param filename - имя файла
-   * @param includeChildren - если true, возвращает полную иерархию (по умолчанию false для оптимизации)
+   * @param depth - глубина загрузки подчиненных элементов (0 = только корневой уровень, 1 = корневой + первый уровень подчиненных, и т.д.)
    * @param signal - опциональный AbortSignal для отмены запроса
    */
-  async getFileStructure(filename: string, includeChildren: boolean = false, signal?: AbortSignal): Promise<FileStructure> {
+  async getFileStructure(
+    filename: string,
+    depth?: number,
+    signal?: AbortSignal
+  ): Promise<FileStructure> {
     const url = new URL(`${API_BASE_URL}/files/${filename}/structure`, window.location.origin);
-    if (includeChildren) {
-      url.searchParams.set('includeChildren', 'true');
+    if (depth !== undefined && depth !== null) {
+      url.searchParams.set('depth', depth.toString());
     }
     
     const response = await fetch(url.toString(), { signal });
@@ -62,19 +66,35 @@ export class HbkApiClient {
   }
 
   /**
-   * Получает дочерние элементы страницы по htmlPath
+   * Получает дочерние элементы страницы по htmlPath или по пути от корня (path)
    * @param filename - имя файла
-   * @param htmlPath - путь к HTML файлу родительской страницы
+   * @param htmlPath - путь к HTML файлу родительской страницы (используется если path не указан)
+   * @param path - путь от корня до родительской страницы (массив индексов, например [0, 2, 1])
    * @param signal - опциональный AbortSignal для отмены запроса
    */
-  async getFileStructureChildren(filename: string, htmlPath: string, signal?: AbortSignal): Promise<PageDto[]> {
+  async getFileStructureChildren(
+    filename: string,
+    htmlPath?: string,
+    path?: number[],
+    signal?: AbortSignal
+  ): Promise<PageDto[]> {
     const url = new URL(`${API_BASE_URL}/files/${filename}/structure/children`, window.location.origin);
-    url.searchParams.set('htmlPath', htmlPath);
+    
+    // Если указан path, используем его для уникальной идентификации (даже если несколько элементов имеют одинаковый htmlPath)
+    if (path && path.length > 0) {
+      url.searchParams.set('path', path.join(','));
+    } else if (htmlPath) {
+      // Для обратной совместимости используем htmlPath
+      url.searchParams.set('htmlPath', htmlPath);
+    } else {
+      throw new Error('Необходимо указать либо htmlPath, либо path');
+    }
     
     const response = await fetch(url.toString(), { signal });
     if (!response.ok) {
       if (response.status === 404) {
-        throw new Error(`Страница "${htmlPath}" не найдена в файле "${filename}"`);
+        const identifier = path ? `path [${path.join(',')}]` : `htmlPath "${htmlPath}"`;
+        throw new Error(`Страница с ${identifier} не найдена в файле "${filename}"`);
       }
       throw new Error(`Ошибка при получении дочерних элементов: ${response.statusText}`);
     }

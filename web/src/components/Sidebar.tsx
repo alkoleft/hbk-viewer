@@ -18,7 +18,9 @@ import {
   Folder,
   FolderOpen,
   KeyboardArrowDown,
+  ArticleOutlined,
 } from '@mui/icons-material';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import type { PageDto, BookInfo } from '../types/api';
 import { apiClient } from '../api/client';
 import { SEARCH_DEBOUNCE_MS } from '../constants/config';
@@ -36,6 +38,11 @@ interface SidebarProps {
   onRetry?: () => void;
 }
 
+const SIDEBAR_WIDTH_KEY = 'sidebar-width';
+const DEFAULT_SIDEBAR_WIDTH = 320;
+const MIN_SIDEBAR_WIDTH = 200;
+const MAX_SIDEBAR_WIDTH = 800;
+
 export function Sidebar({
   selectedFile,
   selectedBookInfo,
@@ -52,6 +59,16 @@ export function Sidebar({
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const searchAbortControllerRef = useRef<AbortController | null>(null);
+
+  // Состояние для изменения ширины Sidebar
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const savedWidth = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    return savedWidth ? parseInt(savedWidth, 10) : DEFAULT_SIDEBAR_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStartXRef = useRef<number>(0);
+  const resizeStartWidthRef = useRef<number>(0);
+  const currentWidthRef = useRef<number>(sidebarWidth);
 
   // Debounce для поисковых запросов
   useEffect(() => {
@@ -125,23 +142,80 @@ export function Sidebar({
     return pages;
   }, [searchQuery, searchResults, pages]);
 
+  // Обработчики для изменения ширины Sidebar
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    resizeStartXRef.current = e.clientX;
+    resizeStartWidthRef.current = sidebarWidth;
+  }, [sidebarWidth]);
+
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const deltaX = e.clientX - resizeStartXRef.current;
+    const newWidth = Math.max(
+      MIN_SIDEBAR_WIDTH,
+      Math.min(MAX_SIDEBAR_WIDTH, resizeStartWidthRef.current + deltaX)
+    );
+    setSidebarWidth(newWidth);
+    currentWidthRef.current = newWidth;
+  }, [isResizing]);
+
+  const handleResizeEnd = useCallback(() => {
+    if (!isResizing) return;
+    setIsResizing(false);
+    // Сохраняем текущую ширину в localStorage используя ref для актуального значения
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, currentWidthRef.current.toString());
+  }, [isResizing]);
+
+  // Синхронизируем ref с состоянием ширины
+  useEffect(() => {
+    currentWidthRef.current = sidebarWidth;
+  }, [sidebarWidth]);
+
+  // Подписываемся на события мыши для изменения размера
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      };
+    }
+  }, [isResizing, handleResizeMove, handleResizeEnd]);
+
   return (
-    <Paper
+    <Box
       sx={{
-        width: { xs: '100%', md: 320 },
-        flexShrink: 0,
+        display: 'flex',
+        width: { xs: '100%', md: sidebarWidth },
         height: { xs: '50vh', md: '100%' },
         maxHeight: { xs: '50vh', md: 'none' },
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        borderRadius: 0,
-        borderRight: { xs: 0, md: 1 },
-        borderBottom: { xs: 1, md: 0 },
-        borderColor: 'divider',
+        flexShrink: 0,
+        position: 'relative',
       }}
-      elevation={0}
     >
+      <Paper
+        sx={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          borderRadius: 0,
+          borderRight: { xs: 0, md: 0 },
+          borderBottom: { xs: 1, md: 0 },
+          borderColor: 'divider',
+        }}
+        elevation={0}
+      >
       <Box
         sx={{
           p: 2,
@@ -153,7 +227,7 @@ export function Sidebar({
       >
         {selectedFile ? (
           <Chip
-            icon={<Folder />}
+            icon={<AutoStoriesIcon />}
             label={selectedBookInfo 
               ? (selectedBookInfo.meta?.bookName 
                 ? `${selectedBookInfo.meta.bookName} (${selectedBookInfo.locale})` 
@@ -259,24 +333,56 @@ export function Sidebar({
               </Box>
             ) : (
               <List dense component="nav" sx={{ py: 0 }} role="tree" aria-label="Оглавление">
-                {displayPages.map((page, index) => (
-                  <TreeNode
-                    key={page.htmlPath || `page-${index}`}
-                    page={page}
-                    onPageSelect={onPageSelect}
-                    selectedPage={selectedPage}
-                    level={0}
-                    searchQuery={searchQuery}
-                    filename={selectedFile}
-                    isSearchResult={searchQuery.trim().length > 0}
-                  />
-                ))}
+                {displayPages.map((page, index) => {
+                  // Используем path для уникальной идентификации, если доступен
+                  // Это решает проблему с дублирующимися htmlPath на разных уровнях
+                  const uniqueKey = page.path && page.path.length > 0 
+                    ? `path-${page.path.join(',')}` 
+                    : (page.htmlPath || `page-${index}`);
+                  
+                  return (
+                    <TreeNode
+                      key={uniqueKey}
+                      page={page}
+                      onPageSelect={onPageSelect}
+                      selectedPage={selectedPage}
+                      level={0}
+                      searchQuery={searchQuery}
+                      filename={selectedFile}
+                      isSearchResult={searchQuery.trim().length > 0}
+                    />
+                  );
+                })}
               </List>
             )}
           </Box>
         </>
       )}
-    </Paper>
+      </Paper>
+      {/* Resize handle */}
+      <Box
+        onMouseDown={handleResizeStart}
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          width: 4,
+          height: '100%',
+          cursor: 'col-resize',
+          bgcolor: isResizing ? 'primary.main' : 'transparent',
+          opacity: isResizing ? 0.7 : 0,
+          position: 'absolute',
+          right: -2,
+          top: 0,
+          zIndex: 10,
+          '&:hover': {
+            bgcolor: 'primary.main',
+            opacity: 0.5,
+          },
+        }}
+        role="separator"
+        aria-label="Изменение ширины оглавления"
+        aria-orientation="vertical"
+      />
+    </Box>
   );
 }
 
@@ -293,13 +399,16 @@ interface TreeNodeProps {
 function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filename, isSearchResult }: TreeNodeProps) {
   // По умолчанию все узлы свернуты, кроме результатов поиска (которые показываем развернутыми)
   const [isExpanded, setIsExpanded] = useState(isSearchResult ?? false);
-  // Если это результат поиска, используем children из page, иначе начинаем с пустого списка
-  // (так как при оптимизированной загрузке children не приходят с сервера)
-  const [loadedChildren, setLoadedChildren] = useState<PageDto[]>(isSearchResult ? page.children : []);
+  // Если это результат поиска или первичная загрузка с depth=1, используем children из page,
+  // иначе начинаем с пустого списка (так как при оптимизированной загрузке children не приходят с сервера)
+  const [loadedChildren, setLoadedChildren] = useState<PageDto[]>(isSearchResult ? page.children : (page.children || []));
   const [isLoadingChildren, setIsLoadingChildren] = useState(false);
-  // Если это результат поиска или уже есть children в page, считаем их загруженными
+  // Если это результат поиска, уже есть children в page (из первичной загрузки с depth=1), 
+  // или у элемента нет htmlPath (дочерние уже загружены), считаем их загруженными
   // Для обычной загрузки childrenLoaded = false, так как children загружаются лениво
-  const [childrenLoaded, setChildrenLoaded] = useState(isSearchResult ? true : page.children.length > 0);
+  const hasChildrenFromInitialLoad = page.children && page.children.length > 0;
+  const hasNoHtmlPath = !page.htmlPath || page.htmlPath.trim() === '';
+  const [childrenLoaded, setChildrenLoaded] = useState(isSearchResult ? true : (hasChildrenFromInitialLoad || hasNoHtmlPath));
   const childrenAbortControllerRef = useRef<AbortController | null>(null);
   
   // Определяем наличие дочерних элементов
@@ -316,9 +425,17 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
       return;
     }
 
-    if (!page.htmlPath) {
-      console.warn('Не указан htmlPath для загрузки дочерних элементов');
-      setChildrenLoaded(true);
+    // Если htmlPath отсутствует, дочерние элементы должны быть уже загружены
+    // при первичной загрузке структуры с depth=1. Используем их из page.children.
+    if (!page.htmlPath || page.htmlPath.trim() === '') {
+      // Если дочерние элементы уже есть в page.children (загружены при первичной загрузке с depth=1),
+      // используем их, иначе помечаем как загруженные (пустой список)
+      if (page.children && page.children.length > 0) {
+        setLoadedChildren(page.children);
+        setChildrenLoaded(true);
+      } else {
+        setChildrenLoaded(true);
+      }
       return;
     }
 
@@ -333,7 +450,14 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
 
     setIsLoadingChildren(true);
     try {
-      const children = await apiClient.getFileStructureChildren(filename, page.htmlPath, abortController.signal);
+      // Используем path для уникальной идентификации элемента, если он доступен
+      // Это решает проблему с элементами, которые имеют одинаковый htmlPath на разных уровнях иерархии
+      const children = await apiClient.getFileStructureChildren(
+        filename,
+        page.htmlPath,
+        page.path,
+        abortController.signal
+      );
       
       // Проверяем, не был ли запрос отменен
       if (!abortController.signal.aborted) {
@@ -341,7 +465,8 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
         setChildrenLoaded(true);
         // Если загружен пустой список, но hasChildren был true, это может быть ошибка
         if (children.length === 0 && hasChildren) {
-          console.warn(`Загружен пустой список дочерних элементов для ${page.htmlPath}, хотя hasChildren=true`);
+          const identifier = page.path ? `path [${page.path.join(',')}]` : `htmlPath ${page.htmlPath}`;
+          console.warn(`Загружен пустой список дочерних элементов для ${identifier}, хотя hasChildren=true`);
         }
       }
     } catch (error) {
@@ -358,7 +483,7 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
         setIsLoadingChildren(false);
       }
     }
-  }, [filename, page.htmlPath, hasChildren, childrenLoaded, isLoadingChildren, isSearchResult]);
+  }, [filename, page.htmlPath, page.path, page.children, hasChildren, childrenLoaded, isLoadingChildren, isSearchResult]);
 
   // Отменяем запрос при размонтировании компонента
   useEffect(() => {
@@ -373,7 +498,10 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
   // Для обычных узлов children загружаются только при раскрытии через handleToggle
 
   const handleClick = () => {
-    onPageSelect(page.htmlPath);
+    // Если htmlPath отсутствует, не выполняем выбор страницы (это группа без собственной страницы)
+    if (page.htmlPath) {
+      onPageSelect(page.htmlPath);
+    }
   };
 
   const handleToggle = async (e: React.MouseEvent) => {
@@ -402,6 +530,8 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
           borderLeft: level > 0 ? 1 : 0,
           borderColor: 'divider',
           position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
           '&.Mui-selected': {
             bgcolor: 'primary.main',
             color: 'primary.contrastText',
@@ -414,35 +544,49 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
           },
         }}
       >
-        {hasChildren && (
-          <IconButton
-            size="small"
-            onClick={handleToggle}
-            disabled={isLoadingChildren}
-            aria-label={isExpanded ? 'Свернуть раздел' : 'Развернуть раздел'}
-            aria-expanded={isExpanded}
-            sx={{
-              mr: 0.5,
-              p: 0.5,
-              color: 'inherit',
-            }}
-          >
-            {isLoadingChildren ? (
-              <CircularProgress size={16} aria-label="Загрузка дочерних элементов" />
-            ) : isExpanded ? (
-              <ExpandMore fontSize="small" />
-            ) : (
-              <ChevronRight fontSize="small" />
-            )}
-          </IconButton>
-        )}
-        {!hasChildren && <Box sx={{ width: 24 }} />}
-        {hasChildren && (
+        <Box
+          sx={{
+            width: 32,
+            minWidth: 32,
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mr: 0.5,
+          }}
+        >
+          {hasChildren ? (
+            <IconButton
+              size="small"
+              onClick={handleToggle}
+              disabled={isLoadingChildren}
+              aria-label={isExpanded ? 'Свернуть раздел' : 'Развернуть раздел'}
+              aria-expanded={isExpanded}
+              sx={{
+                p: 0.5,
+                color: 'inherit',
+              }}
+            >
+              {isLoadingChildren ? (
+                <CircularProgress size={16} aria-label="Загрузка дочерних элементов" />
+              ) : isExpanded ? (
+                <ExpandMore fontSize="small" />
+              ) : (
+                <ChevronRight fontSize="small" />
+              )}
+            </IconButton>
+          ) : null}
+        </Box>
+        {hasChildren ? (
           <Box
             sx={{
+              width: 20,
+              minWidth: 20,
+              flexShrink: 0,
               mr: 0.75,
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               color: 'text.secondary',
             }}
           >
@@ -452,12 +596,41 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
               <Folder fontSize="small" />
             )}
           </Box>
+        ) : (
+          <Box
+            sx={{
+              width: 20,
+              minWidth: 20,
+              flexShrink: 0,
+              mr: 0.75,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'text.secondary',
+            }}
+          >
+            <ArticleOutlined fontSize="small" />
+          </Box>
         )}
         <ListItemText
           primary={pageTitle}
           primaryTypographyProps={{
             variant: 'body2',
             noWrap: true,
+            sx: {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            },
+          }}
+          sx={{
+            minWidth: 0,
+            flex: 1,
+            overflow: 'hidden',
+            '& .MuiListItemText-primary': {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            },
           }}
         />
       </ListItemButton>
@@ -472,18 +645,26 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
                 </Typography>
               </Box>
             ) : (
-              loadedChildren.map((child, index) => (
-                <TreeNode
-                  key={child.htmlPath || index}
-                  page={child}
-                  onPageSelect={onPageSelect}
-                  selectedPage={selectedPage}
-                  level={level + 1}
-                  searchQuery={searchQuery}
-                  filename={filename}
-                  isSearchResult={isSearchResult}
-                />
-              ))
+              loadedChildren.map((child, index) => {
+                // Используем path для уникальной идентификации, если доступен
+                // Это решает проблему с дублирующимися htmlPath на разных уровнях
+                const uniqueKey = child.path && child.path.length > 0 
+                  ? `path-${child.path.join(',')}` 
+                  : (child.htmlPath || `child-${index}`);
+                
+                return (
+                  <TreeNode
+                    key={uniqueKey}
+                    page={child}
+                    onPageSelect={onPageSelect}
+                    selectedPage={selectedPage}
+                    level={level + 1}
+                    searchQuery={searchQuery}
+                    filename={filename}
+                    isSearchResult={isSearchResult}
+                  />
+                );
+              })
             )}
           </List>
         </Collapse>

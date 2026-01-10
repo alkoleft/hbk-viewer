@@ -92,7 +92,7 @@ tasks.jar {
 tasks.bootJar {
     enabled = true
     archiveClassifier.set("")
-    mainClass.set("ru.alkoleft.bsl.platform.HbkReaderApplicationKt")
+    mainClass.set("ru.alkoleft.v8.platform.HbkReaderApplicationKt")
 }
 
 // Исправление зависимостей для задач распространения

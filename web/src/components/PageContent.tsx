@@ -1,30 +1,44 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Box, Paper, Typography, CircularProgress, Button, Alert, Chip } from '@mui/material';
-import type { FileContent, FileStructure } from '../types/api';
+import { useNavigate } from 'react-router-dom';
+import type { FileContent, FileStructure, BookInfo } from '../types/api';
 import { apiClient } from '../api/client';
 import { Breadcrumbs } from './Breadcrumbs';
 import { LOADING_INDICATOR_DELAY_MS, TRANSITION_DURATION_MS } from '../constants/config';
 import { useErrorHandler } from '../hooks/useErrorHandler';
-import { isAbortError, getErrorMessage } from '../utils/errorUtils';
+import { isAbortError } from '../utils/errorUtils';
+import { convertV8HelpLinkToUrl } from '../utils/v8helpUtils';
 
 interface PageContentProps {
   filename: string | undefined;
   pageName?: string; // htmlPath страницы
   structure?: FileStructure | null;
   onPageSelect: (htmlPath: string) => void;
+  books?: BookInfo[]; // Список всех доступных книг
+  currentLocale?: string; // Локаль текущей книги
 }
 
-export function PageContent({ filename, pageName, structure, onPageSelect }: PageContentProps) {
+export function PageContent({ 
+  filename, 
+  pageName, 
+  structure, 
+  onPageSelect,
+  books = [],
+  currentLocale = 'ru',
+}: PageContentProps) {
+  const navigate = useNavigate();
   const [content, setContent] = useState<FileContent | null>(null);
   const [displayContent, setDisplayContent] = useState<FileContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const { error, handleError, clearError } = useErrorHandler();
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousPageNameRef = useRef<string | undefined>(undefined);
-  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const contentContainerRef = useRef<HTMLElement | null>(null);
+  const cleanupClickHandlerRef = useRef<(() => void) | null>(null);
 
   const loadContent = useCallback(async () => {
     if (!filename || !pageName) return;
@@ -44,6 +58,9 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    // Определяем, это первая загрузка или переход между страницами
+    const isFirstLoad = !displayContent;
+
     try {
       setLoading(true);
       clearError();
@@ -52,14 +69,21 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
       // Проверяем, не был ли запрос отменен
       if (!abortController.signal.aborted) {
         setContent(fileContent);
-        // Задержка для плавной смены контента
-        transitionTimeoutRef.current = setTimeout(() => {
-          if (!abortController.signal.aborted) {
-            setDisplayContent(fileContent);
-            setIsTransitioning(false);
-            transitionTimeoutRef.current = null;
-          }
-        }, TRANSITION_DURATION_MS);
+        
+        // При первой загрузке устанавливаем displayContent сразу, без задержки
+        if (isFirstLoad) {
+          setDisplayContent(fileContent);
+          setIsTransitioning(false);
+        } else {
+          // При переходе между страницами используем плавную смену с задержкой
+          transitionTimeoutRef.current = setTimeout(() => {
+            if (!abortController.signal.aborted) {
+              setDisplayContent(fileContent);
+              setIsTransitioning(false);
+              transitionTimeoutRef.current = null;
+            }
+          }, TRANSITION_DURATION_MS);
+        }
       }
     } catch (err) {
       // Игнорируем ошибки отмены запросов
@@ -74,14 +98,21 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
         setLoading(false);
       }
     }
-  }, [filename, pageName, handleError, clearError]);
+  }, [filename, pageName, handleError, clearError, displayContent]);
 
   useEffect(() => {
     if (filename && pageName) {
       // Если это новая страница, начинаем загрузку
       if (previousPageNameRef.current !== pageName) {
+        const wasFirstLoad = previousPageNameRef.current === undefined;
         previousPageNameRef.current = pageName;
-        setIsTransitioning(true);
+        
+        // Устанавливаем isTransitioning только если это не первая загрузка
+        // При первой загрузке не нужно показывать анимацию перехода
+        if (!wasFirstLoad) {
+          setIsTransitioning(true);
+        }
+        
         clearError();
         // Отменяем предыдущий запрос при смене страницы
         if (abortControllerRef.current) {
@@ -129,12 +160,16 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
     };
   }, [loading]);
 
-  // Инициализация displayContent при первой загрузке
+  // Инициализация displayContent при первой загрузке (fallback)
+  // Основная логика уже обрабатывается в loadContent, но это на случай, 
+  // если что-то пойдет не так
   useEffect(() => {
-    if (content && !displayContent && !isTransitioning) {
+    if (content && !displayContent) {
+      // Устанавливаем displayContent при первой загрузке без задержки
       setDisplayContent(content);
+      setIsTransitioning(false);
     }
-  }, [content, displayContent, isTransitioning]);
+  }, [content, displayContent]);
 
   // Очистка таймеров и отмена запросов при размонтировании
   useEffect(() => {
@@ -151,6 +186,94 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
       }
     };
   }, []);
+
+  // Обработчик кликов по ссылкам v8help://
+  useEffect(() => {
+    if (!displayContent) {
+      // Очищаем предыдущий обработчик если контента нет
+      if (cleanupClickHandlerRef.current) {
+        cleanupClickHandlerRef.current();
+        cleanupClickHandlerRef.current = null;
+      }
+      return;
+    }
+    
+    // Очищаем предыдущий обработчик если он был
+    if (cleanupClickHandlerRef.current) {
+      cleanupClickHandlerRef.current();
+      cleanupClickHandlerRef.current = null;
+    }
+    
+    const handleClick = (event: MouseEvent) => {
+      const container = contentContainerRef.current;
+      if (!container) {
+        return;
+      }
+      
+      // Проверяем, что клик произошел внутри контейнера контента
+      const target = event.target as HTMLElement;
+      if (!container.contains(target)) {
+        return;
+      }
+      
+      const link = target.closest('a');
+      if (!link) {
+        return;
+      }
+      
+      const href = link.getAttribute('href');
+      if (!href) {
+        return;
+      }
+      
+      console.log('Клик по ссылке:', href);
+      
+      // Проверяем, является ли ссылка v8help://
+      if (href.startsWith('v8help://')) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        console.log('Обработка v8help:// ссылки:', href, 'books:', books.length, 'locale:', currentLocale);
+        
+        // Преобразуем ссылку в URL приложения
+        const url = convertV8HelpLinkToUrl(href, books, currentLocale);
+        if (url) {
+          console.log('Переход по URL:', url);
+          navigate(url);
+        } else {
+          console.warn('Не удалось найти книгу для ссылки:', href);
+        }
+      }
+    };
+    
+    // Используем requestAnimationFrame чтобы убедиться, что ref установлен после рендера
+    const rafId = requestAnimationFrame(() => {
+      const container = contentContainerRef.current;
+      if (!container) {
+        console.warn('contentContainerRef не установлен после рендера');
+        return;
+      }
+      
+      console.log('Установка обработчика кликов, контейнер:', container);
+      // Используем capture phase для перехвата события раньше
+      container.addEventListener('click', handleClick, true);
+      
+      // Сохраняем функцию очистки
+      cleanupClickHandlerRef.current = () => {
+        container.removeEventListener('click', handleClick, true);
+        console.log('Обработчик кликов удален');
+      };
+    });
+    
+    return () => {
+      cancelAnimationFrame(rafId);
+      // Очищаем обработчик при размонтировании или изменении зависимостей
+      if (cleanupClickHandlerRef.current) {
+        cleanupClickHandlerRef.current();
+        cleanupClickHandlerRef.current = null;
+      }
+    };
+  }, [displayContent, books, currentLocale, navigate]);
 
   return (
     <Box
@@ -218,7 +341,7 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
               position: 'relative',
             }}
           >
-            {showLoadingIndicator && isTransitioning && (
+            {showLoadingIndicator && (isTransitioning || !displayContent) && (
               <Box
                 sx={{
                   display: 'flex',
@@ -270,6 +393,7 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
                 }}
               >
                 <Box
+                  ref={contentContainerRef}
                   sx={{
                     '& h1, & h2, & h3, & h4, & h5, & h6': {
                       mt: 3,
@@ -327,6 +451,7 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
                     '& a': {
                       color: 'primary.main',
                       textDecoration: 'none',
+                      cursor: 'pointer',
                       '&:hover': {
                         textDecoration: 'underline',
                       },

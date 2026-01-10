@@ -71,9 +71,11 @@ function FileViewPage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBookInfo, setSelectedBookInfo] = useState<BookInfo | null>(null);
   const [errorBookInfo, setErrorBookInfo] = useState<string | null>(null);
+  const [allBooks, setAllBooks] = useState<BookInfo[]>([]);
   
   const structureAbortControllerRef = useRef<AbortController | null>(null);
   const bookInfoAbortControllerRef = useRef<AbortController | null>(null);
+  const allBooksAbortControllerRef = useRef<AbortController | null>(null);
 
   const selectedFile = hbkFile ? decodeFileName(hbkFile) : undefined;
   // htmlpagePath может содержать путь с несколькими сегментами
@@ -102,6 +104,8 @@ function FileViewPage() {
       if (!abortController.signal.aborted) {
         const bookInfo = fileList.find((file) => file.filename === selectedFile);
         setSelectedBookInfo(bookInfo || null);
+        // Сохраняем весь список книг для обработки ссылок v8help://
+        setAllBooks(fileList);
       }
     } catch (err) {
       // Игнорируем ошибки отмены запросов
@@ -113,6 +117,40 @@ function FileViewPage() {
       }
     }
   }, [selectedFile]);
+
+  // Загружаем список всех книг при монтировании компонента
+  useEffect(() => {
+    // Отменяем предыдущий запрос, если он существует
+    if (allBooksAbortControllerRef.current) {
+      allBooksAbortControllerRef.current.abort();
+    }
+
+    // Создаем новый AbortController
+    const abortController = new AbortController();
+    allBooksAbortControllerRef.current = abortController;
+
+    const loadAllBooks = async () => {
+      try {
+        const fileList = await apiClient.getFiles(abortController.signal);
+        if (!abortController.signal.aborted) {
+          setAllBooks(fileList);
+        }
+      } catch (err) {
+        // Игнорируем ошибки отмены запросов
+        if (!isAbortError(err) && !abortController.signal.aborted) {
+          console.error('Ошибка при загрузке списка книг:', err);
+        }
+      }
+    };
+
+    loadAllBooks();
+
+    return () => {
+      if (allBooksAbortControllerRef.current) {
+        allBooksAbortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const loadStructure = useCallback(async () => {
     if (!selectedFile) return;
@@ -129,8 +167,9 @@ function FileViewPage() {
     try {
       setLoadingStructure(true);
       setErrorStructure(null);
-      // Загружаем только корневые элементы для оптимизации (includeChildren=false по умолчанию)
-      const fileStructure = await apiClient.getFileStructure(selectedFile, false, abortController.signal);
+      // Загружаем корневую структуру с глубиной 1 для автоматической загрузки подчиненных элементов
+      // Это необходимо для разделов без htmlPath (например, "1C:Enterprise")
+      const fileStructure = await apiClient.getFileStructure(selectedFile, 1, abortController.signal);
       
       // Проверяем, не был ли запрос отменен
       if (!abortController.signal.aborted) {
@@ -178,12 +217,32 @@ function FileViewPage() {
     };
   }, [selectedFile, loadBookInfo, loadStructure]);
 
+  // Определяем локаль текущей книги
+  const currentLocale = selectedBookInfo?.locale || 'ru';
+
   useEffect(() => {
     if (selectedFile && structure && !selectedPage) {
-      // Если файл выбран, но страница не указана, выбираем первую страницу
-      if (structure.pages.length > 0) {
-        const firstPage = structure.pages[0];
-        navigate(buildPageUrl(selectedFile, firstPage.htmlPath), { replace: true });
+      // Если файл выбран, но страница не указана, выбираем первую страницу с валидным htmlPath
+      const findFirstPageWithHtmlPath = (pages: typeof structure.pages): string | null => {
+        for (const page of pages) {
+          // Если у страницы есть htmlPath, возвращаем его
+          if (page.htmlPath && page.htmlPath.trim() !== '') {
+            return page.htmlPath;
+          }
+          // Если есть дочерние элементы, ищем в них рекурсивно
+          if (page.children && page.children.length > 0) {
+            const found = findFirstPageWithHtmlPath(page.children);
+            if (found) {
+              return found;
+            }
+          }
+        }
+        return null;
+      };
+
+      const firstValidHtmlPath = findFirstPageWithHtmlPath(structure.pages);
+      if (firstValidHtmlPath) {
+        navigate(buildPageUrl(selectedFile, firstValidHtmlPath), { replace: true });
       }
     }
   }, [selectedFile, structure, selectedPage, navigate]);
@@ -239,6 +298,8 @@ function FileViewPage() {
           pageName={selectedPage}
           structure={structure}
           onPageSelect={handlePageSelect}
+          books={allBooks}
+          currentLocale={currentLocale}
         />
       </Box>
       <FileSelectorPopup

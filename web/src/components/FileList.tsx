@@ -12,7 +12,7 @@ import {
   ListItemText,
   Chip,
 } from '@mui/material';
-import { InsertDriveFile } from '@mui/icons-material';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import { useFileList } from '../hooks/useFileList';
 import { useFileFilter } from '../hooks/useFileFilter';
 import { formatFileSize } from '../utils/fileUtils';
@@ -103,7 +103,7 @@ export function FileList({ onFileSelect, selectedFile }: FileListProps) {
                     },
                   }}
                 >
-                  <InsertDriveFile sx={{ mr: 2 }} />
+                  <AutoStoriesIcon sx={{ mr: 2 }} />
                   <ListItemText
                     primary={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
