@@ -1,4 +1,3 @@
-import { useEffect, useState, useMemo } from 'react';
 import {
   Paper,
   Typography,
@@ -14,8 +13,9 @@ import {
   Chip,
 } from '@mui/material';
 import { InsertDriveFile } from '@mui/icons-material';
-import type { BookInfo } from '../types/api';
-import { apiClient } from '../api/client';
+import { useFileList } from '../hooks/useFileList';
+import { useFileFilter } from '../hooks/useFileFilter';
+import { formatFileSize } from '../utils/fileUtils';
 
 interface FileListProps {
   onFileSelect: (filename: string) => void;
@@ -23,47 +23,12 @@ interface FileListProps {
 }
 
 export function FileList({ onFileSelect, selectedFile }: FileListProps) {
-  const [files, setFiles] = useState<BookInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    loadFiles();
-  }, []);
-
-  const loadFiles = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const fileList = await apiClient.getFiles();
-      setFiles(fileList);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredFiles = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return files;
-    }
-    const query = searchQuery.toLowerCase();
-    return files.filter((file) => {
-      const matchesFilename = file.filename.toLowerCase().includes(query);
-      const matchesBookName = file.meta?.bookName?.toLowerCase().includes(query) || false;
-      const matchesDescription = file.meta?.description?.toLowerCase().includes(query) || false;
-      const matchesTags = file.meta?.tags?.some((tag) => tag.toLowerCase().includes(query)) || false;
-      return matchesFilename || matchesBookName || matchesDescription || matchesTags;
-    });
-  }, [files, searchQuery]);
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} Б`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} КБ`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} МБ`;
-  };
+  const { files, loading, error, reload } = useFileList();
+  const {
+    searchQuery,
+    setSearchQuery,
+    filteredAndSortedFiles,
+  } = useFileFilter(files, 'name-asc');
 
   return (
     <Paper
@@ -109,19 +74,19 @@ export function FileList({ onFileSelect, selectedFile }: FileListProps) {
             <Alert severity="error" sx={{ mb: 2 }}>
               Ошибка: {error}
             </Alert>
-            <Button variant="contained" onClick={loadFiles} fullWidth>
+            <Button variant="contained" onClick={reload} fullWidth>
               Повторить
             </Button>
           </Box>
         )}
-        {!loading && !error && filteredFiles.length === 0 && (
+        {!loading && !error && filteredAndSortedFiles.length === 0 && (
           <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
             Файлы не найдены
           </Typography>
         )}
-        {!loading && !error && filteredFiles.length > 0 && (
+        {!loading && !error && filteredAndSortedFiles.length > 0 && (
           <List>
-            {filteredFiles.map((file) => (
+            {filteredAndSortedFiles.map((file) => (
               <ListItem key={file.filename} disablePadding>
                 <ListItemButton
                   selected={selectedFile === file.filename}

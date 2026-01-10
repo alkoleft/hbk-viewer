@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 
-export function AppHeader() {
+export const AppHeader = memo(function AppHeader() {
   return (
     <AppBar
       position="fixed"
@@ -25,4 +26,4 @@ export function AppHeader() {
       </Toolbar>
     </AppBar>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { FileSelector } from './components/FileSelector';
@@ -6,9 +6,10 @@ import { FileSelectorPopup } from './components/FileSelectorPopup';
 import { Sidebar } from './components/Sidebar';
 import { PageContent } from './components/PageContent';
 import { AppHeader } from './components/AppHeader';
-import type { FileStructure } from './types/api';
+import type { FileStructure, BookInfo } from './types/api';
 import { apiClient } from './api/client';
-import './App.css';
+import { decodeFileName, buildPageUrl } from './utils/urlUtils';
+import { isAbortError, getErrorMessage } from './utils/errorUtils';
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function HomePage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const handleFileSelect = (filename: string) => {
-    navigate(`/${encodeURIComponent(filename)}`);
+    navigate(buildPageUrl(filename));
     setIsPopupOpen(false);
   };
 
@@ -68,63 +69,135 @@ function FileViewPage() {
   const [loadingStructure, setLoadingStructure] = useState(false);
   const [errorStructure, setErrorStructure] = useState<string | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedBookInfo, setSelectedBookInfo] = useState<BookInfo | null>(null);
+  const [errorBookInfo, setErrorBookInfo] = useState<string | null>(null);
+  
+  const structureAbortControllerRef = useRef<AbortController | null>(null);
+  const bookInfoAbortControllerRef = useRef<AbortController | null>(null);
 
-  const selectedFile = hbkFile ? decodeURIComponent(hbkFile) : undefined;
+  const selectedFile = hbkFile ? decodeFileName(hbkFile) : undefined;
   // htmlpagePath может содержать путь с несколькими сегментами
-  // React Router v6 автоматически декодирует параметры, но decodeURIComponent не повредит
+  // React Router v6 автоматически декодирует параметры, но decodeFileName не повредит
   const selectedPage = htmlpagePath && htmlpagePath.trim() !== '' 
-    ? decodeURIComponent(htmlpagePath) 
+    ? decodeFileName(htmlpagePath) 
     : undefined;
+
+  const loadBookInfo = useCallback(async () => {
+    if (!selectedFile) return;
+
+    // Отменяем предыдущий запрос, если он существует
+    if (bookInfoAbortControllerRef.current) {
+      bookInfoAbortControllerRef.current.abort();
+    }
+
+    // Создаем новый AbortController
+    const abortController = new AbortController();
+    bookInfoAbortControllerRef.current = abortController;
+
+    try {
+      setErrorBookInfo(null);
+      const fileList = await apiClient.getFiles(abortController.signal);
+      
+      // Проверяем, не был ли запрос отменен
+      if (!abortController.signal.aborted) {
+        const bookInfo = fileList.find((file) => file.filename === selectedFile);
+        setSelectedBookInfo(bookInfo || null);
+      }
+    } catch (err) {
+      // Игнорируем ошибки отмены запросов
+      if (!isAbortError(err) && !abortController.signal.aborted) {
+        const errorMessage = getErrorMessage(err);
+        console.error('Ошибка при загрузке информации о книге:', err);
+        setErrorBookInfo(errorMessage);
+        setSelectedBookInfo(null);
+      }
+    }
+  }, [selectedFile]);
+
+  const loadStructure = useCallback(async () => {
+    if (!selectedFile) return;
+
+    // Отменяем предыдущий запрос, если он существует
+    if (structureAbortControllerRef.current) {
+      structureAbortControllerRef.current.abort();
+    }
+
+    // Создаем новый AbortController
+    const abortController = new AbortController();
+    structureAbortControllerRef.current = abortController;
+
+    try {
+      setLoadingStructure(true);
+      setErrorStructure(null);
+      // Загружаем только корневые элементы для оптимизации (includeChildren=false по умолчанию)
+      const fileStructure = await apiClient.getFileStructure(selectedFile, false, abortController.signal);
+      
+      // Проверяем, не был ли запрос отменен
+      if (!abortController.signal.aborted) {
+        setStructure(fileStructure);
+      }
+    } catch (err) {
+      // Игнорируем ошибки отмены запросов
+      if (!isAbortError(err) && !abortController.signal.aborted) {
+        setErrorStructure(getErrorMessage(err));
+        setStructure(null);
+      }
+    } finally {
+      if (!abortController.signal.aborted) {
+        setLoadingStructure(false);
+      }
+    }
+  }, [selectedFile]);
 
   useEffect(() => {
     if (selectedFile) {
+      loadBookInfo();
       loadStructure();
     } else {
+      // Отменяем запросы при смене файла
+      if (structureAbortControllerRef.current) {
+        structureAbortControllerRef.current.abort();
+      }
+      if (bookInfoAbortControllerRef.current) {
+        bookInfoAbortControllerRef.current.abort();
+      }
       setStructure(null);
+      setSelectedBookInfo(null);
+      setErrorStructure(null);
+      setErrorBookInfo(null);
     }
-  }, [selectedFile]);
+    
+    // Отменяем запросы при размонтировании компонента
+    return () => {
+      if (structureAbortControllerRef.current) {
+        structureAbortControllerRef.current.abort();
+      }
+      if (bookInfoAbortControllerRef.current) {
+        bookInfoAbortControllerRef.current.abort();
+      }
+    };
+  }, [selectedFile, loadBookInfo, loadStructure]);
 
   useEffect(() => {
     if (selectedFile && structure && !selectedPage) {
       // Если файл выбран, но страница не указана, выбираем первую страницу
       if (structure.pages.length > 0) {
         const firstPage = structure.pages[0];
-        const encodedPath = encodeURIComponent(firstPage.htmlPath);
-        navigate(`/${encodeURIComponent(selectedFile)}/${encodedPath}`, { replace: true });
+        navigate(buildPageUrl(selectedFile, firstPage.htmlPath), { replace: true });
       }
     }
   }, [selectedFile, structure, selectedPage, navigate]);
 
-  const loadStructure = async () => {
-    if (!selectedFile) return;
-
-    try {
-      setLoadingStructure(true);
-      setErrorStructure(null);
-      // Загружаем только корневые элементы для оптимизации (includeChildren=false по умолчанию)
-      const fileStructure = await apiClient.getFileStructure(selectedFile, false);
-      setStructure(fileStructure);
-    } catch (err) {
-      setErrorStructure(err instanceof Error ? err.message : 'Неизвестная ошибка');
-      setStructure(null);
-    } finally {
-      setLoadingStructure(false);
-    }
-  };
-
-  const handleFileSelect = (filename: string) => {
-    navigate(`/${encodeURIComponent(filename)}`);
+  const handleFileSelect = useCallback((filename: string) => {
+    navigate(buildPageUrl(filename));
     setIsPopupOpen(false);
-  };
+  }, [navigate]);
 
-  const handlePageSelect = (htmlPath: string) => {
+  const handlePageSelect = useCallback((htmlPath: string) => {
     if (selectedFile) {
-      // Кодируем htmlPath для использования в URL
-      // Если путь содержит /, он будет закодирован как %2F
-      const encodedPath = encodeURIComponent(htmlPath);
-      navigate(`/${encodeURIComponent(selectedFile)}/${encodedPath}`);
+      navigate(buildPageUrl(selectedFile, htmlPath));
     }
-  };
+  }, [selectedFile, navigate]);
 
   if (!selectedFile) {
     return null;
@@ -152,6 +225,7 @@ function FileViewPage() {
       >
         <Sidebar
           selectedFile={selectedFile}
+          selectedBookInfo={selectedBookInfo}
           onFileSelectClick={() => setIsPopupOpen(true)}
           pages={structure?.pages || []}
           onPageSelect={handlePageSelect}

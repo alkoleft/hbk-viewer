@@ -21,6 +21,8 @@ import ru.alkoleft.bsl.platform.hbk.dto.FileContent
 import ru.alkoleft.bsl.platform.hbk.dto.FileStructure
 import ru.alkoleft.bsl.platform.hbk.dto.PageDto
 import ru.alkoleft.bsl.platform.hbk.exceptions.PlatformContextLoadException
+import ru.alkoleft.bsl.platform.hbk.models.Page
+import ru.alkoleft.bsl.platform.hbk.reader.toc.Toc
 import ru.alkoleft.bsl.platform.hbk.service.HbkFileScannerService
 
 private val logger = KotlinLogging.logger { }
@@ -217,7 +219,7 @@ class HbkRestController(
      * Ищет страницу по htmlPath в иерархии оглавления.
      */
     private fun findPageByHtmlPath(
-        toc: ru.alkoleft.bsl.platform.hbk.reader.toc.Toc,
+        toc: Toc,
         htmlPath: String,
-    ): ru.alkoleft.bsl.platform.hbk.models.Page? = toc.findPageByHtmlPath(htmlPath)
+    ): Page? = toc.findPageByHtmlPath(htmlPath)
 }

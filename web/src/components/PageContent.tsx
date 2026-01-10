@@ -3,6 +3,9 @@ import { Box, Paper, Typography, CircularProgress, Button, Alert, Chip } from '@
 import type { FileContent, FileStructure } from '../types/api';
 import { apiClient } from '../api/client';
 import { Breadcrumbs } from './Breadcrumbs';
+import { LOADING_INDICATOR_DELAY_MS, TRANSITION_DURATION_MS } from '../constants/config';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { isAbortError, getErrorMessage } from '../utils/errorUtils';
 
 interface PageContentProps {
   filename: string | undefined;
@@ -16,14 +19,20 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
   const [displayContent, setDisplayContent] = useState<FileContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { error, handleError, clearError } = useErrorHandler();
   const [isTransitioning, setIsTransitioning] = useState(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previousPageNameRef = useRef<string | undefined>(undefined);
   const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const loadContent = useCallback(async () => {
     if (!filename || !pageName) return;
+
+    // Отменяем предыдущий запрос, если он существует
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
     // Очищаем предыдущие таймеры при новой загрузке
     if (transitionTimeoutRef.current) {
@@ -31,26 +40,41 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
       transitionTimeoutRef.current = null;
     }
 
+    // Создаем новый AbortController
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
       setLoading(true);
-      setError(null);
-      const fileContent = await apiClient.getFileContent(filename, pageName);
-      setContent(fileContent);
-      // Задержка для плавной смены контента
-      transitionTimeoutRef.current = setTimeout(() => {
-        setDisplayContent(fileContent);
-        setIsTransitioning(false);
-        transitionTimeoutRef.current = null;
-      }, 150);
+      clearError();
+      const fileContent = await apiClient.getFileContent(filename, pageName, abortController.signal);
+      
+      // Проверяем, не был ли запрос отменен
+      if (!abortController.signal.aborted) {
+        setContent(fileContent);
+        // Задержка для плавной смены контента
+        transitionTimeoutRef.current = setTimeout(() => {
+          if (!abortController.signal.aborted) {
+            setDisplayContent(fileContent);
+            setIsTransitioning(false);
+            transitionTimeoutRef.current = null;
+          }
+        }, TRANSITION_DURATION_MS);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
-      setContent(null);
-      setDisplayContent(null);
-      setIsTransitioning(false);
+      // Игнорируем ошибки отмены запросов
+      if (!isAbortError(err) && !abortController.signal.aborted) {
+        handleError(err);
+        setContent(null);
+        setDisplayContent(null);
+        setIsTransitioning(false);
+      }
     } finally {
-      setLoading(false);
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
     }
-  }, [filename, pageName]);
+  }, [filename, pageName, handleError, clearError]);
 
   useEffect(() => {
     if (filename && pageName) {
@@ -58,7 +82,11 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
       if (previousPageNameRef.current !== pageName) {
         previousPageNameRef.current = pageName;
         setIsTransitioning(true);
-        setError(null);
+        clearError();
+        // Отменяем предыдущий запрос при смене страницы
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
         loadContent();
       }
     } else {
@@ -67,20 +95,24 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
         clearTimeout(transitionTimeoutRef.current);
         transitionTimeoutRef.current = null;
       }
+      // Отменяем запрос
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
       setContent(null);
       setDisplayContent(null);
-      setError(null);
+      clearError();
       setIsTransitioning(false);
       previousPageNameRef.current = undefined;
     }
-  }, [filename, pageName, loadContent]);
+  }, [filename, pageName, loadContent, clearError]);
 
   useEffect(() => {
     // Показываем индикатор загрузки только после небольшой задержки
     if (loading) {
       loadingTimeoutRef.current = setTimeout(() => {
         setShowLoadingIndicator(true);
-      }, 200); // Задержка 200мс перед показом индикатора
+      }, LOADING_INDICATOR_DELAY_MS);
     } else {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -104,7 +136,7 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
     }
   }, [content, displayContent, isTransitioning]);
 
-  // Очистка таймеров при размонтировании
+  // Очистка таймеров и отмена запросов при размонтировании
   useEffect(() => {
     return () => {
       if (loadingTimeoutRef.current) {
@@ -112,6 +144,10 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
       }
       if (transitionTimeoutRef.current) {
         clearTimeout(transitionTimeoutRef.current);
+      }
+      // Отменяем запрос при размонтировании компонента
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, []);
@@ -155,6 +191,7 @@ export function PageContent({ filename, pageName, structure, onPageSelect }: Pag
                 pages={structure.pages}
                 currentPageName={pageName}
                 onPageSelect={onPageSelect}
+                filename={filename}
               />
             )}
             {displayContent && (

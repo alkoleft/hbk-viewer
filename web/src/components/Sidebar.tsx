@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   Box,
   Paper,
@@ -13,16 +13,20 @@ import {
   CircularProgress,
 } from '@mui/material';
 import {
-  ExpandLess,
   ExpandMore,
+  ChevronRight,
   Folder,
+  FolderOpen,
   KeyboardArrowDown,
 } from '@mui/icons-material';
-import type { PageDto } from '../types/api';
+import type { PageDto, BookInfo } from '../types/api';
 import { apiClient } from '../api/client';
+import { SEARCH_DEBOUNCE_MS } from '../constants/config';
+import { isAbortError, getErrorMessage } from '../utils/errorUtils';
 
 interface SidebarProps {
   selectedFile?: string;
+  selectedBookInfo?: BookInfo | null;
   onFileSelectClick: () => void;
   pages: PageDto[];
   onPageSelect: (htmlPath: string) => void;
@@ -34,6 +38,7 @@ interface SidebarProps {
 
 export function Sidebar({
   selectedFile,
+  selectedBookInfo,
   onFileSelectClick,
   pages,
   onPageSelect,
@@ -46,6 +51,7 @@ export function Sidebar({
   const [searchResults, setSearchResults] = useState<PageDto[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
 
   // Debounce для поисковых запросов
   useEffect(() => {
@@ -58,27 +64,57 @@ export function Sidebar({
       setSearchResults([]);
       setIsSearching(false);
       setSearchError(null);
+      // Отменяем текущий поиск, если есть
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+        searchAbortControllerRef.current = null;
+      }
       return;
+    }
+
+    // Отменяем предыдущий поисковый запрос
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
     }
 
     setIsSearching(true);
     setSearchError(null);
 
     const timeoutId = setTimeout(async () => {
-      try {
-        const results = await apiClient.searchFileStructure(selectedFile, searchQuery);
-        setSearchResults(results);
-        setSearchError(null);
-      } catch (err) {
-        console.error('Ошибка при поиске:', err);
-        setSearchError(err instanceof Error ? err.message : 'Ошибка при поиске');
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 400); // Debounce 400ms
+      // Создаем новый AbortController для этого запроса
+      const abortController = new AbortController();
+      searchAbortControllerRef.current = abortController;
 
-    return () => clearTimeout(timeoutId);
+      try {
+        const results = await apiClient.searchFileStructure(selectedFile, searchQuery, abortController.signal);
+        
+        // Проверяем, не был ли запрос отменен
+        if (!abortController.signal.aborted) {
+          setSearchResults(results);
+          setSearchError(null);
+        }
+      } catch (err) {
+        // Игнорируем ошибки отмены запросов
+        if (!isAbortError(err) && !abortController.signal.aborted) {
+          console.error('Ошибка при поиске:', err);
+          setSearchError(getErrorMessage(err));
+          setSearchResults([]);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsSearching(false);
+        }
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timeoutId);
+      // Отменяем запрос при размонтировании или изменении зависимостей
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+        searchAbortControllerRef.current = null;
+      }
+    };
   }, [searchQuery, selectedFile]);
 
   // Определяем, какие страницы показывать: результаты поиска или обычный список
@@ -118,7 +154,11 @@ export function Sidebar({
         {selectedFile ? (
           <Chip
             icon={<Folder />}
-            label={selectedFile}
+            label={selectedBookInfo 
+              ? (selectedBookInfo.meta?.bookName 
+                ? `${selectedBookInfo.meta.bookName} (${selectedBookInfo.locale})` 
+                : `${selectedFile} (${selectedBookInfo.locale})`)
+              : selectedFile}
             onClick={onFileSelectClick}
             deleteIcon={<KeyboardArrowDown />}
             onDelete={onFileSelectClick}
@@ -183,9 +223,10 @@ export function Sidebar({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               variant="outlined"
+              aria-label="Поиск в оглавлении"
               InputProps={{
                 endAdornment: isSearching ? (
-                  <CircularProgress size={16} sx={{ mr: 1 }} />
+                  <CircularProgress size={16} sx={{ mr: 1 }} aria-label="Поиск выполняется" />
                 ) : null,
               }}
             />
@@ -217,7 +258,7 @@ export function Sidebar({
                 </Typography>
               </Box>
             ) : (
-              <List dense component="nav" sx={{ py: 0 }}>
+              <List dense component="nav" sx={{ py: 0 }} role="tree" aria-label="Оглавление">
                 {displayPages.map((page, index) => (
                   <TreeNode
                     key={page.htmlPath || `page-${index}`}
@@ -259,6 +300,7 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
   // Если это результат поиска или уже есть children в page, считаем их загруженными
   // Для обычной загрузки childrenLoaded = false, так как children загружаются лениво
   const [childrenLoaded, setChildrenLoaded] = useState(isSearchResult ? true : page.children.length > 0);
+  const childrenAbortControllerRef = useRef<AbortController | null>(null);
   
   // Определяем наличие дочерних элементов
   // Для оптимизированной загрузки page.children всегда пустой, поэтому полагаемся на флаг hasChildren
@@ -280,25 +322,52 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
       return;
     }
 
+    // Отменяем предыдущий запрос, если он существует
+    if (childrenAbortControllerRef.current) {
+      childrenAbortControllerRef.current.abort();
+    }
+
+    // Создаем новый AbortController
+    const abortController = new AbortController();
+    childrenAbortControllerRef.current = abortController;
+
     setIsLoadingChildren(true);
     try {
-      const children = await apiClient.getFileStructureChildren(filename, page.htmlPath);
-      setLoadedChildren(children);
-      setChildrenLoaded(true);
-      // Если загружен пустой список, но hasChildren был true, это может быть ошибка
-      if (children.length === 0 && hasChildren) {
-        console.warn(`Загружен пустой список дочерних элементов для ${page.htmlPath}, хотя hasChildren=true`);
+      const children = await apiClient.getFileStructureChildren(filename, page.htmlPath, abortController.signal);
+      
+      // Проверяем, не был ли запрос отменен
+      if (!abortController.signal.aborted) {
+        setLoadedChildren(children);
+        setChildrenLoaded(true);
+        // Если загружен пустой список, но hasChildren был true, это может быть ошибка
+        if (children.length === 0 && hasChildren) {
+          console.warn(`Загружен пустой список дочерних элементов для ${page.htmlPath}, хотя hasChildren=true`);
+        }
       }
     } catch (error) {
-      console.error('Ошибка при загрузке дочерних элементов:', error);
-      // В случае ошибки оставляем пустой список, но помечаем как загруженное,
-      // чтобы не пытаться загружать снова
-      setLoadedChildren([]);
-      setChildrenLoaded(true);
+      // Игнорируем ошибки отмены запросов
+      if (!isAbortError(error) && !abortController.signal.aborted) {
+        console.error('Ошибка при загрузке дочерних элементов:', error);
+        // В случае ошибки оставляем пустой список, но помечаем как загруженное,
+        // чтобы не пытаться загружать снова
+        setLoadedChildren([]);
+        setChildrenLoaded(true);
+      }
     } finally {
-      setIsLoadingChildren(false);
+      if (!abortController.signal.aborted) {
+        setIsLoadingChildren(false);
+      }
     }
   }, [filename, page.htmlPath, hasChildren, childrenLoaded, isLoadingChildren, isSearchResult]);
+
+  // Отменяем запрос при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      if (childrenAbortControllerRef.current) {
+        childrenAbortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   // Для результатов поиска children уже загружены с сервера, дополнительная загрузка не нужна
   // Для обычных узлов children загружаются только при раскрытии через handleToggle
@@ -323,15 +392,25 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
       <ListItemButton
         selected={isSelected}
         onClick={handleClick}
+        aria-selected={isSelected}
+        aria-expanded={hasChildren ? isExpanded : undefined}
+        aria-level={level + 1}
+        role="treeitem"
         sx={{
           pl: 2 + level * 2,
           py: 0.5,
+          borderLeft: level > 0 ? 1 : 0,
+          borderColor: 'divider',
+          position: 'relative',
           '&.Mui-selected': {
             bgcolor: 'primary.main',
             color: 'primary.contrastText',
             '&:hover': {
               bgcolor: 'primary.dark',
             },
+          },
+          '&:hover': {
+            borderLeftColor: 'primary.light',
           },
         }}
       >
@@ -340,6 +419,8 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
             size="small"
             onClick={handleToggle}
             disabled={isLoadingChildren}
+            aria-label={isExpanded ? 'Свернуть раздел' : 'Развернуть раздел'}
+            aria-expanded={isExpanded}
             sx={{
               mr: 0.5,
               p: 0.5,
@@ -347,15 +428,31 @@ function TreeNode({ page, onPageSelect, selectedPage, level, searchQuery, filena
             }}
           >
             {isLoadingChildren ? (
-              <CircularProgress size={16} />
+              <CircularProgress size={16} aria-label="Загрузка дочерних элементов" />
             ) : isExpanded ? (
-              <ExpandLess fontSize="small" />
-            ) : (
               <ExpandMore fontSize="small" />
+            ) : (
+              <ChevronRight fontSize="small" />
             )}
           </IconButton>
         )}
         {!hasChildren && <Box sx={{ width: 24 }} />}
+        {hasChildren && (
+          <Box
+            sx={{
+              mr: 0.75,
+              display: 'flex',
+              alignItems: 'center',
+              color: 'text.secondary',
+            }}
+          >
+            {isExpanded ? (
+              <FolderOpen fontSize="small" />
+            ) : (
+              <Folder fontSize="small" />
+            )}
+          </Box>
+        )}
         <ListItemText
           primary={pageTitle}
           primaryTypographyProps={{

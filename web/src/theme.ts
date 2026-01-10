@@ -63,5 +63,5 @@ export const theme = createTheme({
     '0px 8px 16px rgba(0,0,0,0.1)',
     '0px 12px 24px rgba(0,0,0,0.15)',
     ...Array(20).fill('0px 16px 32px rgba(0,0,0,0.15)'),
-  ] as any,
+  ] as unknown as typeof import('@mui/material/styles').Theme['shadows'],
 });
