@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  hbk-reader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hbk-reader
+    ports:
+      - "8080:8080"
+    volumes:
+      # Монтируем каталог с HBK файлами
+      # Замените /path/to/your/hbk/files на реальный путь к вашим HBK файлам
+      - /path/to/your/hbk/files:/data/hbk:ro
+    environment:
+      # Можно переопределить путь к каталогу через переменную окружения
+      # HBK_FILES_DIRECTORY: /data/hbk
+      # Для отладочного логирования раскомментируйте следующую строку
+      # JAVA_OPTS: -Dlogging.level.root=DEBUG
+    restart: unless-stopped

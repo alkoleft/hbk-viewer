@@ -1,0 +1,48 @@
+# Игнорируем файлы сборки
+build/
+.gradle/
+out/
+dist/
+
+# Игнорируем зависимости
+node_modules/
+web/node_modules/
+web/dist/
+
+# Игнорируем системные файлы
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Игнорируем IDE файлы
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# Игнорируем Git
+.git/
+.gitignore
+.gitattributes
+
+# Игнорируем документацию и другие файлы
+*.md
+!README.md
+doc/
+documentation/
+memory-bank/
+
+# Игнорируем тестовые ресурсы
+src/test/
+
+# Игнорируем CI/CD файлы
+.github/
+
+# Игнорируем временные файлы
+*.log
+*.tmp
+*.bak
