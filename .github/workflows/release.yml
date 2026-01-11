@@ -10,26 +10,13 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-publish:
+  build-and-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
-      id-token: write
 
     steps:
-      - name: Checkout bsl-context
-        uses: actions/checkout@v4
-        with:
-          repository: 1c-syntax/bsl-context
-          path: bsl-context
-          ref: rnd
-
-      - name: Build and publish bsl-context to mavenLocal
-        run: |
-          cd bsl-context
-          ./gradlew publishToMavenLocal
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -47,19 +34,25 @@ jobs:
         with:
           cache-read-only: false
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run tests
-        run: ./gradlew test --no-daemon
+      - name: Install web dependencies
+        working-directory: ./web
+        run: pnpm install --frozen-lockfile
 
       - name: Build application
         run: ./gradlew bootJar --no-daemon
-
-      - name: Publish to GitHub Packages
-        run: ./gradlew publish --no-daemon
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract tag version
         id: tag_version
@@ -68,88 +61,42 @@ jobs:
           echo "VERSION=${TAG}" >> $GITHUB_OUTPUT
           echo "VERSION_NUMBER=${TAG#v}" >> $GITHUB_OUTPUT
 
+      - name: Find JAR file
+        id: find_jar
+        run: |
+          JAR_FILE=$(find build/libs -name "hbk-reader-*.jar" ! -name "*-plain.jar" | head -1)
+          if [ -z "$JAR_FILE" ]; then
+            echo "JAR file not found!"
+            exit 1
+          fi
+          JAR_NAME=$(basename "$JAR_FILE")
+          echo "JAR_FILE=${JAR_FILE}" >> $GITHUB_OUTPUT
+          echo "JAR_NAME=${JAR_NAME}" >> $GITHUB_OUTPUT
+          echo "Found JAR: ${JAR_NAME}"
+
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mcp-bsl-context-jar
-          path: ./build/libs/mcp-bsl-context-${{ steps.tag_version.outputs.VERSION_NUMBER }}.jar
-          
-      - name: Create GitHub Release
-        id: create_release
+          name: hbk-reader-jar
+          path: ${{ steps.find_jar.outputs.JAR_FILE }}
+          retention-days: 30
+
+      - name: Create GitHub Release (Draft)
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag_version.outputs.VERSION }}
           name: Release ${{ steps.tag_version.outputs.VERSION }}
           body: |
-            ## 🚀 MCP BSL Context Server ${{ steps.tag_version.outputs.VERSION }}
+            ## 🚀 HBK Reader ${{ steps.tag_version.outputs.VERSION }}
             
-            ### 🔄 Changes
+            ### 📦 Changes
             - Automatic release from tag ${{ steps.tag_version.outputs.VERSION }}
             
+            ### 📥 Downloads
+            - **JAR**: `${{ steps.find_jar.outputs.JAR_NAME }}`
           draft: true
           prerelease: false
           files: |
-            ./build/libs/mcp-bsl-context-${{ steps.tag_version.outputs.VERSION_NUMBER }}.jar
-
-  docker-build:
-    runs-on: ubuntu-latest
-    needs: build-and-publish
-    permissions:
-      contents: read
-      packages: write
-    
-    strategy:
-      matrix:
-        dockerfile: ['Dockerfile.sse', 'Dockerfile.stdio']
-        
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mcp-bsl-context-jar
-      
-      - name: Copy JAR to project root for Docker
-        run: cp mcp-bsl-context-*.jar mcp-bsl-context.jar
-      
-      - name: Extract tag version
-        id: tag_version
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          echo "VERSION=${TAG}" >> $GITHUB_OUTPUT
-          echo "VERSION_NUMBER=${TAG#v}" >> $GITHUB_OUTPUT
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=tag
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-          flavor: |
-            suffix=-${{ matrix.dockerfile == 'Dockerfile.sse' && 'sse' || 'stdio' }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max 
+            ${{ steps.find_jar.outputs.JAR_FILE }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
