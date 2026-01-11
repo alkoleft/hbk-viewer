@@ -39,3 +39,8 @@ export interface BookStructure {
   filename: string;
   pages: PageDto[];
 }
+
+export interface VersionInfo {
+  applicationVersion: string;
+  platformVersion: string | null;
+}

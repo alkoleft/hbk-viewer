@@ -1,4 +1,4 @@
-import type { BookInfo, BookPageContent, BookStructure, PageDto } from '../types/api';
+import type { BookInfo, BookPageContent, BookStructure, PageDto, VersionInfo } from '../types/api';
 import { API } from '../constants/config';
 
 /**
@@ -121,6 +121,24 @@ export class HbkApiClient {
         throw new Error(`Файл "${filename}" не найден`);
       }
       throw new Error(`Ошибка при поиске: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  /**
+   * Получает информацию о версиях приложения и платформы 1С
+   * @param platformPath - опциональный путь к директории установки платформы 1С
+   * @param signal - опциональный AbortSignal для отмены запроса
+   */
+  async getVersion(platformPath?: string, signal?: AbortSignal): Promise<VersionInfo> {
+    const url = new URL(`${API.BASE_URL}/version`, window.location.origin);
+    if (platformPath) {
+      url.searchParams.set('platformPath', platformPath);
+    }
+    
+    const response = await fetch(url.toString(), { signal });
+    if (!response.ok) {
+      throw new Error(`Ошибка при получении версий: ${response.statusText}`);
     }
     return response.json();
   }

@@ -12,6 +12,7 @@ export const queryKeys = {
     ['BookStructureChildren', filename, htmlPath, path] as const,
   searchStructure: (filename: string, query: string) => 
     ['searchStructure', filename, query] as const,
+  version: (platformPath?: string) => ['version', platformPath] as const,
 };
 
 /**
@@ -96,5 +97,16 @@ export function useSearchStructure(filename: string | undefined, query: string) 
     },
     enabled: !!filename && query.trim().length > 0,
     staleTime: 2 * 60 * 1000, // 2 минуты для результатов поиска
+  });
+}
+
+/**
+ * Хук для получения версий приложения и платформы 1С
+ */
+export function useVersion(platformPath?: string) {
+  return useQuery({
+    queryKey: queryKeys.version(platformPath),
+    queryFn: () => apiClient.getVersion(platformPath),
+    staleTime: 60 * 60 * 1000, // 1 час - версии редко меняются
   });
 }

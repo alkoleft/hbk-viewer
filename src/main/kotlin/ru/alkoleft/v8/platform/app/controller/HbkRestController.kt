@@ -18,8 +18,10 @@ import ru.alkoleft.v8.platform.app.controller.dto.BookInfo
 import ru.alkoleft.v8.platform.app.controller.dto.FileContent
 import ru.alkoleft.v8.platform.app.controller.dto.FileStructure
 import ru.alkoleft.v8.platform.app.controller.dto.PageDto
+import ru.alkoleft.v8.platform.app.controller.dto.VersionInfo
 import ru.alkoleft.v8.platform.app.service.HbkFileScannerService
 import ru.alkoleft.v8.platform.app.service.HbkPathService
+import ru.alkoleft.v8.platform.app.service.VersionService
 import ru.alkoleft.v8.platform.hbk.HbkPageReaderService
 import ru.alkoleft.v8.platform.hbk.models.Page
 
@@ -39,6 +41,7 @@ class HbkRestController(
     private val fileScannerService: HbkFileScannerService,
     private val pageReaderService: HbkPageReaderService,
     private val pathService: HbkPathService,
+    private val versionService: VersionService,
 ) {
     /**
      * Получает список всех доступных HBK книг.
@@ -233,5 +236,19 @@ class HbkRestController(
                 }
             }
         return ResponseEntity.ok(pagesDto)
+    }
+
+    /**
+     * Получает информацию о версиях приложения и платформы 1С.
+     *
+     * @param platformPath Опциональный путь к директории установки платформы 1С (для определения версии 1С)
+     * @return Информация о версиях
+     */
+    @GetMapping("/version")
+    fun getVersion(
+        @RequestParam(required = false) platformPath: String?,
+    ): ResponseEntity<VersionInfo> {
+        logger.debug { "Запрос информации о версиях, platformPath: $platformPath" }
+        return ResponseEntity.ok(versionService.versionsInfo)
     }
 }

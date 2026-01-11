@@ -29,7 +29,7 @@ private val logger = KotlinLogging.logger { }
 @Service
 class HbkFileScannerService(
     @Value("\${hbk.files.directory:}")
-    private val hbkDirectory: String,
+    val hbkDirectory: String,
     private val hbkContentReader: HbkContentReader,
 ) {
     private val books: MutableMap<String, BookInfo> = mutableMapOf()
