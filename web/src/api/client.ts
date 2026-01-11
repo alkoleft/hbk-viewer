@@ -1,5 +1,5 @@
 import type { BookInfo, FileContent, FileStructure, PageDto } from '../types/api';
-import { API_BASE_URL } from '../constants/config';
+import { API } from '../constants/config';
 
 /**
  * Клиент для работы с API HBK Reader
@@ -10,7 +10,7 @@ export class HbkApiClient {
    * @param signal - опциональный AbortSignal для отмены запроса
    */
   async getFiles(signal?: AbortSignal): Promise<BookInfo[]> {
-    const response = await fetch(`${API_BASE_URL}/files`, { signal });
+    const response = await fetch(`${API.BASE_URL}/files`, { signal });
     if (!response.ok) {
       throw new Error(`Ошибка при получении списка файлов: ${response.statusText}`);
     }
@@ -24,7 +24,7 @@ export class HbkApiClient {
    * @param signal - опциональный AbortSignal для отмены запроса
    */
   async getFileContent(filename: string, htmlPath?: string, signal?: AbortSignal): Promise<FileContent> {
-    const url = new URL(`${API_BASE_URL}/files/${filename}/content`, window.location.origin);
+    const url = new URL(`${API.BASE_URL}/files/${filename}/content`, window.location.origin);
     if (htmlPath) {
       url.searchParams.set('htmlPath', htmlPath);
     }
@@ -50,7 +50,7 @@ export class HbkApiClient {
     depth?: number,
     signal?: AbortSignal
   ): Promise<FileStructure> {
-    const url = new URL(`${API_BASE_URL}/files/${filename}/structure`, window.location.origin);
+    const url = new URL(`${API.BASE_URL}/files/${filename}/structure`, window.location.origin);
     if (depth !== undefined && depth !== null) {
       url.searchParams.set('depth', depth.toString());
     }
@@ -78,7 +78,7 @@ export class HbkApiClient {
     path?: number[],
     signal?: AbortSignal
   ): Promise<PageDto[]> {
-    const url = new URL(`${API_BASE_URL}/files/${filename}/structure/children`, window.location.origin);
+    const url = new URL(`${API.BASE_URL}/files/${filename}/structure/children`, window.location.origin);
     
     // Если указан path, используем его для уникальной идентификации (даже если несколько элементов имеют одинаковый htmlPath)
     if (path && path.length > 0) {
@@ -112,7 +112,7 @@ export class HbkApiClient {
       return [];
     }
     
-    const url = new URL(`${API_BASE_URL}/files/${filename}/structure/search`, window.location.origin);
+    const url = new URL(`${API.BASE_URL}/files/${filename}/structure/search`, window.location.origin);
     url.searchParams.set('query', query);
     
     const response = await fetch(url.toString(), { signal });

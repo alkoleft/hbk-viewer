@@ -18,11 +18,11 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import type { BookInfo } from '../types/api';
-import type { SortType } from '../types/common';
-import { formatFileSize } from '../utils/fileUtils';
+import type { BookInfo } from '../../types/api';
+import type { SortType } from '../../types/common';
+import { formatFileSize } from '../../utils/fileUtils';
 
-interface FileListContentProps {
+interface BookListContentProps {
   files: BookInfo[];
   loading: boolean;
   error: string | null;
@@ -40,9 +40,9 @@ interface FileListContentProps {
 }
 
 /**
- * Общий компонент для отображения списка файлов с поиском и сортировкой
+ * Общий компонент для отображения списка книг с поиском и сортировкой
  */
-export const FileListContent = memo(function FileListContent({
+export const BookListContent = memo(function BookListContent({
   files,
   loading,
   error,
@@ -54,10 +54,10 @@ export const FileListContent = memo(function FileListContent({
   filteredAndSortedFiles,
   selectedFile,
   onFileSelect,
-  emptyMessage = 'HBK файлы не найдены',
-  notFoundMessage = 'Файлы не найдены',
+  emptyMessage = 'HBK книги не найдены',
+  notFoundMessage = 'Книги не найдены',
   showEmptyState = true,
-}: FileListContentProps) {
+}: BookListContentProps) {
   const handleSortChange = useCallback((event: SelectChangeEvent<SortType>) => {
     onSortChange(event.target.value as SortType);
   }, [onSortChange]);
@@ -108,11 +108,11 @@ export const FileListContent = memo(function FileListContent({
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <TextField
           fullWidth
-          placeholder="Поиск файлов..."
+          placeholder="Поиск книг..."
           value={searchQuery}
           onChange={handleSearchChange}
           variant="outlined"
-          aria-label="Поиск файлов"
+          aria-label="Поиск книг"
         />
         <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Сортировка</InputLabel>
@@ -120,7 +120,7 @@ export const FileListContent = memo(function FileListContent({
             value={sortType}
             label="Сортировка"
             onChange={handleSortChange}
-            aria-label="Сортировка файлов"
+            aria-label="Сортировка книг"
           >
             <MenuItem value="name-asc">По имени (А-Я)</MenuItem>
             <MenuItem value="name-desc">По имени (Я-А)</MenuItem>
@@ -135,7 +135,7 @@ export const FileListContent = memo(function FileListContent({
             {notFoundMessage}
           </Typography>
         ) : (
-          <List role="listbox" aria-label="Список файлов">
+          <List role="listbox" aria-label="Список книг">
             {filteredAndSortedFiles.map((file) => (
               <ListItem key={file.filename} disablePadding>
                 <ListItemButton

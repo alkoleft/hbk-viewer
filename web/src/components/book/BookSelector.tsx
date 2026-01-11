@@ -1,16 +1,16 @@
 import { Paper, Typography, Box } from '@mui/material';
-import { useFileList } from '../hooks/useFileList';
-import { useFileFilter } from '../hooks/useFileFilter';
-import { FileListContent } from './FileListContent';
-import type { SortType } from '../types/common';
+import { useBooks } from '../../api/queries';
+import { useFileFilter } from '../../hooks/useFileFilter';
+import { BookListContent } from './BookListContent';
+import type { SortType } from '../../types/common';
 
-interface FileSelectorProps {
-  onFileSelect: (filename: string) => void;
-  selectedFile?: string;
+interface BookSelectorProps {
+  onBookSelect: (filename: string) => void;
+  selectedBook?: string;
 }
 
-export function FileSelector({ onFileSelect, selectedFile }: FileSelectorProps) {
-  const { files, loading, error, reload } = useFileList();
+export function BookSelector({ onBookSelect, selectedBook }: BookSelectorProps) {
+  const { data: files = [], isLoading: loading, error, refetch: reload } = useBooks();
   const {
     searchQuery,
     setSearchQuery,
@@ -29,26 +29,26 @@ export function FileSelector({ onFileSelect, selectedFile }: FileSelectorProps) 
       }}
     >
       <Typography variant="h4" component="h2" gutterBottom align="center">
-        Выберите HBK файл
+        Выберите HBK книгу
       </Typography>
       <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-        Выберите файл документации для просмотра
+        Выберите книгу документации для просмотра
       </Typography>
 
       <Box sx={{ maxHeight: 500, overflowY: 'auto' }}>
-        <FileListContent
+        <BookListContent
           files={files}
           loading={loading}
-          error={error}
+          error={error ? (error instanceof Error ? error.message : 'Ошибка загрузки книг') : null}
           onReload={reload}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           sortType={sortType}
           onSortChange={setSortType}
           filteredAndSortedFiles={filteredAndSortedFiles}
-          selectedFile={selectedFile}
-          onFileSelect={onFileSelect}
-          emptyMessage="HBK файлы не найдены"
+          selectedFile={selectedBook}
+          onFileSelect={onBookSelect}
+          emptyMessage="HBK книги не найдены"
         />
       </Box>
     </Paper>

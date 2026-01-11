@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -8,25 +7,25 @@ import {
   Typography,
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
-import { useFileList } from '../hooks/useFileList';
-import { useFileFilter } from '../hooks/useFileFilter';
-import { FileListContent } from './FileListContent';
-import type { SortType } from '../types/common';
+import { useBooks } from '../../api/queries';
+import { useFileFilter } from '../../hooks/useFileFilter';
+import { BookListContent } from './BookListContent';
+import type { SortType } from '../../types/common';
 
-interface FileSelectorPopupProps {
+interface BookSelectorPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  onFileSelect: (filename: string) => void;
-  selectedFile?: string;
+  onBookSelect: (filename: string) => void;
+  selectedBook?: string;
 }
 
-export function FileSelectorPopup({
+export function BookSelectorPopup({
   isOpen,
   onClose,
-  onFileSelect,
-  selectedFile,
-}: FileSelectorPopupProps) {
-  const { files, loading, error, reload } = useFileList();
+  onBookSelect,
+  selectedBook,
+}: BookSelectorPopupProps) {
+  const { data: files = [], isLoading: loading, error, refetch: reload } = useBooks();
   const {
     searchQuery,
     setSearchQuery,
@@ -35,14 +34,8 @@ export function FileSelectorPopup({
     filteredAndSortedFiles,
   } = useFileFilter(files);
 
-  useEffect(() => {
-    if (isOpen && files.length === 0) {
-      reload();
-    }
-  }, [isOpen, files.length, reload]);
-
-  const handleFileSelect = (filename: string) => {
-    onFileSelect(filename);
+  const handleBookSelect = (filename: string) => {
+    onBookSelect(filename);
     onClose();
   };
 
@@ -59,11 +52,11 @@ export function FileSelectorPopup({
           flexDirection: 'column',
         },
       }}
-      aria-labelledby="file-selector-dialog-title"
+      aria-labelledby="book-selector-dialog-title"
     >
-      <DialogTitle id="file-selector-dialog-title">
+      <DialogTitle id="book-selector-dialog-title">
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6">Выберите HBK файл</Typography>
+          <Typography variant="h6">Выберите HBK книгу</Typography>
           <IconButton onClick={onClose} size="small" aria-label="Закрыть диалог">
             <Close />
           </IconButton>
@@ -77,18 +70,18 @@ export function FileSelectorPopup({
           minHeight: 0,
         }}
       >
-        <FileListContent
+        <BookListContent
           files={files}
           loading={loading}
-          error={error}
+          error={error ? (error instanceof Error ? error.message : 'Ошибка загрузки книг') : null}
           onReload={reload}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           sortType={sortType}
           onSortChange={setSortType}
           filteredAndSortedFiles={filteredAndSortedFiles}
-          selectedFile={selectedFile}
-          onFileSelect={handleFileSelect}
+          selectedFile={selectedBook}
+          onFileSelect={handleBookSelect}
           showEmptyState={false}
         />
       </DialogContent>

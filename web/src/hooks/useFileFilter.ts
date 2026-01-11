@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { BookInfo } from '../types/api';
 import type { SortType } from '../types/common';
-import { SEARCH_DEBOUNCE_MS } from '../constants/config';
+import { UI } from '../constants/config';
 
 /**
  * Хук для фильтрации и сортировки файлов
@@ -16,7 +16,7 @@ export function useFileFilter(files: BookInfo[], initialSort: SortType = 'name-a
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, SEARCH_DEBOUNCE_MS);
+    }, UI.SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
