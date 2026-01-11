@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { PageDto } from '../types/api';
 import { findPagePath } from '../utils/findPagePath';
-import { useFileStructureChildren } from '../api/queries';
 
 interface UseBreadcrumbsOptions {
   pages: PageDto[];
@@ -12,9 +11,8 @@ interface UseBreadcrumbsOptions {
 /**
  * Хук для получения пути breadcrumbs к текущей странице
  */
-export function useBreadcrumbs({ pages, currentPageName, filename }: UseBreadcrumbsOptions) {
+export function useBreadcrumbs({ pages, currentPageName }: UseBreadcrumbsOptions) {
   const [path, setPath] = useState<PageDto[] | null>(null);
-  const [expandedPages, setExpandedPages] = useState<Map<string, PageDto[]>>(new Map());
 
   // Находим путь в доступных страницах
   const initialPath = useMemo(() => {

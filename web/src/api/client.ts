@@ -1,4 +1,4 @@
-import type { BookInfo, FileContent, FileStructure, PageDto } from '../types/api';
+import type { BookInfo, BookPageContent, BookStructure, PageDto } from '../types/api';
 import { API } from '../constants/config';
 
 /**
@@ -23,7 +23,7 @@ export class HbkApiClient {
    * @param htmlPath - путь к HTML странице (используется вместо title)
    * @param signal - опциональный AbortSignal для отмены запроса
    */
-  async getFileContent(filename: string, htmlPath?: string, signal?: AbortSignal): Promise<FileContent> {
+  async getBookPageContent(filename: string, htmlPath?: string, signal?: AbortSignal): Promise<BookPageContent> {
     const url = new URL(`${API.BASE_URL}/files/${filename}/content`, window.location.origin);
     if (htmlPath) {
       url.searchParams.set('htmlPath', htmlPath);
@@ -45,11 +45,11 @@ export class HbkApiClient {
    * @param depth - глубина загрузки подчиненных элементов (0 = только корневой уровень, 1 = корневой + первый уровень подчиненных, и т.д.)
    * @param signal - опциональный AbortSignal для отмены запроса
    */
-  async getFileStructure(
+  async getBookStructure(
     filename: string,
     depth?: number,
     signal?: AbortSignal
-  ): Promise<FileStructure> {
+  ): Promise<BookStructure> {
     const url = new URL(`${API.BASE_URL}/files/${filename}/structure`, window.location.origin);
     if (depth !== undefined && depth !== null) {
       url.searchParams.set('depth', depth.toString());
@@ -72,7 +72,7 @@ export class HbkApiClient {
    * @param path - путь от корня до родительской страницы (массив индексов, например [0, 2, 1])
    * @param signal - опциональный AbortSignal для отмены запроса
    */
-  async getFileStructureChildren(
+  async getBookStructureChildren(
     filename: string,
     htmlPath?: string,
     path?: number[],
@@ -107,7 +107,7 @@ export class HbkApiClient {
    * @param query - поисковый запрос
    * @param signal - опциональный AbortSignal для отмены запроса
    */
-  async searchFileStructure(filename: string, query: string, signal?: AbortSignal): Promise<PageDto[]> {
+  async searchBookStructure(filename: string, query: string, signal?: AbortSignal): Promise<PageDto[]> {
     if (!query.trim()) {
       return [];
     }

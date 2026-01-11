@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import ru.alkoleft.v8.platform.hbk.HbkPageReaderService
 import ru.alkoleft.v8.platform.app.controller.dto.BookInfo
 import ru.alkoleft.v8.platform.app.controller.dto.FileContent
 import ru.alkoleft.v8.platform.app.controller.dto.FileStructure
 import ru.alkoleft.v8.platform.app.controller.dto.PageDto
-import ru.alkoleft.v8.platform.hbk.models.Page
 import ru.alkoleft.v8.platform.app.service.HbkFileScannerService
 import ru.alkoleft.v8.platform.app.service.HbkPathService
+import ru.alkoleft.v8.platform.hbk.HbkPageReaderService
+import ru.alkoleft.v8.platform.hbk.models.Page
 
 private val logger = KotlinLogging.logger { }
 
@@ -66,15 +66,17 @@ class HbkRestController(
     ): ResponseEntity<FileContent> {
         logger.debug { "Запрос содержимого файла: $filename, htmlPath: $htmlPath" }
 
-        val filePath = fileScannerService.getFilePath(filename)
-            ?: return ResponseEntity.notFound().build()
+        val filePath =
+            fileScannerService.getFilePath(filename)
+                ?: return ResponseEntity.notFound().build()
 
         val toc = pageReaderService.readToc(filePath)
-        val actualHtmlPath = if (htmlPath != null) {
-            pathService.validateAndNormalizeHtmlPath(htmlPath)
-        } else {
-            pathService.getFirstPageHtmlPath(toc)
-        }
+        val actualHtmlPath =
+            if (htmlPath != null) {
+                pathService.validateAndNormalizeHtmlPath(htmlPath)
+            } else {
+                pathService.getFirstPageHtmlPath(toc)
+            }
 
         logger.debug { "Нормализация htmlPath: '$htmlPath' -> '$actualHtmlPath'" }
 
@@ -84,11 +86,12 @@ class HbkRestController(
         val page = pathService.findPageByHtmlPath(toc, actualHtmlPath)
         val pageName = page?.title?.ru?.ifEmpty { page?.title?.en } ?: actualHtmlPath
 
-        val fileContent = FileContent(
-            filename = filename,
-            pageName = pageName,
-            content = content,
-        )
+        val fileContent =
+            FileContent(
+                filename = filename,
+                pageName = pageName,
+                content = content,
+            )
         return ResponseEntity.ok(fileContent)
     }
 
@@ -107,23 +110,26 @@ class HbkRestController(
     ): ResponseEntity<FileStructure> {
         logger.debug { "Запрос структуры файла: $filename, depth: $depth" }
 
-        val filePath = fileScannerService.getFilePath(filename)
-            ?: return ResponseEntity.notFound().build()
+        val filePath =
+            fileScannerService.getFilePath(filename)
+                ?: return ResponseEntity.notFound().build()
 
         val toc = pageReaderService.readToc(filePath)
-        val pages = if (depth != null) {
-            if (depth < 0) {
-                return ResponseEntity.badRequest().build()
+        val pages =
+            if (depth != null) {
+                if (depth < 0) {
+                    return ResponseEntity.badRequest().build()
+                }
+                toc.pages.mapIndexed { index, page -> PageDto.fromWithDepth(page, depth, listOf(index)) }
+            } else {
+                toc.pages.mapIndexed { index, page -> PageDto.fromLite(page, listOf(index)) }
             }
-            toc.pages.mapIndexed { index, page -> PageDto.fromWithDepth(page, depth, listOf(index)) }
-        } else {
-            toc.pages.mapIndexed { index, page -> PageDto.fromLite(page, listOf(index)) }
-        }
 
-        val structure = FileStructure(
-            filename = filename,
-            pages = pages,
-        )
+        val structure =
+            FileStructure(
+                filename = filename,
+                pages = pages,
+            )
         return ResponseEntity.ok(structure)
     }
 
@@ -145,8 +151,9 @@ class HbkRestController(
     ): ResponseEntity<List<PageDto>> {
         logger.debug { "Запрос дочерных элементов файла: $filename, htmlPath: $htmlPath, path: $path" }
 
-        val filePath = fileScannerService.getFilePath(filename)
-            ?: return ResponseEntity.notFound().build()
+        val filePath =
+            fileScannerService.getFilePath(filename)
+                ?: return ResponseEntity.notFound().build()
 
         val toc = pageReaderService.readToc(filePath)
         val children: List<Page>
@@ -154,14 +161,16 @@ class HbkRestController(
 
         // Если указан path, используем его для уникальной идентификации
         if (path != null && path.isNotBlank()) {
-            val pathList = try {
-                pathService.parsePathString(path)
-            } catch (e: IllegalArgumentException) {
-                return ResponseEntity.badRequest().build()
-            }
+            val pathList =
+                try {
+                    pathService.parsePathString(path)
+                } catch (e: IllegalArgumentException) {
+                    return ResponseEntity.badRequest().build()
+                }
 
-            val parentPage = toc.findPageByPath(pathList)
-                ?: return ResponseEntity.notFound().build()
+            val parentPage =
+                toc.findPageByPath(pathList)
+                    ?: return ResponseEntity.notFound().build()
 
             children = parentPage.children
             parentPath = pathList
@@ -169,19 +178,21 @@ class HbkRestController(
             // Для обратной совместимости используем htmlPath
             val normalizedHtmlPath = pathService.validateAndNormalizeHtmlPath(htmlPath)
             children = toc.getChildrenByHtmlPath(normalizedHtmlPath)
-            
+
             // Находим путь к родителю
-            val parentPage = pathService.findPageByHtmlPath(toc, normalizedHtmlPath)
-                ?: return ResponseEntity.notFound().build()
-            
+            val parentPage =
+                pathService.findPageByHtmlPath(toc, normalizedHtmlPath)
+                    ?: return ResponseEntity.notFound().build()
+
             parentPath = pathService.findPathToPage(toc, parentPage) ?: emptyList()
         } else {
             return ResponseEntity.badRequest().build()
         }
 
-        val childrenDto = children.mapIndexed { index, child ->
-            PageDto.fromLite(child, parentPath + index)
-        }
+        val childrenDto =
+            children.mapIndexed { index, child ->
+                PageDto.fromLite(child, parentPath + index)
+            }
         return ResponseEntity.ok(childrenDto)
     }
 
@@ -199,8 +210,9 @@ class HbkRestController(
     ): ResponseEntity<List<PageDto>> {
         logger.debug { "Поиск в структуре файла: $filename, query: $query" }
 
-        val filePath = fileScannerService.getFilePath(filename)
-            ?: return ResponseEntity.notFound().build()
+        val filePath =
+            fileScannerService.getFilePath(filename)
+                ?: return ResponseEntity.notFound().build()
 
         if (query.isBlank() || query.length > 500) {
             return ResponseEntity.badRequest().build()
@@ -210,15 +222,16 @@ class HbkRestController(
         val foundPages = toc.searchPages(query)
 
         // Для найденных страниц строим path и возвращаем с полной иерархией для контекста
-        val pagesDto = foundPages.mapNotNull { page ->
-            val path = pathService.findPathToPage(toc, page)
-            if (path != null) {
-                // Для результатов поиска возвращаем с полной иерархией для контекста
-                PageDto.from(page, path)
-            } else {
-                null
+        val pagesDto =
+            foundPages.mapNotNull { page ->
+                val path = pathService.findPathToPage(toc, page)
+                if (path != null) {
+                    // Для результатов поиска возвращаем с полной иерархией для контекста
+                    PageDto.from(page, path)
+                } else {
+                    null
+                }
             }
-        }
         return ResponseEntity.ok(pagesDto)
     }
 }

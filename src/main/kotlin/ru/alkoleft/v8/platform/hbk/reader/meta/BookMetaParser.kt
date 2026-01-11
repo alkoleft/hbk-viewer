@@ -12,7 +12,7 @@ import ru.alkoleft.v8.platform.hbk.exceptions.PageDescriptionParsingError
 import ru.alkoleft.v8.platform.hbk.reader.toc.PeekableIterator
 import ru.alkoleft.v8.platform.hbk.reader.toc.Tokenizer
 
-private val logger = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 /**
  * Парсер для разбора описания страницы (книги) в HBK файлах.
@@ -38,7 +38,6 @@ internal class BookMetaParser {
      * @return Описание страницы
      */
     fun parseContent(bytes: ByteArray): BookMeta {
-        logger.debug { "Чтение из ByteArray, размер: ${bytes.size}" }
         val content = bytes.toString(Charsets.UTF_8)
         return parseContent(content)
     }
@@ -50,10 +49,10 @@ internal class BookMetaParser {
      * @return Описание страницы
      */
     fun parseContent(content: String): BookMeta {
-        logger.debug { "Токенизация содержимого..." }
+        log.trace { "Токенизация содержимого..." }
         val tokens = Tokenizer.tokenize(content)
-        logger.debug { "Токенов получено: ${tokens.size}" }
-        logger.debug { "Первые 20 токенов: ${tokens.take(20)}" }
+        log.trace { "Токенов получено: ${tokens.size}" }
+        log.trace { "Первые 20 токенов: ${tokens.take(20)}" }
         val iterator = PeekableIterator(tokens.iterator())
         return parsePageDescription(iterator)
     }
@@ -67,23 +66,22 @@ internal class BookMetaParser {
      *  tagCount,"tag1",{number,number},"tag2",...,0}
      */
     private fun parsePageDescription(iterator: PeekableIterator<String>): BookMeta {
-        logger.debug { "Парсинг PageDescription..." }
         expectToken(iterator, "{", "PageDescription: ожидался '{'")
         val type = parseNumber(iterator, "PageDescription: ожидалось число type")
-        logger.debug { "PageDescription: type=$type" }
+        log.trace { "PageDescription: type=$type" }
         val bookName = parseString(iterator, "PageDescription: ожидалось bookName")
-        logger.debug { "PageDescription: bookName=$bookName" }
+        log.trace { "PageDescription: bookName=$bookName" }
         val fileName = parseFileName(iterator)
-        logger.debug { "PageDescription: fileName=$fileName" }
+        log.trace { "PageDescription: fileName=$fileName" }
         val tagCount = parseNumber(iterator, "PageDescription: ожидалось число tagCount")
-        logger.debug { "PageDescription: tagCount=$tagCount" }
+        log.trace { "PageDescription: tagCount=$tagCount" }
         val tags =
             if (tagCount > 0) {
                 parseTags(iterator, tagCount)
             } else {
                 emptyList()
             }
-        logger.debug { "PageDescription: tags=$tags" }
+        log.trace { "PageDescription: tags=$tags" }
         val trailingZero = parseNumber(iterator, "PageDescription: ожидался завершающий ноль")
         if (trailingZero != 0) {
             throw PageDescriptionParsingError("PageDescription: ожидался завершающий ноль, получено: $trailingZero")
@@ -102,15 +100,15 @@ internal class BookMetaParser {
      * Формат: {number,number,{"language","fileName"}}
      */
     private fun parseFileName(iterator: PeekableIterator<String>): String {
-        logger.debug { "  [FileName] Начало парсинга..." }
+        log.trace { "  [FileName] Начало парсинга..." }
         expectToken(iterator, "{", "FileName: ожидался '{'")
         val number1 = parseNumber(iterator, "FileName: ожидалось число number1")
         val number2 = parseNumber(iterator, "FileName: ожидалось число number2")
-        logger.debug { "  [FileName] number1=$number1, number2=$number2" }
+        log.trace { "  [FileName] number1=$number1, number2=$number2" }
         expectToken(iterator, "{", "FileName: ожидался '{' для объекта имени")
         val language = parseString(iterator, "FileName: ожидался language")
         val fileName = parseString(iterator, "FileName: ожидался fileName")
-        logger.debug { "  [FileName] language=$language, fileName=$fileName" }
+        log.trace { "  [FileName] language=$language, fileName=$fileName" }
         expectToken(iterator, "}", "FileName: ожидался '}' в конце объекта имени")
         expectToken(iterator, "}", "FileName: ожидался '}' в конце объекта файла")
         return fileName
@@ -125,11 +123,11 @@ internal class BookMetaParser {
         iterator: PeekableIterator<String>,
         count: Int,
     ): List<String> {
-        logger.debug { "  [Tags] Начало парсинга, count=$count..." }
+        log.trace { "  [Tags] Начало парсинга, count=$count..." }
         val tags = mutableListOf<String>()
         for (i in 0 until count) {
             val tag = parseString(iterator, "Tags: ожидался тег #${i + 1}")
-            logger.debug { "  [Tags] tag[$i]=$tag" }
+            log.trace { "  [Tags] tag[$i]=$tag" }
             tags.add(tag)
             parseNumberPair(iterator)
         }
@@ -140,11 +138,11 @@ internal class BookMetaParser {
      * Парсит пару чисел в формате {number,number}.
      */
     private fun parseNumberPair(iterator: PeekableIterator<String>) {
-        logger.debug { "    [NumberPair] Начало парсинга..." }
+        log.trace { "    [NumberPair] Начало парсинга..." }
         expectToken(iterator, "{", "NumberPair: ожидался '{'")
         val number1 = parseNumber(iterator, "NumberPair: ожидалось число number1")
         val number2 = parseNumber(iterator, "NumberPair: ожидалось число number2")
-        logger.debug { "    [NumberPair] number1=$number1, number2=$number2" }
+        log.trace { "    [NumberPair] number1=$number1, number2=$number2" }
         expectToken(iterator, "}", "NumberPair: ожидался '}' в конце")
     }
 

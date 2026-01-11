@@ -10,7 +10,6 @@ import { Close } from '@mui/icons-material';
 import { useBooks } from '../../api/queries';
 import { useFileFilter } from '../../hooks/useFileFilter';
 import { BookListContent } from './BookListContent';
-import type { SortType } from '../../types/common';
 
 interface BookSelectorPopupProps {
   isOpen: boolean;

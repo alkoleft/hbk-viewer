@@ -29,13 +29,13 @@ export interface BookInfo {
   locale: string;
 }
 
-export interface FileContent {
+export interface BookPageContent {
   filename: string;
   pageName: string;
   content: string;
 }
 
-export interface FileStructure {
+export interface BookStructure {
   filename: string;
   pages: PageDto[];
 }

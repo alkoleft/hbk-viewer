@@ -48,11 +48,12 @@ class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
-        val errors = ex.bindingResult
-            .fieldErrors
-            .stream()
-            .map { "${it.field}: ${it.defaultMessage}" }
-            .collect(Collectors.toList())
+        val errors =
+            ex.bindingResult
+                .fieldErrors
+                .stream()
+                .map { "${it.field}: ${it.defaultMessage}" }
+                .collect(Collectors.toList())
 
         logger.debug(ex) { "Ошибка валидации: $errors" }
         return ResponseEntity

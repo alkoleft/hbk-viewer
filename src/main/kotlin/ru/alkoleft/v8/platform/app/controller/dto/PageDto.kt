@@ -33,7 +33,10 @@ data class PageDto(
          * @param page Страница для преобразования
          * @param path Путь от корня до текущей страницы (массив индексов)
          */
-        fun from(page: Page, path: List<Int> = emptyList()): PageDto =
+        fun from(
+            page: Page,
+            path: List<Int> = emptyList(),
+        ): PageDto =
             PageDto(
                 title = page.title,
                 htmlPath = page.htmlPath,
@@ -49,7 +52,10 @@ data class PageDto(
          * @param page Страница для преобразования
          * @param path Путь от корня до текущей страницы (массив индексов)
          */
-        fun fromLite(page: Page, path: List<Int> = emptyList()): PageDto =
+        fun fromLite(
+            page: Page,
+            path: List<Int> = emptyList(),
+        ): PageDto =
             PageDto(
                 title = page.title,
                 htmlPath = page.htmlPath,

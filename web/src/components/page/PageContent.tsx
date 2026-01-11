@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Box, Typography, CircularProgress, Button, Alert } from '@mui/material';
-import type { FileStructure, BookInfo } from '../../types/api';
-import { useFileContent } from '../../api/queries';
+import type { BookStructure, BookInfo } from '../../types/api';
+import { useBookPageContent } from '../../api/queries';
 import { findPagePath } from '../../utils/findPagePath';
 import { PageHeader } from './PageHeader';
 import { PageViewer } from './PageViewer';
@@ -9,7 +9,7 @@ import { PageViewer } from './PageViewer';
 interface PageContentProps {
   filename: string | undefined;
   pageName?: string;
-  structure?: FileStructure | null;
+  structure?: BookStructure | null;
   onPageSelect: (htmlPath: string) => void;
   books?: BookInfo[];
   currentLocale?: string;
@@ -32,7 +32,7 @@ export function PageContent({
     refetch: loadContent,
     isFetching,
     isPlaceholderData,
-  } = useFileContent(filename, pageName);
+  } = useBookPageContent(filename, pageName);
 
   const error = contentError 
     ? (contentError instanceof Error ? contentError.message : 'Ошибка загрузки контента')

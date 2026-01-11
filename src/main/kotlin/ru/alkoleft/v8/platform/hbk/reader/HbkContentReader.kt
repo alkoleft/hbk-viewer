@@ -26,7 +26,7 @@ private const val PACK_BLOCK_NAME = "PackBlock"
 private const val FILE_STORAGE_NAME = "FileStorage"
 private const val BOOK_NAME = "Book"
 
-private val logger = KotlinLogging.logger { }
+private val log = KotlinLogging.logger { }
 
 /**
  * Читает содержимое HBK файлов и предоставляет доступ к их структуре.
@@ -107,8 +107,11 @@ class HbkContentReader {
         val extractor = HbkContainerReader()
 
         return extractor.readHbk(path) {
+            log.debug { "Reading BOOK info: $path" }
             val parser = BookMetaParser()
-            parser.parseContent(getEntity(BOOK_NAME)!!)
+            parser
+                .parseContent(getEntity(BOOK_NAME)!!)
+                .also { log.debug { it } }
         }
     }
 

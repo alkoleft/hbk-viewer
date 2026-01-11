@@ -6,22 +6,14 @@ spring:
   main:
     banner-mode: off
 
-# Настройки платформы 1С
-platform:
-  context:
-    # Путь к каталогу с файлами платформы (содержащий shcntx_ru.hbk)
-    # Можно переопределить через переменную окружения PLATFORM_CONTEXT_PATH
-    path: ${PLATFORM_CONTEXT_PATH:}
-
 # Настройки HBK файлов для REST API
 hbk:
   files:
     # Путь к каталогу с HBK файлами
     # Можно переопределить через переменную окружения HBK_FILES_DIRECTORY
-    directory: ${HBK_FILES_DIRECTORY:/opt/1cv8/x86_64/8.3.27.1859/}
+    directory: ${HBK_FILES_DIRECTORY}
 
 # Настройки логирования
 logging:
   level:
     root: INFO
-    ru.alkoleft: DEBUG

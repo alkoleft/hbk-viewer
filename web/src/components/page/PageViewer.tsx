@@ -13,7 +13,6 @@ interface PageViewerProps {
 
 export function PageViewer({
   content,
-  isTransitioning,
   books,
   currentLocale,
 }: PageViewerProps) {

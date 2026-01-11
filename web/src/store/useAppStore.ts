@@ -6,8 +6,10 @@ export interface AppState {
   // UI состояние
   sidebarWidth: number;
   isBookSelectorOpen: boolean;
+  isFileSelectorOpen: boolean;
   setSidebarWidth: (width: number) => void;
   setIsBookSelectorOpen: (isOpen: boolean) => void;
+  setIsFileSelectorOpen: (isOpen: boolean) => void;
   
   // Выбранная книга (для удобства, основное состояние в React Query)
   selectedBook: BookInfo | null;
@@ -27,6 +29,7 @@ export const useAppStore = create<AppState>((set) => ({
   // UI состояние
   sidebarWidth: getInitialSidebarWidth(),
   isBookSelectorOpen: false,
+  isFileSelectorOpen: false,
   setSidebarWidth: (width: number) => {
     set({ sidebarWidth: width });
     if (typeof window !== 'undefined') {
@@ -35,6 +38,9 @@ export const useAppStore = create<AppState>((set) => ({
   },
   setIsBookSelectorOpen: (isOpen: boolean) => {
     set({ isBookSelectorOpen: isOpen });
+  },
+  setIsFileSelectorOpen: (isOpen: boolean) => {
+    set({ isFileSelectorOpen: isOpen });
   },
   
   // Выбранная книга

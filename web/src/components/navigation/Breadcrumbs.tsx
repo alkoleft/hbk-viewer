@@ -17,7 +17,6 @@ export const Breadcrumbs = memo(function Breadcrumbs({
   pages,
   currentPageName,
   onPageSelect,
-  filename,
 }: BreadcrumbsProps) {
   // Находим путь к текущей странице
   const path = useMemo(() => {

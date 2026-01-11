@@ -64,6 +64,7 @@ class HbkContainerReader {
         path: Path,
         block: EntitiesScope.() -> T,
     ): T {
+        log.debug { "Reading HBK: $path" }
         if (!path.toFile().exists()) {
             throw IllegalArgumentException("Hbk-file not exists")
         }
@@ -72,7 +73,7 @@ class HbkContainerReader {
             val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
 
             val entities = entities(buffer)
-            entities.forEach { log.warn { "Entry: $it" } }
+            entities.forEach { log.trace { "Entry: $it" } }
             return EntitiesScope(entities, buffer).let(block)
         }
     }
@@ -83,11 +84,6 @@ class HbkContainerReader {
 
         readContainerHeader(buffer)
         val containerTocBlock = readBlockHeader(buffer)
-//        // заголовок блока
-//        skipBlock(buffer, 2) // short CRLF
-//        val payloadSize = getLongString(buffer)
-//        val blockSize = getLongString(buffer)
-//        skipBlock(buffer, 11) // long + byte + short
 
         val position = buffer.position()
 
@@ -122,11 +118,14 @@ class HbkContainerReader {
         // Число, отражающее некоторую величину, как правило, совпадающую с количеством файлов в контейнере, однако, коллеги в комментариях считают, что это не совсем так. На алгоритм интерпретации контейнера данное число никак не влияет, его можно игнорировать.
         //
         // Зарезервированное поле INT32 (4 байта) Всегда равно 0 (всегда ли?)
-        log.warn { "Адрес первого свободного блока: ${buffer.int}" }
-        log.warn { "Размер блока по умолчанию: ${buffer.int}" }
-        log.warn { "Поле неизвестного назначения: ${buffer.int}" }
-        log.warn { "Зарезервированное поле: ${buffer.int}" }
-        // skipBlock(buffer, 16) // int * 4
+        if (log.isTraceEnabled()) {
+            log.trace { "Адрес первого свободного блока: ${buffer.int}" }
+            log.trace { "Размер блока по умолчанию: ${buffer.int}" }
+            log.trace { "Поле неизвестного назначения: ${buffer.int}" }
+            log.trace { "Зарезервированное поле: ${buffer.int}" }
+        } else {
+            skipBlock(buffer, 16) // int * 4
+        }
     }
 
     private fun readBlockHeader(buffer: ByteBuffer): Block {
@@ -140,7 +139,7 @@ class HbkContainerReader {
         skipBlock(buffer, 1) // Пробел
         skipBlock(buffer, 2) // CRLF
         return Block(payloadSize, blockSize, nextBlock).also {
-            log.warn { "Block: $it" }
+            log.trace { "Block: $it" }
         }
     }
 
@@ -153,7 +152,7 @@ class HbkContainerReader {
         var blockOffset = 0
         do {
             val length = min(currentBlock.blockSize, block.payloadSize - blockOffset)
-            log.warn { "Read block chunk. Length = $length" }
+            log.trace { "Read block chunk. Length = $length" }
             buffer.get(fileInfos, blockOffset, length)
             blockOffset += length
             if (currentBlock.hasNextBlock) {

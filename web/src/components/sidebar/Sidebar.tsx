@@ -5,14 +5,13 @@ import {
   Typography,
   IconButton,
 } from '@mui/material';
-import type { PageDto, BookInfo } from '../types/api';
-import { useSearchStructure } from '../api/queries';
-import { UI } from '../constants/config';
-import { useAppStore } from '../store/useAppStore';
-import { useSidebarResize } from '../hooks/ui/useSidebarResize';
-import { SidebarHeader } from './sidebar/SidebarHeader';
-import { SidebarSearch } from './sidebar/SidebarSearch';
-import { NavigationTree } from './sidebar/NavigationTree';
+import type { PageDto, BookInfo } from '../../types/api';
+import { useSearchStructure } from '../../api/queries';
+import { UI } from '../../constants/config';
+import { useSidebarResize } from '../../hooks/ui/useSidebarResize';
+import { SidebarHeader } from './SidebarHeader';
+import { SidebarSearch } from './SidebarSearch';
+import { NavigationTree } from './NavigationTree';
 
 interface SidebarProps {
   selectedFile?: string;

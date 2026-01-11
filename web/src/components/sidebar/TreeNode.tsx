@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import {
   Box,
   ListItemButton,
@@ -17,7 +17,7 @@ import {
   ArticleOutlined,
 } from '@mui/icons-material';
 import type { PageDto } from '../../types/api';
-import { useFileStructureChildren } from '../../api/queries';
+import { useBookStructureChildren } from '../../api/queries';
 
 interface TreeNodeProps {
   page: PageDto;
@@ -50,7 +50,7 @@ export function TreeNode({
   const {
     data: loadedChildren = [],
     isLoading: isLoadingChildren,
-  } = useFileStructureChildren(
+  } = useBookStructureChildren(
     filename,
     page.htmlPath,
     page.path,

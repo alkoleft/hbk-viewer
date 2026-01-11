@@ -75,7 +75,6 @@ dependencies {
     testImplementation(libs.slf4j.log4j12)
 }
 
-
 tasks.test {
     useJUnitPlatform()
 
@@ -89,10 +88,92 @@ tasks.jar {
     archiveClassifier.set("plain")
 }
 
+// Определяем менеджер пакетов (pnpm приоритетнее, если доступен)
+val packageManager =
+    if (file("web/pnpm-lock.yaml").exists()) {
+        "pnpm"
+    } else if (file("web/yarn.lock").exists()) {
+        "yarn"
+    } else {
+        "npm"
+    }
+
+// Задача для сборки web-части
+val buildWeb =
+    tasks.register<Exec>("buildWeb") {
+        group = "build"
+        description = "Сборка web-части приложения"
+        workingDir = file("web")
+
+        // Используем sh/bash для выполнения команды, чтобы PATH работал правильно
+        // Это позволяет находить команды, установленные в пользовательском окружении
+        if (System.getProperty("os.name").lowercase().contains("win")) {
+            commandLine = listOf("cmd", "/c", "$packageManager run build")
+        } else {
+            // Для Unix-систем используем sh с явным PATH
+            val pathEnv = System.getenv("PATH") ?: ""
+            val homeDir = System.getenv("HOME") ?: ""
+            val customPath =
+                if (homeDir.isNotEmpty()) {
+                    "$pathEnv:$homeDir/.local/bin:$homeDir/.local/share/pnpm"
+                } else {
+                    pathEnv
+                }
+
+            environment("PATH", customPath)
+            // Используем sh для выполнения команды
+            commandLine = listOf("sh", "-c", "$packageManager run build")
+        }
+
+        // Проверяем наличие node_modules перед выполнением
+        doFirst {
+            val nodeModules = file("web/node_modules")
+            if (!nodeModules.exists()) {
+                throw GradleException("node_modules не найден. Запустите '$packageManager install' в директории web/")
+            }
+        }
+
+        // Очищаем директорию перед сборкой
+        doFirst {
+            val distDir = file("web/dist")
+            if (distDir.exists()) {
+                delete(distDir)
+            }
+        }
+    }
+
+// Задача для копирования собранных файлов в ресурсы Spring Boot
+val copyWebAssets =
+    tasks.register<Copy>("copyWebAssets") {
+        group = "build"
+        description = "Копирование собранных web-файлов в ресурсы Spring Boot"
+        dependsOn(buildWeb)
+
+        from("web/dist") {
+            include("**/*")
+        }
+        into("src/main/resources/static")
+
+        // Очищаем директорию перед копированием
+        doFirst {
+            val staticDir = file("src/main/resources/static")
+            if (staticDir.exists()) {
+                delete(staticDir)
+            }
+            staticDir.mkdirs()
+        }
+    }
+
+// Настраиваем зависимость processResources от copyWebAssets
+tasks.named("processResources") {
+    dependsOn(copyWebAssets)
+}
+
 tasks.bootJar {
     enabled = true
     archiveClassifier.set("")
     mainClass.set("ru.alkoleft.v8.platform.HbkReaderApplicationKt")
+    dependsOn(copyWebAssets)
 }
 
 // Исправление зависимостей для задач распространения

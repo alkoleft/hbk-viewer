@@ -32,13 +32,12 @@ class HbkPathService {
      * @param htmlPath Путь к HTML странице
      * @return Нормализованный путь
      */
-    fun normalizeHtmlPath(htmlPath: String): String {
-        return if (htmlPath.startsWith("/")) {
+    fun normalizeHtmlPath(htmlPath: String): String =
+        if (htmlPath.startsWith("/")) {
             htmlPath.substring(1)
         } else {
             htmlPath
         }
-    }
 
     /**
      * Валидирует и нормализует путь, защищая от path traversal атак.
@@ -49,12 +48,12 @@ class HbkPathService {
      */
     fun validateAndNormalizeHtmlPath(htmlPath: String): String {
         val normalized = normalizeHtmlPath(htmlPath)
-        
+
         // Защита от path traversal
         if (normalized.contains("..") || normalized.contains("//")) {
             throw IllegalArgumentException("Недопустимый путь: $htmlPath")
         }
-        
+
         return normalized
     }
 
@@ -65,8 +64,14 @@ class HbkPathService {
      * @param targetPage Целевая страница
      * @return Список индексов пути от корня до страницы, или null если страница не найдена
      */
-    fun findPathToPage(toc: Toc, targetPage: Page): List<Int>? {
-        fun searchInPages(pages: List<Page>, currentPath: List<Int>): List<Int>? {
+    fun findPathToPage(
+        toc: Toc,
+        targetPage: Page,
+    ): List<Int>? {
+        fun searchInPages(
+            pages: List<Page>,
+            currentPath: List<Int>,
+        ): List<Int>? {
             for ((index, page) in pages.withIndex()) {
                 if (page === targetPage) {
                     return currentPath + index
@@ -88,7 +93,10 @@ class HbkPathService {
      * @param htmlPath Путь к HTML странице
      * @return Найденная страница или null
      */
-    fun findPageByHtmlPath(toc: Toc, htmlPath: String): Page? {
+    fun findPageByHtmlPath(
+        toc: Toc,
+        htmlPath: String,
+    ): Page? {
         val normalizedPath = normalizeHtmlPath(htmlPath)
         val page = toc.findPageByHtmlPath(normalizedPath)
         if (page != null) {
@@ -113,18 +121,19 @@ class HbkPathService {
      * @throws IllegalArgumentException если путь невалиден
      */
     fun parsePathString(pathString: String): List<Int> {
-        val pathList = pathString
-            .split(',')
-            .mapNotNull { it.trim().toIntOrNull() }
-        
+        val pathList =
+            pathString
+                .split(',')
+                .mapNotNull { it.trim().toIntOrNull() }
+
         if (pathList.isEmpty()) {
             throw IllegalArgumentException("Путь не может быть пустым: $pathString")
         }
-        
+
         if (pathList.any { it < 0 }) {
             throw IllegalArgumentException("Индексы пути не могут быть отрицательными: $pathString")
         }
-        
+
         return pathList
     }
 
@@ -135,11 +144,10 @@ class HbkPathService {
      * @return htmlPath первой страницы
      * @throws PlatformContextLoadException если оглавление пусто
      */
-    fun getFirstPageHtmlPath(toc: Toc): String {
-        return if (toc.pages.isNotEmpty()) {
+    fun getFirstPageHtmlPath(toc: Toc): String =
+        if (toc.pages.isNotEmpty()) {
             toc.pages.first().htmlPath
         } else {
             throw PlatformContextLoadException("Оглавление файла пусто")
         }
-    }
 }

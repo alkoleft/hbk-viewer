@@ -36,7 +36,7 @@ fun main(args: Array<String>) {
     parser.parse(args)
 
     if (!platformPath.isNullOrBlank()) {
-        System.setProperty("platform.context.path", platformPath as String)
+        System.setProperty("hbk.files.directory", platformPath as String)
     }
     if (verbose ?: false) {
         System.setProperty("logging.level.root", "DEBUG")

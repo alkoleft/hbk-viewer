@@ -49,3 +49,6 @@ bin/
 custom_modes/
 memory-bank/
 tmp/
+
+# Генерируемые статические ресурсы (web UI)
+src/main/resources/static/

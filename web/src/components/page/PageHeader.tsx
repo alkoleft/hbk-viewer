@@ -1,9 +1,9 @@
 import { Box } from '@mui/material';
-import type { FileStructure } from '../../types/api';
+import type { BookStructure } from '../../types/api';
 import { Breadcrumbs } from '../navigation/Breadcrumbs';
 
 interface PageHeaderProps {
-  structure: FileStructure | null;
+  structure: BookStructure | null;
   pageName?: string;
   filename: string;
   onPageSelect: (htmlPath: string) => void;

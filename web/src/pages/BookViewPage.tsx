@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import { Sidebar } from '../components/Sidebar';
+import { Sidebar } from '../components/sidebar/Sidebar';
 import { PageContent } from '../components/page/PageContent';
 import { BookSelectorPopup } from '../components/book/BookSelectorPopup';
 import { AppHeader } from '../components/layout/AppHeader';

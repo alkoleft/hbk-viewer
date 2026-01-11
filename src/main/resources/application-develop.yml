@@ -3,4 +3,8 @@ logging:
   config:
   level:
     root: INFO
-    ru.alkoleft.context: DEBUG
+    ru.alkoleft: DEBUG
+
+hbk:
+  files:
+    directory: ${HBK_FILES_DIRECTORY:/opt/1cv8/x86_64/8.3.27.1859/}

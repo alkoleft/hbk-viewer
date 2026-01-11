@@ -1,16 +1,15 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from './client';
-import type { BookInfo, FileContent, FileStructure, PageDto } from '../types/api';
 
 /**
  * Query keys для React Query
  */
 export const queryKeys = {
   books: ['books'] as const,
-  fileStructure: (filename: string, depth?: number) => ['fileStructure', filename, depth] as const,
-  fileContent: (filename: string, htmlPath?: string) => ['fileContent', filename, htmlPath] as const,
-  fileStructureChildren: (filename: string, htmlPath?: string, path?: number[]) => 
-    ['fileStructureChildren', filename, htmlPath, path] as const,
+  BookStructure: (filename: string, depth?: number) => ['BookStructure', filename, depth] as const,
+  BookPageContent: (filename: string, htmlPath?: string) => ['BookPageContent', filename, htmlPath] as const,
+  BookStructureChildren: (filename: string, htmlPath?: string, path?: number[]) => 
+    ['BookStructureChildren', filename, htmlPath, path] as const,
   searchStructure: (filename: string, query: string) => 
     ['searchStructure', filename, query] as const,
 };
@@ -29,14 +28,14 @@ export function useBooks() {
 /**
  * Хук для получения структуры (оглавления) HBK файла
  */
-export function useFileStructure(filename: string | undefined, depth: number = 1) {
+export function useBookStructure(filename: string | undefined, depth: number = 1) {
   return useQuery({
-    queryKey: queryKeys.fileStructure(filename || '', depth),
+    queryKey: queryKeys.BookStructure(filename || '', depth),
     queryFn: () => {
       if (!filename) {
         throw new Error('Filename is required');
       }
-      return apiClient.getFileStructure(filename, depth);
+      return apiClient.getBookStructure(filename, depth);
     },
     enabled: !!filename,
     staleTime: 5 * 60 * 1000,
@@ -46,14 +45,14 @@ export function useFileStructure(filename: string | undefined, depth: number = 1
 /**
  * Хук для получения содержимого страницы из HBK файла
  */
-export function useFileContent(filename: string | undefined, htmlPath?: string) {
+export function useBookPageContent(filename: string | undefined, htmlPath?: string) {
   return useQuery({
-    queryKey: queryKeys.fileContent(filename || '', htmlPath),
+    queryKey: queryKeys.BookPageContent(filename || '', htmlPath),
     queryFn: () => {
       if (!filename) {
         throw new Error('Filename is required');
       }
-      return apiClient.getFileContent(filename, htmlPath);
+      return apiClient.getBookPageContent(filename, htmlPath);
     },
     enabled: !!filename && !!htmlPath,
     staleTime: 10 * 60 * 1000, // 10 минут для контента
@@ -64,19 +63,19 @@ export function useFileContent(filename: string | undefined, htmlPath?: string) 
 /**
  * Хук для получения дочерних элементов страницы
  */
-export function useFileStructureChildren(
+export function useBookStructureChildren(
   filename: string | undefined,
   htmlPath?: string,
   path?: number[],
   enabled: boolean = true
 ) {
   return useQuery({
-    queryKey: queryKeys.fileStructureChildren(filename || '', htmlPath, path),
+    queryKey: queryKeys.BookStructureChildren(filename || '', htmlPath, path),
     queryFn: () => {
       if (!filename) {
         throw new Error('Filename is required');
       }
-      return apiClient.getFileStructureChildren(filename, htmlPath, path);
+      return apiClient.getBookStructureChildren(filename, htmlPath, path);
     },
     enabled: !!filename && enabled && (!!htmlPath || (path && path.length > 0)),
     staleTime: 5 * 60 * 1000,
@@ -93,7 +92,7 @@ export function useSearchStructure(filename: string | undefined, query: string) 
       if (!filename) {
         throw new Error('Filename is required');
       }
-      return apiClient.searchFileStructure(filename, query);
+      return apiClient.searchBookStructure(filename, query);
     },
     enabled: !!filename && query.trim().length > 0,
     staleTime: 2 * 60 * 1000, // 2 минуты для результатов поиска

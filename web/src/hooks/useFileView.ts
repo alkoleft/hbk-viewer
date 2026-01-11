@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useBooks, useFileStructure } from '../api/queries';
+import { useBooks, useBookStructure } from '../api/queries';
 import { decodeFileName, buildPageUrl } from '../utils/urlUtils';
 
 /**
@@ -30,7 +30,7 @@ export function useFileView() {
     isLoading: loadingStructure,
     error: structureError,
     refetch: refetchStructure,
-  } = useFileStructure(selectedFile, 1);
+  } = useBookStructure(selectedFile, 1);
   
   const errorStructure = structureError 
     ? (structureError instanceof Error ? structureError.message : 'Ошибка загрузки структуры')
