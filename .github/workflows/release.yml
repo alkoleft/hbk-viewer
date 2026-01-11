@@ -42,7 +42,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 10
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
