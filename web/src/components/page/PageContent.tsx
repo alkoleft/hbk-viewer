@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
 import { Box, Typography, CircularProgress, Button, Alert } from '@mui/material';
 import type { BookStructure, BookInfo } from '../../types/api';
 import { useBookPageContent } from '../../api/queries';
-import { findPagePath } from '../../utils/findPagePath';
+import { extractErrorMessage } from '../../utils/errorUtils';
+import { usePageTitle } from '../../hooks/usePageTitle';
 import { PageHeader } from './PageHeader';
 import { PageViewer } from './PageViewer';
 
@@ -34,9 +34,8 @@ export function PageContent({
     isPlaceholderData,
   } = useBookPageContent(filename, pageName);
 
-  const error = contentError 
-    ? (contentError instanceof Error ? contentError.message : 'Ошибка загрузки контента')
-    : null;
+  // Безопасное извлечение сообщения об ошибке
+  const error = contentError ? extractErrorMessage(contentError, 'Ошибка загрузки контента') : null;
 
   // Используем данные напрямую из React Query
   // placeholderData автоматически сохраняет предыдущие данные при переключении
@@ -46,30 +45,11 @@ export function PageContent({
   const showLoadingIndicator = loading && !displayContent;
 
   // Обновляем заголовок страницы в браузере
-  useEffect(() => {
-    const defaultTitle = '1C:Hand Book (HBK) Viewer';
-    
-    if (!structure || !pageName) {
-      document.title = defaultTitle;
-      return;
-    }
-
-    // Находим страницу в структуре по htmlPath
-    const pagePath = findPagePath(structure.pages, pageName);
-    if (pagePath && pagePath.length > 0) {
-      const currentPage = pagePath[pagePath.length - 1];
-      // Выбираем заголовок в зависимости от текущей локали
-      const pageTitle = currentPage.title 
-        ? (currentLocale === 'en' && currentPage.title.en 
-            ? currentPage.title.en 
-            : currentPage.title.ru) || currentPage.title.en || pageName
-        : pageName;
-      document.title = `${pageTitle} - ${defaultTitle}`;
-    } else {
-      // Если страница не найдена в структуре, используем pageName
-      document.title = `${pageName} - ${defaultTitle}`;
-    }
-  }, [structure, pageName, currentLocale]);
+  usePageTitle({
+    structure: structure ?? null,
+    pageName,
+    currentLocale,
+  });
 
   return (
     <Box
@@ -161,7 +141,7 @@ export function PageContent({
               </Box>
             )}
 
-            {displayContent && (
+            {displayContent && displayContent.content && typeof displayContent.content === 'string' && (
               <PageViewer
                 content={displayContent.content}
                 isTransitioning={false}

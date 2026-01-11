@@ -1,12 +1,11 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { Box, Paper } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import type { BookInfo } from '../../types/api';
-import { convertV8HelpLinkToUrl } from '../../utils/v8helpUtils';
+import { useV8HelpNavigation } from '../../hooks/useV8HelpNavigation';
 
 interface PageViewerProps {
   content: string;
-  isTransitioning: boolean;
+  isTransitioning?: boolean;
   books: BookInfo[];
   currentLocale: string;
 }
@@ -16,80 +15,15 @@ export function PageViewer({
   books,
   currentLocale,
 }: PageViewerProps) {
-  const navigate = useNavigate();
   const contentContainerRef = useRef<HTMLElement | null>(null);
-  const cleanupClickHandlerRef = useRef<(() => void) | null>(null);
 
-  // Обработчик кликов по ссылкам v8help://
-  useEffect(() => {
-    if (!content) {
-      if (cleanupClickHandlerRef.current) {
-        cleanupClickHandlerRef.current();
-        cleanupClickHandlerRef.current = null;
-      }
-      return;
-    }
-    
-    if (cleanupClickHandlerRef.current) {
-      cleanupClickHandlerRef.current();
-      cleanupClickHandlerRef.current = null;
-    }
-    
-    const handleClick = (event: MouseEvent) => {
-      const container = contentContainerRef.current;
-      if (!container) {
-        return;
-      }
-      
-      const target = event.target as HTMLElement;
-      if (!container.contains(target)) {
-        return;
-      }
-      
-      const link = target.closest('a');
-      if (!link) {
-        return;
-      }
-      
-      const href = link.getAttribute('href');
-      if (!href) {
-        return;
-      }
-      
-      if (href.startsWith('v8help://')) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const url = convertV8HelpLinkToUrl(href, books, currentLocale);
-        if (url) {
-          navigate(url);
-        } else {
-          console.warn('Не удалось найти книгу для ссылки:', href);
-        }
-      }
-    };
-    
-    const rafId = requestAnimationFrame(() => {
-      const container = contentContainerRef.current;
-      if (!container) {
-        return;
-      }
-      
-      container.addEventListener('click', handleClick, true);
-      
-      cleanupClickHandlerRef.current = () => {
-        container.removeEventListener('click', handleClick, true);
-      };
-    });
-    
-    return () => {
-      cancelAnimationFrame(rafId);
-      if (cleanupClickHandlerRef.current) {
-        cleanupClickHandlerRef.current();
-        cleanupClickHandlerRef.current = null;
-      }
-    };
-  }, [content, books, currentLocale, navigate]);
+  // Обработка навигации по v8help:// ссылкам
+  useV8HelpNavigation({
+    content: content,
+    books,
+    currentLocale,
+    containerRef: contentContainerRef,
+  });
 
   return (
     <Paper
@@ -113,7 +47,7 @@ export function PageViewer({
           '& h1': { fontSize: '1.8rem' },
           '& h2': { fontSize: '1.5rem' },
           '& h3': { fontSize: '1.3rem' },
-          '& p': {
+          '& p, & div': {
             mb: 2,
             lineHeight: 1.6,
           },

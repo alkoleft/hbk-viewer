@@ -1,6 +1,5 @@
 import { Box, Chip, Typography } from '@mui/material';
-import { KeyboardArrowDown } from '@mui/icons-material';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import { KeyboardArrowDown, AutoStories } from '@mui/icons-material';
 import type { BookInfo } from '../../types/api';
 
 interface SidebarHeaderProps {
@@ -26,7 +25,7 @@ export function SidebarHeader({
     >
       {selectedFile ? (
         <Chip
-          icon={<AutoStoriesIcon />}
+          icon={<AutoStories />}
           label={selectedBookInfo 
             ? (selectedBookInfo.meta?.bookName 
               ? `${selectedBookInfo.meta.bookName} (${selectedBookInfo.locale})` 

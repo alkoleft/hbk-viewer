@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Paper,
@@ -7,7 +7,9 @@ import {
 } from '@mui/material';
 import type { PageDto, BookInfo } from '../../types/api';
 import { useSearchStructure } from '../../api/queries';
-import { UI } from '../../constants/config';
+import { extractErrorMessage } from '../../utils/errorUtils';
+import { useDebounce } from '../../hooks/useDebounce';
+import { useSidebarPages } from '../../hooks/useSidebarPages';
 import { useSidebarResize } from '../../hooks/ui/useSidebarResize';
 import { SidebarHeader } from './SidebarHeader';
 import { SidebarSearch } from './SidebarSearch';
@@ -37,16 +39,7 @@ export function Sidebar({
   onRetry,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-
-  // Debounce для поискового запроса
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, UI.SEARCH_DEBOUNCE_MS);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  const debouncedSearchQuery = useDebounce(searchQuery);
 
   // Используем React Query для поиска
   const {
@@ -56,18 +49,17 @@ export function Sidebar({
   } = useSearchStructure(selectedFile, debouncedSearchQuery);
 
   // Определяем, какие страницы показывать: результаты поиска или обычный список
-  const displayPages = useMemo(() => {
-    if (debouncedSearchQuery.trim()) {
-      return searchResults;
-    }
-    return pages;
-  }, [debouncedSearchQuery, searchResults, pages]);
+  const displayPages = useSidebarPages({
+    pages,
+    searchResults,
+    searchQuery: debouncedSearchQuery,
+  });
 
   // Используем хук для изменения размера
   const { sidebarWidth, isResizing, handleResizeStart } = useSidebarResize();
 
   const searchErrorText = searchError 
-    ? (searchError instanceof Error ? searchError.message : 'Ошибка поиска')
+    ? extractErrorMessage(searchError, 'Ошибка поиска')
     : null;
 
   return (

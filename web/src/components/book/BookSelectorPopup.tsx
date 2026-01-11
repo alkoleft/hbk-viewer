@@ -9,6 +9,7 @@ import {
 import { Close } from '@mui/icons-material';
 import { useBooks } from '../../api/queries';
 import { useFileFilter } from '../../hooks/useFileFilter';
+import { extractErrorMessage } from '../../utils/errorUtils';
 import { BookListContent } from './BookListContent';
 
 interface BookSelectorPopupProps {
@@ -72,7 +73,7 @@ export function BookSelectorPopup({
         <BookListContent
           files={files}
           loading={loading}
-          error={error ? (error instanceof Error ? error.message : 'Ошибка загрузки книг') : null}
+          error={error ? extractErrorMessage(error, 'Ошибка загрузки книг') : null}
           onReload={reload}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

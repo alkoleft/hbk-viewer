@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import type { PageDto } from '../../types/api';
 import { useBookStructureChildren } from '../../api/queries';
+import { hasPageChildren, shouldLoadPageChildren, getPageTitle } from '../../utils/pageUtils';
 
 interface TreeNodeProps {
   page: PageDto;
@@ -41,10 +42,8 @@ export function TreeNode({
   const [isExpanded, setIsExpanded] = useState(isSearchResult ?? false);
   
   // Определяем наличие дочерних элементов
-  const hasChildren = page.hasChildren === true || (page.hasChildren === undefined && page.children.length > 0);
-  const hasChildrenFromInitialLoad = page.children && page.children.length > 0;
-  const hasNoHtmlPath = !page.htmlPath || page.htmlPath.trim() === '';
-  const shouldLoadChildren = hasChildren && !isSearchResult && !hasChildrenFromInitialLoad && !hasNoHtmlPath;
+  const hasChildren = hasPageChildren(page);
+  const shouldLoad = shouldLoadPageChildren(page, isSearchResult ?? false);
   
   // Используем React Query для загрузки дочерних элементов
   const {
@@ -54,7 +53,7 @@ export function TreeNode({
     filename,
     page.htmlPath,
     page.path,
-    isExpanded && shouldLoadChildren
+    isExpanded && shouldLoad
   );
   
   // Используем загруженные children или children из page
@@ -62,7 +61,7 @@ export function TreeNode({
     ? loadedChildren 
     : (page.children || []);
   
-  const pageTitle = page.title.ru || page.title.en;
+  const pageTitle = getPageTitle(page);
   const isSelected = selectedPage === page.htmlPath;
 
   const handleClick = () => {

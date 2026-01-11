@@ -17,7 +17,7 @@ import {
   MenuItem,
   SelectChangeEvent,
 } from '@mui/material';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import { AutoStories } from '@mui/icons-material';
 import type { BookInfo } from '../../types/api';
 import type { SortType } from '../../types/common';
 import { formatFileSize } from '../../utils/fileUtils';
@@ -155,7 +155,7 @@ export const BookListContent = memo(function BookListContent({
                     },
                   }}
                 >
-                  <AutoStoriesIcon sx={{ mr: 2 }} aria-hidden="true" />
+                  <AutoStories sx={{ mr: 2 }} aria-hidden="true" />
                   <ListItemText
                     primary={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -206,6 +206,7 @@ export const BookListContent = memo(function BookListContent({
                           ))}
                       </Box>
                     }
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                 </ListItemButton>
               </ListItem>

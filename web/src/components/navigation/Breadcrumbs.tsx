@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Breadcrumbs as MuiBreadcrumbs, Link, Typography } from '@mui/material';
 import type { PageDto } from '../../types/api';
 import { findPagePath } from '../../utils/findPagePath';
+import { getPageTitle } from '../../utils/pageUtils';
 
 interface BreadcrumbsProps {
   pages: PageDto[];
@@ -43,7 +44,7 @@ export const Breadcrumbs = memo(function Breadcrumbs({
       }}
     >
       {path.map((page, index) => {
-        const pageTitle = page.title.ru || page.title.en;
+        const pageTitle = getPageTitle(page);
         const isLast = index === path.length - 1;
         
         const uniqueKey = page.path && page.path.length > 0 

@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBooks, useBookStructure } from '../api/queries';
 import { decodeFileName, buildPageUrl } from '../utils/urlUtils';
+import { extractErrorMessage } from '../utils/errorUtils';
 
 /**
  * Хук для логики страницы просмотра файла
@@ -33,7 +34,7 @@ export function useFileView() {
   } = useBookStructure(selectedFile, 1);
   
   const errorStructure = structureError 
-    ? (structureError instanceof Error ? structureError.message : 'Ошибка загрузки структуры')
+    ? extractErrorMessage(structureError, 'Ошибка загрузки структуры')
     : null;
 
   // Автоматический выбор первой страницы

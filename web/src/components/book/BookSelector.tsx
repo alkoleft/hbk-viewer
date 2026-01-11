@@ -1,6 +1,7 @@
 import { Paper, Typography, Box } from '@mui/material';
 import { useBooks } from '../../api/queries';
 import { useFileFilter } from '../../hooks/useFileFilter';
+import { extractErrorMessage } from '../../utils/errorUtils';
 import { BookListContent } from './BookListContent';
 
 interface BookSelectorProps {
@@ -38,7 +39,7 @@ export function BookSelector({ onBookSelect, selectedBook }: BookSelectorProps) 
         <BookListContent
           files={files}
           loading={loading}
-          error={error ? (error instanceof Error ? error.message : 'Ошибка загрузки книг') : null}
+          error={error ? extractErrorMessage(error, 'Ошибка загрузки книг') : null}
           onReload={reload}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
