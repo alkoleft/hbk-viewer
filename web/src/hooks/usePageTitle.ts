@@ -17,7 +17,7 @@ export function usePageTitle({
   structure,
   pageName,
   currentLocale = 'ru',
-  defaultTitle = '1C:Hand Book (HBK) Viewer',
+  defaultTitle = '1C:Help Book (HBK) Viewer',
 }: UsePageTitleOptions) {
   useEffect(() => {
     if (!structure || !pageName) {

@@ -20,7 +20,7 @@ export const AppHeader = memo(function AppHeader() {
     >
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          1C:Hand Book (HBK) Viewer
+          1C:Help Book (HBK) Viewer
         </Typography>
         <Box
           sx={{
