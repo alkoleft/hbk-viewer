@@ -8,11 +8,11 @@
 package ru.alkoleft.v8.platform.shctx
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.shctx.models.EnumInfo
 import ru.alkoleft.v8.platform.shctx.models.ObjectInfo
-import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.shctx.parsers.PlatformContextPagesParser
-import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import java.nio.file.Path
 
 private val logger = KotlinLogging.logger { }

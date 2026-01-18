@@ -11,6 +11,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
+import ru.alkoleft.v8.platform.hbk.exceptions.TocParsingException
 import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.meta.BookMeta
 import ru.alkoleft.v8.platform.hbk.reader.meta.BookMetaParser
@@ -55,7 +56,7 @@ class HbkContentReader {
         block: Context.() -> Unit,
     ) {
         ContainerReader.readContainer(path) {
-            val toc = toc()
+            val toc = toc() ?: throw TocParsingException("Нет данных оглавления")
             zipContent {
                 val context = Context(toc, it)
                 context.apply(block)
@@ -63,7 +64,7 @@ class HbkContentReader {
         }
     }
 
-    fun readToc(path: Path): Toc =
+    fun readToc(path: Path): Toc? =
         ContainerReader.readContainer(path) {
             toc()
         }
@@ -93,7 +94,7 @@ class HbkContentReader {
         }
 
     private fun ContainerReader.EntitiesScope.toc() =
-        Toc.parse(getInflatePackBlock(getEntity(PACK_BLOCK_NAME) as ByteArray))
+        getEntity(PACK_BLOCK_NAME)?.let { Toc.parse(getInflatePackBlock(it)) }
 
     private fun <R> ContainerReader.EntitiesScope.zipContent(block: (ZipFile) -> R): R {
         val fileStorage = getEntity(FILE_STORAGE_NAME)

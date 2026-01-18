@@ -8,7 +8,10 @@
 package ru.alkoleft.v8.platform.hbk
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
+import ru.alkoleft.v8.platform.hbk.model.DoubleLanguageString
 import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.reader.meta.BookMeta
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import java.nio.file.Files
 import java.nio.file.Path
@@ -21,19 +24,17 @@ private val logger = KotlinLogging.logger { }
  * Объединяет оглавления из всех найденных HBK файлов в директории,
  * объединяя узлы с одинаковыми путями или названиями.
  */
-class TocMergerService() {
+object TocMergerService {
     /**
      * Объединяет несколько оглавлений в одно.
      *
      * @param tocs Список оглавлений для объединения
      * @return Объединенное оглавление
      */
-    fun mergeTocs(tocs: List<Toc>): Toc {
+    fun mergeToc(tocs: List<Toc>): Toc {
         if (tocs.isEmpty()) {
             return Toc.EMPTY
-        }
-
-        if (tocs.size == 1) {
+        } else if (tocs.size == 1) {
             return tocs.first()
         }
 
@@ -45,6 +46,34 @@ class TocMergerService() {
 
         return Toc(mergedRootPages)
     }
+
+    fun merge(items: List<Pair<BookInfo, Toc>>): Toc {
+        if (items.isEmpty()) {
+            return Toc.EMPTY
+        } else if (items.size == 1) {
+            return items.first().second
+        }
+
+        val rootPage = PageBuilder(BookMeta("", "", emptyList()), "", "")
+
+        val books = items
+            .asSequence()
+            .map { it.first }
+            .filter { it.meta != null }
+            .sortedByDescending { it.size }
+            .toMutableList()
+
+        val tocByBook = items.associate { it }
+        val firstBook = books.removeAt(0)
+        tocByBook[firstBook]!!.pages.forEach { addRecursive(rootPage, it, firstBook.meta!!) }
+
+        books.forEach { book ->
+            mergeTo(rootPage, tocByBook[book]!!.pages, book.meta!!)
+        }
+
+        return Toc(rootPage.children.map { it.toPage() })
+    }
+
 
     /**
      * Объединяет страницы на одном уровне иерархии.
@@ -161,4 +190,51 @@ class TocMergerService() {
 
         return builder.toString()
     }
+
+    private fun mergeTo(rootPage: PageBuilder, pages: List<Page>, book: BookMeta) {
+        for (page in pages) {
+            val existsPage = rootPage.getChildren(page.title.get())
+            if (existsPage == null) {
+                addRecursive(rootPage, page, book)
+            } else {
+                if (existsPage.htmlPath.isEmpty() && page.htmlPath.isNotEmpty()) {
+                    existsPage.book = book
+                } else if (page.htmlPath != existsPage.htmlPath && page.htmlPath.isNotEmpty() && existsPage.htmlPath.isNotEmpty()) {
+                    logger.warn { "Разные адреса страниц '${page.title}': '${page.htmlPath}' != '${existsPage.htmlPath}'" }
+                }
+                mergeTo(existsPage, page.children, book)
+            }
+        }
+    }
+
+    private fun addRecursive(target: PageBuilder, source: Page, book: BookMeta) {
+        val newPage = target.add(source, book)
+        source.children.forEach { addRecursive(newPage, it, book) }
+    }
 }
+
+private class PageBuilder(
+    var book: BookMeta,
+    val title: String,
+    val htmlPath: String,
+    val children: MutableList<PageBuilder> = mutableListOf()
+) {
+    fun contains(name: String) = false
+
+    fun getChildren(name: String) =
+        children.find { it.title.equals(name, true) }
+
+    fun add(page: Page, book: BookMeta): PageBuilder {
+        val newPage = PageBuilder(book, page.title.get(), htmlPath)
+        children.add(newPage)
+        return newPage
+    }
+
+    fun toPage(): Page {
+        val childrenPages = children.map { it.toPage() }.toMutableList()
+        return Page(DoubleLanguageString(title, ""), htmlPath, childrenPages)
+    }
+}
+
+private fun DoubleLanguageString.get() =
+    en.ifEmpty { ru }

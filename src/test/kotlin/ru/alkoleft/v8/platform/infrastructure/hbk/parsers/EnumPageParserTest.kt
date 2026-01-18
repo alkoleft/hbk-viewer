@@ -14,7 +14,7 @@ import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser
 import java.io.FileInputStream
 import java.nio.file.Paths
 
-class EnumPageParserTest: ShouldSpec({
+class EnumPageParserTest : ShouldSpec({
     fun <R> parseFile(
         fileName: String,
         parser: PageParser<R>,

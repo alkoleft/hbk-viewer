@@ -8,9 +8,10 @@
 package ru.alkoleft.v8.platform.shctx.parsers
 
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
+import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.shctx.models.EnumInfo
 import ru.alkoleft.v8.platform.shctx.models.ObjectInfo
-import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.shctx.parsers.core.PageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.ConstructorPageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser
@@ -18,7 +19,6 @@ import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumValuePageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.MethodPageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.ObjectPageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.PropertyPageParser
-import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 
 /**
  * Координатор парсеров для различных типов страниц HBK документации.

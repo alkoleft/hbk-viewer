@@ -46,7 +46,7 @@ class HandlerProcessingNotImplemented(
  *
  * @param message Сообщение об ошибке парсинга
  */
-class TocParsingError(
+class TocParsingException(
     message: String,
 ) : HbkParsingException("Ошибка разбора оглавления (Table of content) файла: $message")
 

@@ -16,10 +16,13 @@ import ru.alkoleft.v8.platform.app.exeption.BookNotFoundException
 import ru.alkoleft.v8.platform.app.exeption.BookPageNotFoundException
 import ru.alkoleft.v8.platform.app.storage.BookRegistry
 import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
+import ru.alkoleft.v8.platform.hbk.TocMergerService
+import ru.alkoleft.v8.platform.hbk.exceptions.TocParsingException
 import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import kotlin.io.path.Path
+import kotlin.time.measureTimedValue
 
 private val logger = KotlinLogging.logger { }
 
@@ -29,6 +32,7 @@ class BooksService(
     private val hbkContentReader: HbkContentReader,
 ) {
     val books: List<BookInfo> = bookRegistry.books
+    val globalTocRu: Toc by lazy { globalTocByLocale("ru") }
 
     fun getBookPageContent(hbkFile: String, pagePath: String): String {
         val bookInfo = getBookInfo(hbkFile)
@@ -45,8 +49,11 @@ class BooksService(
     fun bookToc(hbkFile: String) =
         bookToc(getBookInfo(hbkFile))
 
+    fun bookToc(book: BookInfo) =
+        getCacheableBookToc(book) ?: throw TocParsingException("Нет данных оглавления")
+
     @Cacheable(value = ["tocCache"], key = "#book.path")
-    fun bookToc(book: BookInfo): Toc {
+    private fun getCacheableBookToc(book: BookInfo): Toc? {
         logger.debug { "Чтение оглавления из файла ${book.path}" }
         return hbkContentReader.readToc(Path(book.path))
     }
@@ -65,4 +72,17 @@ class BooksService(
         } else {
             this
         }
+
+    private fun globalTocByLocale(locale: String) =
+        measureTimedValue {
+            TocMergerService.merge(
+                books.asSequence()
+                    .filter { it.locale.equals(locale, true) }
+                    .mapNotNull { book ->
+                        getCacheableBookToc(book)?.let { Pair(book, it) }
+                    }
+                    .toList()
+            )
+        }.also { logger.info { "Build global TOC($locale): ${it.duration}, root pages: ${it.value.pages.size}" } }
+            .value
 }

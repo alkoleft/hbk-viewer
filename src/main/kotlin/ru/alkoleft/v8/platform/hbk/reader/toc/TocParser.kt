@@ -8,7 +8,7 @@
 package ru.alkoleft.v8.platform.hbk.reader.toc
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import ru.alkoleft.v8.platform.hbk.exceptions.TocParsingError
+import ru.alkoleft.v8.platform.hbk.exceptions.TocParsingException
 import ru.alkoleft.v8.platform.hbk.model.Chunk
 import ru.alkoleft.v8.platform.hbk.model.NameContainer
 import ru.alkoleft.v8.platform.hbk.model.NameObject
@@ -159,8 +159,8 @@ internal class TocParser {
         context: String,
     ): Int {
         val token =
-            if (iterator.hasNext()) iterator.next() else throw TocParsingError("$context: не найден токен (конец данных)")
-        return token.toIntOrNull() ?: throw TocParsingError("$context: ожидалось число, получено: '$token'")
+            if (iterator.hasNext()) iterator.next() else throw TocParsingException("$context: не найден токен (конец данных)")
+        return token.toIntOrNull() ?: throw TocParsingException("$context: ожидалось число, получено: '$token'")
     }
 
     /**
@@ -171,9 +171,9 @@ internal class TocParser {
         context: String,
     ): String {
         val token =
-            if (iterator.hasNext()) iterator.next() else throw TocParsingError("$context: не найден токен (конец данных)")
+            if (iterator.hasNext()) iterator.next() else throw TocParsingException("$context: не найден токен (конец данных)")
         if (!token.startsWith("\"") || !token.endsWith("\"")) {
-            throw TocParsingError("$context: ожидалась строка в кавычках, получено: '$token'")
+            throw TocParsingException("$context: ожидалась строка в кавычках, получено: '$token'")
         }
         return token.substring(1, token.length - 1)
     }
@@ -187,9 +187,9 @@ internal class TocParser {
         context: String,
     ) {
         val token =
-            if (iterator.hasNext()) iterator.next() else throw TocParsingError("$context: не найден токен (конец данных)")
+            if (iterator.hasNext()) iterator.next() else throw TocParsingException("$context: не найден токен (конец данных)")
         if (token != expected) {
-            throw TocParsingError("$context: ожидался '$expected', получен '$token'")
+            throw TocParsingException("$context: ожидался '$expected', получен '$token'")
         }
     }
 }

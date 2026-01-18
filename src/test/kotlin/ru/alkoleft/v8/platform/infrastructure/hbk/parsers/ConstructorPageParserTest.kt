@@ -11,12 +11,11 @@ import io.kotest.core.spec.style.ShouldSpec
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.ConstructorPageParser
 import java.io.File
 
-class ConstructorPageParserTest: ShouldSpec({
+class ConstructorPageParserTest : ShouldSpec({
     should("parse ctor13 - Array constructor with parameters") {
         val parser = ConstructorPageParser()
         val file = File("src/test/resources/constructors/ctor13.html")

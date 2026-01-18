@@ -17,7 +17,7 @@ import java.nio.file.Paths
 private val logger = KotlinLogging.logger { }
 
 @OptIn(ExperimentalCli::class)
-fun Subcommand.getHbkFilePath(hbkPath:String): Path? {
+fun Subcommand.getHbkFilePath(hbkPath: String): Path? {
     val path = Paths.get(hbkPath)
     if (!Files.exists(path) || !Files.isRegularFile(path)) {
         logger.error { "HBK файл не существует или не является файлом: $path" }

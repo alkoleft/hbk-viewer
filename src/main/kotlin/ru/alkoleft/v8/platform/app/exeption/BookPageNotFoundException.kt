@@ -8,5 +8,4 @@
 package ru.alkoleft.v8.platform.app.exeption
 
 class BookPageNotFoundException(book: String, pagePath: String) :
-    Exception("Не удалось найти страницу по пути '$pagePath' в книге '$book'") {
-}
+    Exception("Не удалось найти страницу по пути '$pagePath' в книге '$book'")

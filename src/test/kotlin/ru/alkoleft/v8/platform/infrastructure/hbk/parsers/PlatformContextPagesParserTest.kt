@@ -9,7 +9,6 @@ package ru.alkoleft.v8.platform.hbk.parsers
 
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
-import org.junit.jupiter.api.Assertions.assertNotNull
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.ConstructorPageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumValuePageParser

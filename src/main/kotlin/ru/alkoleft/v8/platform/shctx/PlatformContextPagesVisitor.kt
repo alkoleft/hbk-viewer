@@ -8,11 +8,11 @@
 package ru.alkoleft.v8.platform.shctx
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.shctx.models.ConstructorInfo
 import ru.alkoleft.v8.platform.shctx.models.EnumInfo
 import ru.alkoleft.v8.platform.shctx.models.MethodInfo
 import ru.alkoleft.v8.platform.shctx.models.ObjectInfo
-import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.shctx.models.PageType
 import ru.alkoleft.v8.platform.shctx.models.PropertyInfo
 import ru.alkoleft.v8.platform.shctx.parsers.PlatformContextPagesParser
@@ -122,7 +122,8 @@ private fun isGlobalContextPage(page: Page): Boolean = page.htmlPath.contains("G
 
 private fun isCatalogPage(page: Page) = CATALOG_PAGE_PATTERN.find(page.htmlPath) != null
 
-private fun isEnumCatalog(page: Page) = page.title.en == "Системные наборы значений" || page.title.en == "Системные перечисления"
+private fun isEnumCatalog(page: Page) =
+    page.title.en == "Системные наборы значений" || page.title.en == "Системные перечисления"
 
 suspend fun SequenceScope<Page>.drillDown(base: Page) {
     base.children.forEach { child ->

@@ -76,7 +76,7 @@ class ExportAllCommand : Subcommand("all", "Экспортирует все HBK 
         }
 
         if (includeToc) {
-            val globalToc = TocMergerService().mergeTocs(tocList)
+            val globalToc = TocMergerService.mergeToc(tocList)
             MkDocsToc().export(globalToc, baseOutputPath.resolve("mkdocs.yml"))
         }
         tocList.clear()
