@@ -10,6 +10,7 @@ plugins {
     id("maven-publish")
     id("jacoco")
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.kotest)
 }
 
 group = "io.github.alkoleft"
@@ -69,9 +70,7 @@ dependencies {
 
     // Tests
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation(libs.bundles.junit)
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.assertj.core)
+    testImplementation(libs.bundles.kotest)
     testImplementation(libs.slf4j.log4j12)
 }
 

@@ -8,7 +8,7 @@
 package ru.alkoleft.v8.platform.hbk
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import java.nio.file.Files
 import java.nio.file.Path

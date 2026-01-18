@@ -10,9 +10,8 @@ package ru.alkoleft.v8.platform.hbk.reader
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
-import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.meta.BookMeta
 import ru.alkoleft.v8.platform.hbk.reader.meta.BookMetaParser
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
@@ -44,7 +43,6 @@ private val log = KotlinLogging.logger { }
  * @see Toc для работы с оглавлением
  * @see ru.alkoleft.v8.platform.shctx.PlatformContextReader для полного процесса чтения контекста
  */
-@Service
 class HbkContentReader {
     /**
      * Читает HBK файл и выполняет блок кода с контекстом.
@@ -79,6 +77,11 @@ class HbkContentReader {
                 getEntryStream(it, pagePath).readAllBytes()
             }
         }
+
+    fun getPageText(
+        path: Path,
+        pagePath: String,
+    ) = getPage(path, pagePath).decodeToString()
 
     fun getMeta(path: Path): BookMeta =
         ContainerReader.readContainer(path) {

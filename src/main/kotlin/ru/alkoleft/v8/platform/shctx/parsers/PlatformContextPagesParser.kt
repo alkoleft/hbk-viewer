@@ -10,7 +10,7 @@ package ru.alkoleft.v8.platform.shctx.parsers
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
 import ru.alkoleft.v8.platform.shctx.models.EnumInfo
 import ru.alkoleft.v8.platform.shctx.models.ObjectInfo
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.shctx.parsers.core.PageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.ConstructorPageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser

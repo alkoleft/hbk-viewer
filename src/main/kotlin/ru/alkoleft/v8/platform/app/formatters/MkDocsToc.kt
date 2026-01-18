@@ -7,7 +7,7 @@
 
 package ru.alkoleft.v8.platform.app.formatters
 
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import java.io.BufferedWriter
 import java.nio.file.Files

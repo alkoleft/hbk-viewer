@@ -7,18 +7,16 @@
 
 package ru.alkoleft.v8.platform.app.cli
 
+import io.kotest.core.spec.style.ShouldSpec
 import ru.alkoleft.v8.platform.app.service.ExportService
+import ru.alkoleft.v8.platform.hbkFilesPath
 import java.nio.file.Path
-import kotlin.io.path.Path
-import kotlin.test.Test
 
-class ExportTest {
-    val platformPath = Path("/opt/1cv8/x86_64/8.3.21.1895")
+class ExportTest : ShouldSpec({
     val outputDir: Path = Path.of("/tmp", "export_all")
     val service = ExportService()
 
-    @Test
-    fun exportBook() {
-        service.exportBookToMkDocs(platformPath.resolve("shcntx_ru.hbk"), outputDir)
+    should("exportBook") {
+        service.exportBookToMkDocs(hbkFilesPath().resolve("shcntx_ru.hbk"), outputDir)
     }
-}
+})

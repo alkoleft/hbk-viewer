@@ -10,8 +10,9 @@ package ru.alkoleft.v8.platform.app.service
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.HbkReaderApplication
-import ru.alkoleft.v8.platform.app.web.controller.dto.VersionInfo
+import ru.alkoleft.v8.platform.app.config.ApplicationConfiguration
 import ru.alkoleft.v8.platform.app.util.PlatformVersionDetector
+import ru.alkoleft.v8.platform.app.web.controller.dto.VersionInfo
 import java.nio.file.Path
 import java.util.jar.Attributes
 import java.util.jar.Manifest
@@ -27,12 +28,12 @@ private val logger = KotlinLogging.logger { }
  */
 @Service
 class VersionService(
-    private val fileScannerService: HbkFileScannerService
+    applicationConfiguration: ApplicationConfiguration
 ) {
     val versionsInfo: VersionInfo by lazy {
         VersionInfo(
             applicationVersion = getApplicationVersion(),
-            platformVersion = getPlatformVersion(fileScannerService.hbkDirectory),
+            platformVersion = getPlatformVersion(applicationConfiguration.hbkFilesDirectory),
         )
     }
 

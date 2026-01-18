@@ -10,7 +10,7 @@ package ru.alkoleft.v8.platform.app.service
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 
 private val logger = KotlinLogging.logger { }

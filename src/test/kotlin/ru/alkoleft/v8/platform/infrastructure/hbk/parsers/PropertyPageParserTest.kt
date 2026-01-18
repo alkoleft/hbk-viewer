@@ -7,18 +7,16 @@
 
 package ru.alkoleft.v8.platform.hbk.parsers
 
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import ru.alkoleft.v8.platform.shctx.models.PropertyInfo
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.PropertyPageParser
 import java.io.FileInputStream
 import java.nio.file.Paths
-import kotlin.test.assertEquals
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class PropertyPageParserTest {
-    private fun parseFile(
+class PropertyPageParserTest : ShouldSpec({
+    fun parseFile(
         fileName: String,
         directory: String = "global-properties",
     ): PropertyInfo {
@@ -28,8 +26,7 @@ class PropertyPageParserTest {
         }
     }
 
-    @Test
-    fun shouldCorrectlyParseCatalogs336Html() {
+    should("CorrectlyParseCatalogs336Html") {
         val info = parseFile("Catalogs336.html")
 
         Assertions.assertThat(info.nameRu).isEqualTo("Справочники")
@@ -47,8 +44,7 @@ class PropertyPageParserTest {
             .isEqualTo("v8help://SyntaxHelperContext/objects/catalog125/catalog126/CatalogsManager.html")
     }
 
-    @Test
-    fun shouldCorrectlyParseURLExternalDataStorage12781Html() {
+    should("CorrectlyParseURLExternalDataStorage12781Html") {
         val info = parseFile("URLExternalDataStorage12781.html")
 
         Assertions.assertThat(info.nameRu).isEqualTo("ХранилищеВнешнихДанныхНавигационныхСсылок")
@@ -63,8 +59,7 @@ class PropertyPageParserTest {
         Assertions.assertThat(info.relatedObjects).isNullOrEmpty()
     }
 
-    @Test
-    fun shouldCorrectlyParseWorkingDateUse1182Html() {
+    should("CorrectlyParseWorkingDateUse1182Html") {
         val info = parseFile("WorkingDateUse1182.html")
 
         Assertions.assertThat(info.nameRu).isEqualTo("ИспользованиеРабочейДаты")
@@ -75,8 +70,7 @@ class PropertyPageParserTest {
         Assertions.assertThat(info.relatedObjects?.map { it.name }).contains("РабочаяДата")
     }
 
-    @Test
-    fun shouldCorrectlyParseXDTOFactory4693Html() {
+    should("CorrectlyParseXDTOFactory4693Html") {
         val info = parseFile("XDTOFactory4693.html")
 
         Assertions.assertThat(info.nameRu).isEqualTo("ФабрикаXDTO")
@@ -84,25 +78,22 @@ class PropertyPageParserTest {
         Assertions.assertThat(info.readonly).isTrue()
         Assertions.assertThat(info.typeName).isEqualTo("ФабрикаXDTO")
         Assertions.assertThat(info.relatedObjects).isNullOrEmpty()
-        assertEquals(
+        info.description shouldBe
             """
             Фабрика XDTO, содержащая набор пакетов XDTO, соответствующих контексту выполнения:
             * для тонкого клиента, мобильного клиента и мобильного сервера - предопределенные пакеты (например, пакет типов XML-схемы)
             * для толстого клиента и сервера - все пакеты XDTO, имеющиеся в конфигурации, а также все предопределенные пакеты (например, пакет типов XML-схемы).
-            """.trimIndent(),
-            info.description,
-        )
+            """.trimIndent()
     }
 
-    @Test
-    fun shouldCorrectlyParseAttributes4786Html() {
+    should("CorrectlyParseAttributes4786Html") {
         val info = parseFile("Attributes4786.html", "object-properties")
 
         Assertions.assertThat(info.nameRu).isEqualTo("Атрибуты")
         Assertions.assertThat(info.nameEn).isEqualTo("Attributes")
         Assertions.assertThat(info.readonly).isTrue()
         Assertions.assertThat(info.typeName).isEqualTo("КоллекцияАтрибутовDOM")
-        assertEquals(
+        info.description shouldBe
             """Содержит коллекцию атрибутов узла. Коллекция атрибутов доступна только для узла Element.
 Узел Атрибуты
 * Attribute - `Неопределено`;
@@ -116,9 +107,7 @@ class PropertyPageParserTest {
 * EntityReference - `Неопределено`;
 * Notation - `Неопределено`;
 * ProcessingInstruction - `Неопределено`;
-* Text - `Неопределено`.""",
-            info.description,
-        )
+* Text - `Неопределено`."""
         Assertions.assertThat(info.relatedObjects).isNullOrEmpty()
     }
-}
+})

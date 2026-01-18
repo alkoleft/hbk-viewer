@@ -7,18 +7,17 @@
 
 package ru.alkoleft.v8.platform.hbk.parsers
 
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.MethodPageParser
 import java.io.File
-import kotlin.test.assertFalse
 
-class MethodPageParserTest {
-    @Test
-    fun `test parse BeginGetFileFromServer5707`() {
+class MethodPageParserTest : ShouldSpec({
+    should("parse BeginGetFileFromServer5707") {
         val parser = MethodPageParser()
         val file = File("src/test/resources/global-methods/BeginGetFileFromServer5707.html")
         val result = parser.parse(file.inputStream())
@@ -53,7 +52,7 @@ class MethodPageParserTest {
         assertEquals(3, signature1.parameters.size)
         assertEquals("Адрес", signature1.parameters[0].name)
         assertEquals("Строка", signature1.parameters[0].type)
-        assertFalse { signature1.parameters[0].isOptional }
+        signature1.parameters[0].isOptional shouldBe false
         assertEquals(
             """
             Расположение данных во временном хранилище или в информационной базе.
@@ -97,7 +96,7 @@ class MethodPageParserTest {
 
         assertEquals("Адрес", signature2.parameters[1].name)
         assertEquals("Строка", signature2.parameters[1].type)
-        assertFalse { signature2.parameters[1].isOptional }
+        signature2.parameters[1].isOptional shouldBe false
         assertEquals(
             """
             Расположение данных во временном хранилище или в информационной базе.
@@ -108,14 +107,13 @@ class MethodPageParserTest {
 
         assertEquals("ПутьКФайлу", signature2.parameters[2].name)
         assertEquals("Строка", signature2.parameters[2].type)
-        assertFalse { signature2.parameters[2].isOptional }
+        signature2.parameters[2].isOptional shouldBe false
         assertEquals("Путь к файлу, в который будет сохранен файл.", signature2.parameters[2].description)
 
         assertNull(result.example)
     }
 
-    @Test
-    fun `test parse GetCommonTemplate376`() {
+    should("parse GetCommonTemplate376") {
         val parser = MethodPageParser()
         val file = File("src/test/resources/global-methods/GetCommonTemplate376.html")
         val result = parser.parse(file.inputStream())
@@ -149,7 +147,7 @@ class MethodPageParserTest {
         assertEquals(1, signature.parameters.size)
         assertEquals("ОбщийМакет", signature.parameters[0].name)
         assertEquals("Строка,ОбъектМетаданных: Макет", signature.parameters[0].type)
-        assertFalse { signature.parameters[0].isOptional }
+        signature.parameters[0].isOptional shouldBe false
         assertEquals(
             "Имя общего макета, как оно задано в конфигураторе, или объект описания метаданного общего макета.",
             signature.parameters[0].description,
@@ -164,8 +162,7 @@ class MethodPageParserTest {
         assertNotNull(result.returnValue!!.description)
     }
 
-    @Test
-    fun `test parse BeginTransaction9`() {
+    should("parse BeginTransaction9") {
         val parser = MethodPageParser()
         val file = File("src/test/resources/global-methods/BeginTransaction9.html")
         val result = parser.parse(file.inputStream())
@@ -217,8 +214,7 @@ class MethodPageParserTest {
         )
     }
 
-    @Test
-    fun `test parse AttachAddIn697`() {
+    should("parse AttachAddIn697") {
         val parser = MethodPageParser()
         val file = File("src/test/resources/global-methods/AttachAddIn697.html")
         val result = parser.parse(file.inputStream())
@@ -248,7 +244,7 @@ class MethodPageParserTest {
             """.trimIndent(),
             signature0.parameters[0].description,
         )
-        assertFalse { signature0.parameters[0].isOptional }
+        signature0.parameters[0].isOptional shouldBe false
 
         assertEquals("По имени и местоположению", signature1.name)
         assertEquals("ПодключитьВнешнююКомпоненту(<Местоположение>, <Имя>, <Тип>, <ТипПодключения>)", signature1.syntax)
@@ -298,8 +294,7 @@ class MethodPageParserTest {
         )
     }
 
-    @Test
-    fun `test parse NumberInWords714`() {
+    should("parse NumberInWords714") {
         val parser = MethodPageParser()
         val file = File("src/test/resources/global-methods/NumberInWords714.html")
         val result = parser.parse(file.inputStream())
@@ -316,7 +311,7 @@ class MethodPageParserTest {
         assertEquals(3, signature.parameters.size)
         assertEquals("Число", signature.parameters[0].name)
         assertEquals("Число", signature.parameters[0].type)
-        assertFalse { signature.parameters[0].isOptional }
+        signature.parameters[0].isOptional shouldBe false
         assertEquals("Число, которое необходимо преобразовать в строку прописью.", signature.parameters[0].description)
 
         assertEquals("ФорматнаяСтрока", signature.parameters[1].name)
@@ -475,8 +470,7 @@ class MethodPageParserTest {
         )
     }
 
-    @Test
-    fun `test parse StrTemplate4527`() {
+    should("parse StrTemplate4527") {
         val parser = MethodPageParser()
         val file = File("src/test/resources/global-methods/StrTemplate4527.html")
         val result = parser.parse(file.inputStream())
@@ -494,7 +488,7 @@ class MethodPageParserTest {
 
         assertEquals("Шаблон", signature.parameters[0].name)
         assertEquals("Строка", signature.parameters[0].type)
-        assertFalse { signature.parameters[0].isOptional }
+        signature.parameters[0].isOptional shouldBe false
         assertEquals(
             """
             Строка, содержащая маркеры подстановки вида: "%1..%N". Нумерация маркеров начинается с 1. N не может быть больше 10. 
@@ -519,8 +513,7 @@ class MethodPageParserTest {
         assertEquals("СтрШаблон(\"Ошибка в данных в строке %1 (требуется тип %2)\", 2, \"Дата\")", result.example)
     }
 
-    @Test
-    fun `test parse InputDate25`() {
+    should("parse InputDate25") {
         val parser = MethodPageParser()
         val file = File("src/test/resources/global-methods/InputDate25.html")
         val result = parser.parse(file.inputStream())
@@ -537,7 +530,7 @@ class MethodPageParserTest {
         assertEquals(3, signature.parameters.size)
         assertEquals("Дата", signature.parameters[0].name)
         assertEquals("Дата", signature.parameters[0].type)
-        assertFalse { signature.parameters[0].isOptional }
+        signature.parameters[0].isOptional shouldBe false
         assertEquals(
             "Имя доступной в модуле переменной. В эту переменную будет помещено введенное значение даты. Начальное значение переменной будет использовано в качестве начального значения в диалоге.",
             signature.parameters[0].description,
@@ -587,4 +580,4 @@ class MethodPageParserTest {
                 ?.trim(),
         )
     }
-}
+})

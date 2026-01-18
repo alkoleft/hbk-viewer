@@ -12,7 +12,7 @@ import ru.alkoleft.v8.platform.shctx.models.ConstructorInfo
 import ru.alkoleft.v8.platform.shctx.models.EnumInfo
 import ru.alkoleft.v8.platform.shctx.models.MethodInfo
 import ru.alkoleft.v8.platform.shctx.models.ObjectInfo
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.shctx.models.PageType
 import ru.alkoleft.v8.platform.shctx.models.PropertyInfo
 import ru.alkoleft.v8.platform.shctx.parsers.PlatformContextPagesParser

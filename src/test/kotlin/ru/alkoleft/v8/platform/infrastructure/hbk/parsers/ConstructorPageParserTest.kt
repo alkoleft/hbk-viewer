@@ -7,6 +7,7 @@
 
 package ru.alkoleft.v8.platform.hbk.parsers
 
+import io.kotest.core.spec.style.ShouldSpec
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -15,9 +16,8 @@ import org.junit.jupiter.api.assertNull
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.ConstructorPageParser
 import java.io.File
 
-class ConstructorPageParserTest {
-    @Test
-    fun `test parse ctor13 - Array constructor with parameters`() {
+class ConstructorPageParserTest: ShouldSpec({
+    should("parse ctor13 - Array constructor with parameters") {
         val parser = ConstructorPageParser()
         val file = File("src/test/resources/constructors/ctor13.html")
         val result = parser.parse(file.inputStream())
@@ -65,8 +65,7 @@ class ConstructorPageParserTest {
         assertNull(result.relatedObjects)
     }
 
-    @Test
-    fun `test parse ctor80 - ZipFileWriter constructor without parameters`() {
+    should("parse ctor80 - ZipFileWriter constructor without parameters") {
         val parser = ConstructorPageParser()
         val file = File("src/test/resources/constructors/ctor80.html")
         val result = parser.parse(file.inputStream())
@@ -85,8 +84,7 @@ class ConstructorPageParserTest {
         assertNull(result.relatedObjects)
     }
 
-    @Test
-    fun `test parse ctor225 - Constructor with single required parameter`() {
+    should("parse ctor225 - Constructor with single required parameter") {
         val parser = ConstructorPageParser()
         val file = File("src/test/resources/constructors/ctor225.html")
         val result = parser.parse(file.inputStream())
@@ -110,8 +108,7 @@ class ConstructorPageParserTest {
         assertNull(result.relatedObjects)
     }
 
-    @Test
-    fun `test parse ctor81 - Constructor with multiple parameters`() {
+    should("parse ctor81 - Constructor with multiple parameters") {
         val parser = ConstructorPageParser()
         val file = File("src/test/resources/constructors/ctor81.html")
         val result = parser.parse(file.inputStream())
@@ -153,8 +150,7 @@ class ConstructorPageParserTest {
         assertNull(result.relatedObjects)
     }
 
-    @Test
-    fun `test parse ctor264 - Constructor with stream parameter`() {
+    should("parse ctor264 - Constructor with stream parameter") {
         val parser = ConstructorPageParser()
         val file = File("src/test/resources/constructors/ctor264.html")
         val result = parser.parse(file.inputStream())
@@ -183,8 +179,7 @@ class ConstructorPageParserTest {
         assertNull(result.relatedObjects)
     }
 
-    @Test
-    fun `test parse ctor_Auto - UserWorkFavorites default constructor`() {
+    should("parse ctor_Auto - UserWorkFavorites default constructor") {
         val parser = ConstructorPageParser()
         val file = File("src/test/resources/constructors/ctor_Auto.html")
         val result = parser.parse(file.inputStream())
@@ -202,4 +197,4 @@ class ConstructorPageParserTest {
         assertNull(result.note)
         assertNull(result.relatedObjects)
     }
-}
+})

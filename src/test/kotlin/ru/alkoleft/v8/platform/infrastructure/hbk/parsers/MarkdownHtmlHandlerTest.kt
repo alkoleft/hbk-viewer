@@ -8,12 +8,12 @@
 package ru.alkoleft.v8.platform.hbk.parsers
 
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
+import io.kotest.core.spec.style.ShouldSpec
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 import ru.alkoleft.v8.platform.shctx.parsers.core.MarkdownHtmlHandler
 
-class MarkdownHtmlHandlerTest {
-    private fun parseHtmlToMarkdown(html: String): String {
+class MarkdownHtmlHandlerTest : ShouldSpec({
+    fun parseHtmlToMarkdown(html: String): String {
         val markdownHandler =
             object : MarkdownHtmlHandler<String>() {
                 override fun getResult() = getMarkdown()
@@ -23,8 +23,7 @@ class MarkdownHtmlHandlerTest {
         return markdownHandler.getResult()
     }
 
-    @Test
-    fun `test basic markdown conversion`() {
+    should("basic markdown conversion") {
         val html =
             """
             <h1>Заголовок 1</h1>
@@ -50,8 +49,7 @@ class MarkdownHtmlHandlerTest {
         assertEquals(expected, result)
     }
 
-    @Test
-    fun `test custom HBK rules`() {
+    should("custom HBK rules") {
         val html =
             """
             <p class="heading">Справочники (Catalogs)</p>
@@ -80,8 +78,7 @@ class MarkdownHtmlHandlerTest {
         assertEquals(expected, result)
     }
 
-    @Test
-    fun `test custom link rules`() {
+    should("custom link rules") {
         val html =
             """
             <p>Ссылка: <a href="https://example.com">Пример</a></p>
@@ -100,8 +97,7 @@ class MarkdownHtmlHandlerTest {
         assertEquals(expected, result)
     }
 
-    @Test
-    fun `test multiple custom rules`() {
+    should("multiple custom rules") {
         val html =
             """
             <p class="heading">Справочники (Catalogs)</p>
@@ -126,4 +122,4 @@ class MarkdownHtmlHandlerTest {
 
         assertEquals(expected, result)
     }
-}
+})

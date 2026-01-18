@@ -7,18 +7,19 @@
 
 package ru.alkoleft.v8.platform.hbk.parsers
 
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeEmpty
 import org.junit.jupiter.api.assertDoesNotThrow
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.ObjectPageParser
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
-class ObjectPageParserTest {
-    private val parser = ObjectPageParser()
+class ObjectPageParserTest : ShouldSpec({
+    val parser = ObjectPageParser()
 
-    @Test
-    fun `should parse COMSafeArray object correctly`() {
+    should("parse COMSafeArray object correctly") {
         // Arrange
         val html = javaClass.getResourceAsStream("/objects/COMSafeArray.html")!!
 
@@ -29,22 +30,21 @@ class ObjectPageParserTest {
             }
 
         // Assert
-        assertEquals("COMSafeArray", result.nameRu)
-        assertEquals("COMSafeArray", result.nameEn)
-        assertTrue(result.description.isNotEmpty())
-        assertTrue(result.description.contains("Объектная оболочка над многомерным массивом SAFEARRAY"))
+        "COMSafeArray" shouldBe result.nameRu
+        "COMSafeArray" shouldBe result.nameEn
+        result.description.shouldNotBeEmpty()
+        result.description.shouldContain("Объектная оболочка над многомерным массивом SAFEARRAY")
 
         // Проверяем пример
-        assertNotNull(result.example)
-        assertTrue(result.example.contains("COMSafeArray"))
+        result.example.shouldNotBeNull()
+        result.example.shouldContain("COMSafeArray")
 
         // Проверяем связанные объекты
-        assertNotNull(result.relatedObjects)
-        assertTrue(result.relatedObjects.isNotEmpty())
+        result.relatedObjects.shouldNotBeNull()
+        result.relatedObjects.shouldNotBeEmpty()
     }
 
-    @Test
-    fun `should parse CallbackDescription object correctly`() {
+    should("parse CallbackDescription object correctly") {
         // Arrange
         val html = javaClass.getResourceAsStream("/objects/CallbackDescription.html")!!
 
@@ -55,22 +55,21 @@ class ObjectPageParserTest {
             }
 
         // Assert
-        assertEquals("ОписаниеОповещения", result.nameRu)
-        assertEquals("CallbackDescription", result.nameEn)
-        assertTrue(result.description.isNotEmpty())
-        assertTrue(result.description.contains("Используется для описания вызова процедуры"))
+        "ОписаниеОповещения" shouldBe result.nameRu
+        "CallbackDescription" shouldBe result.nameEn
+        result.description.shouldNotBeEmpty()
+        result.description.shouldContain("Используется для описания вызова процедуры")
 
         // Проверяем пример
-        assertNotNull(result.example)
-        assertTrue(result.example.contains("ОписаниеОповещения"))
+        result.example.shouldNotBeNull()
+        result.example.shouldContain("ОписаниеОповещения")
 
         // Проверяем связанные объекты
-        assertNotNull(result.relatedObjects)
-        assertTrue(result.relatedObjects.isNotEmpty())
+        result.relatedObjects.shouldNotBeNull()
+        result.relatedObjects.shouldNotBeEmpty()
     }
 
-    @Test
-    fun `should parse complex object correctly`() {
+    should("parse complex object correctly") {
         // Arrange
         val html = javaClass.getResourceAsStream("/objects/object130.html")!!
 
@@ -81,13 +80,13 @@ class ObjectPageParserTest {
             }
 
         // Assert
-        assertEquals("СправочникОбъект.<Имя справочника>", result.nameRu)
-        assertEquals("CatalogObject.<Catalog name>", result.nameEn)
-        assertTrue(result.description.isNotEmpty())
-        assertTrue(result.description.contains("Предназначен для чтения, изменения, добавления и удаления элементов"))
+        "СправочникОбъект.<Имя справочника>" shouldBe result.nameRu
+        "CatalogObject.<Catalog name>" shouldBe result.nameEn
+        result.description.shouldNotBeEmpty()
+        result.description.shouldContain("Предназначен для чтения, изменения, добавления и удаления элементов")
 
         // Проверяем связанные объекты
-        assertNotNull(result.relatedObjects)
-        assertTrue(result.relatedObjects.isNotEmpty())
+        result.relatedObjects.shouldNotBeNull()
+        result.relatedObjects.shouldNotBeEmpty()
     }
-}
+})

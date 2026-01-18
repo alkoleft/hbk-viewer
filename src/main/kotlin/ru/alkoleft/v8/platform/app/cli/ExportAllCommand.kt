@@ -16,7 +16,7 @@ import kotlinx.cli.Subcommand
 import kotlinx.cli.default
 import kotlinx.cli.required
 import ru.alkoleft.v8.platform.app.formatters.MkDocsToc
-import ru.alkoleft.v8.platform.hbk.HbkExportService
+import ru.alkoleft.v8.platform.app.service.HbkExportService
 import ru.alkoleft.v8.platform.hbk.TocMergerService
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import java.nio.file.Files

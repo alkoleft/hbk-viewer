@@ -7,19 +7,19 @@
 
 package ru.alkoleft.v8.platform.hbk
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.alkoleft.v8.platform.app.service.HbkExportService
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.isRegularFile
 
 /**
- * Интеграционные тесты для [HbkExportService].
+ * Интеграционные тесты для [ru.alkoleft.v8.platform.app.service.HbkExportService].
  *
  * Требует наличия реального HBK файла для выполнения.
  * Путь к файлу можно задать через:

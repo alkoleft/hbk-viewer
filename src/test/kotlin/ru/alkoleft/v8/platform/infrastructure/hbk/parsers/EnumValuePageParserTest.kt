@@ -7,15 +7,14 @@
 
 package ru.alkoleft.v8.platform.hbk.parsers
 
+import io.kotest.core.spec.style.ShouldSpec
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumValuePageParser
 import java.io.File
 
-class EnumValuePageParserTest {
-    @Test
-    fun `test parse ControlBorder1060 - enum value with description`() {
+class EnumValuePageParserTest : ShouldSpec({
+    should("test parse ControlBorder1060 - enum value with description") {
         val parser = EnumValuePageParser()
         val file = File("src/test/resources/enum-values/ControlBorder1060.html")
         val result = parser.parse(file.inputStream())
@@ -34,8 +33,7 @@ class EnumValuePageParserTest {
         assertNull(result.relatedObjects)
     }
 
-    @Test
-    fun `test parse UsualGroup7012 - enum value with detailed description`() {
+    should("test parse UsualGroup7012 - enum value with detailed description") {
         val parser = EnumValuePageParser()
         val file = File("src/test/resources/enum-values/UsualGroup7012.html")
         val result = parser.parse(file.inputStream())
@@ -50,4 +48,4 @@ class EnumValuePageParserTest {
         // Проверяем связанные объекты
         assertNull(result.relatedObjects)
     }
-}
+})

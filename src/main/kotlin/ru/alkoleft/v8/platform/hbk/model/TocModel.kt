@@ -5,7 +5,7 @@
  * Licensed under the MIT License. See LICENSE file in the project root for full license information.
  */
 
-package ru.alkoleft.v8.platform.shctx.models
+package ru.alkoleft.v8.platform.hbk.model
 
 /**
  * Представляет чанк (фрагмент) в структуре оглавления HBK файла.

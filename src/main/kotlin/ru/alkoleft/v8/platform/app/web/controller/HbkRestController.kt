@@ -14,16 +14,15 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import ru.alkoleft.v8.platform.app.service.BooksService
+import ru.alkoleft.v8.platform.app.service.HbkPathService
+import ru.alkoleft.v8.platform.app.service.VersionService
 import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
 import ru.alkoleft.v8.platform.app.web.controller.dto.FileContent
 import ru.alkoleft.v8.platform.app.web.controller.dto.FileStructure
 import ru.alkoleft.v8.platform.app.web.controller.dto.PageDto
 import ru.alkoleft.v8.platform.app.web.controller.dto.VersionInfo
-import ru.alkoleft.v8.platform.app.service.HbkFileScannerService
-import ru.alkoleft.v8.platform.app.service.HbkPathService
-import ru.alkoleft.v8.platform.app.service.VersionService
-import ru.alkoleft.v8.platform.hbk.HbkPageReaderService
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Page
 
 private val logger = KotlinLogging.logger { }
 
@@ -38,8 +37,7 @@ private val logger = KotlinLogging.logger { }
 @RestController
 @RequestMapping("/api/hbk")
 class HbkRestController(
-    private val fileScannerService: HbkFileScannerService,
-    private val pageReaderService: HbkPageReaderService,
+    private val booksService: BooksService,
     private val pathService: HbkPathService,
     private val versionService: VersionService,
 ) {
@@ -49,10 +47,9 @@ class HbkRestController(
      * @return Список информации о книгах (с метаданными и локалью)
      */
     @GetMapping("/files")
-    fun getFiles(): ResponseEntity<List<BookInfo>> {
+    fun getBooks(): ResponseEntity<List<BookInfo>> {
         logger.debug { "Запрос списка HBK книг" }
-        val books = fileScannerService.getAllFiles()
-        return ResponseEntity.ok(books)
+        return ResponseEntity.ok(booksService.books)
     }
 
     /**
@@ -65,37 +62,21 @@ class HbkRestController(
     @GetMapping("/files/{filename}/content")
     fun getFileContent(
         @PathVariable filename: String,
-        @RequestParam(required = false) htmlPath: String?,
+        @RequestParam(required = true) htmlPath: String,
     ): ResponseEntity<FileContent> {
         logger.debug { "Запрос содержимого файла: $filename, htmlPath: $htmlPath" }
 
-        val filePath =
-            fileScannerService.getFilePath(filename)
-                ?: return ResponseEntity.notFound().build()
+        val page = booksService.getBookPageInfo(filename, htmlPath)
+        val content = booksService.getBookPageContent(filename, htmlPath)
+        logger.debug { "Загружено содержимое страницы '$htmlPath', размер: ${content.length} символов" }
 
-        val toc = pageReaderService.readToc(filePath)
-        val actualHtmlPath =
-            if (htmlPath != null) {
-                pathService.validateAndNormalizeHtmlPath(htmlPath)
-            } else {
-                pathService.getFirstPageHtmlPath(toc)
-            }
-
-        logger.debug { "Нормализация htmlPath: '$htmlPath' -> '$actualHtmlPath'" }
-
-        val content = pageReaderService.readPageByName(filePath, actualHtmlPath)
-        logger.debug { "Загружено содержимое страницы '$actualHtmlPath', размер: ${content.length} байт" }
-
-        val page = pathService.findPageByHtmlPath(toc, actualHtmlPath)
-        val pageName = page?.title?.ru?.ifEmpty { page?.title?.en } ?: actualHtmlPath
-
-        val fileContent =
+        return ResponseEntity.ok(
             FileContent(
                 filename = filename,
-                pageName = pageName,
+                pageName = page.title.ru.ifEmpty { page.title.en },
                 content = content,
             )
-        return ResponseEntity.ok(fileContent)
+        )
     }
 
     /**
@@ -113,11 +94,7 @@ class HbkRestController(
     ): ResponseEntity<FileStructure> {
         logger.debug { "Запрос структуры файла: $filename, depth: $depth" }
 
-        val filePath =
-            fileScannerService.getFilePath(filename)
-                ?: return ResponseEntity.notFound().build()
-
-        val toc = pageReaderService.readToc(filePath)
+        val toc = booksService.bookToc(filename)
         val pages =
             if (depth != null) {
                 if (depth < 0) {
@@ -154,11 +131,7 @@ class HbkRestController(
     ): ResponseEntity<List<PageDto>> {
         logger.debug { "Запрос дочерных элементов файла: $filename, htmlPath: $htmlPath, path: $path" }
 
-        val filePath =
-            fileScannerService.getFilePath(filename)
-                ?: return ResponseEntity.notFound().build()
-
-        val toc = pageReaderService.readToc(filePath)
+        val toc = booksService.bookToc(filename)
         val children: List<Page>
         val parentPath: List<Int>
 
@@ -213,15 +186,11 @@ class HbkRestController(
     ): ResponseEntity<List<PageDto>> {
         logger.debug { "Поиск в структуре файла: $filename, query: $query" }
 
-        val filePath =
-            fileScannerService.getFilePath(filename)
-                ?: return ResponseEntity.notFound().build()
-
         if (query.isBlank() || query.length > 500) {
             return ResponseEntity.badRequest().build()
         }
 
-        val toc = pageReaderService.readToc(filePath)
+        val toc = booksService.bookToc(filename)
         val foundPages = toc.searchPages(query)
 
         // Для найденных страниц строим path и возвращаем с полной иерархией для контекста

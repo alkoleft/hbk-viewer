@@ -5,14 +5,14 @@
  * Licensed under the MIT License. See LICENSE file in the project root for full license information.
  */
 
-package ru.alkoleft.v8.platform.hbk
+package ru.alkoleft.v8.platform.app.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.ContainerReader
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc

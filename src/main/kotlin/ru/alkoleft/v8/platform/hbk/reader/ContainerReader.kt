@@ -99,10 +99,10 @@ class ContainerReader {
             }
 
             val name = readFileName(buffer, headerAddress)
-            if (bodyAddress == SPLITTER) {
-                log.warn { "Skip entry '${name}' with body address $bodyAddress" }
-            } else {
+            if (bodyAddress != SPLITTER) {
                 result[name] = bodyAddress
+            } else {
+                log.debug { "Skip entry '${name}' with body address $bodyAddress" }
             }
         }
         return result.toMap()

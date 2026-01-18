@@ -7,11 +7,11 @@
 
 package ru.alkoleft.v8.platform.hbk.reader.toc
 
-import ru.alkoleft.v8.platform.shctx.models.Chunk
-import ru.alkoleft.v8.platform.shctx.models.DoubleLanguageString
-import ru.alkoleft.v8.platform.shctx.models.NameContainer
-import ru.alkoleft.v8.platform.shctx.models.NameObject
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.Chunk
+import ru.alkoleft.v8.platform.hbk.model.DoubleLanguageString
+import ru.alkoleft.v8.platform.hbk.model.NameContainer
+import ru.alkoleft.v8.platform.hbk.model.NameObject
+import ru.alkoleft.v8.platform.hbk.model.Page
 
 /**
  * Представляет оглавление (Table of Contents) HBK файла.

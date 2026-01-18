@@ -7,8 +7,8 @@
 
 package ru.alkoleft.v8.platform.app.web.controller.dto
 
-import ru.alkoleft.v8.platform.shctx.models.DoubleLanguageString
-import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.model.DoubleLanguageString
+import ru.alkoleft.v8.platform.hbk.model.Page
 
 /**
  * DTO для представления страницы в REST API.

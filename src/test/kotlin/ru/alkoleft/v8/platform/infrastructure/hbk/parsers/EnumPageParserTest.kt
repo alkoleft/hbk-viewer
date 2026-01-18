@@ -7,15 +7,15 @@
 
 package ru.alkoleft.v8.platform.hbk.parsers
 
+import io.kotest.core.spec.style.ShouldSpec
 import org.assertj.core.api.Assertions
 import ru.alkoleft.v8.platform.shctx.parsers.core.PageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser
 import java.io.FileInputStream
 import java.nio.file.Paths
-import kotlin.test.Test
 
-class EnumPageParserTest {
-    private fun <R> parseFile(
+class EnumPageParserTest: ShouldSpec({
+    fun <R> parseFile(
         fileName: String,
         parser: PageParser<R>,
     ): R {
@@ -24,8 +24,7 @@ class EnumPageParserTest {
         }
     }
 
-    @Test
-    fun `test parse FormGroupType`() {
+    should("parse FormGroupType") {
         val info = parseFile("FormGroupType.html", EnumPageParser())
 
         Assertions.assertThat(info.nameRu).isEqualTo("ВидГруппыФормы")
@@ -34,8 +33,7 @@ class EnumPageParserTest {
         Assertions.assertThat(info.relatedObjects).hasSize(2) // TODO
     }
 
-    @Test
-    fun `test parse PictureLib`() {
+    should("parse PictureLib") {
         val info = parseFile("PictureLib.html", EnumPageParser())
 
         Assertions.assertThat(info.nameRu).isEqualTo("БиблиотекаКартинок")
@@ -45,8 +43,7 @@ class EnumPageParserTest {
             .isEqualTo("Определяет набор картинок, используемых в конфигурации. Значения этого набора имеют тип `Картинка`.")
     }
 
-    @Test
-    fun `test parse ActionOnThePasswordRequirementsViolationOnAuthentication`() {
+    should("parse ActionOnThePasswordRequirementsViolationOnAuthentication") {
         val info = parseFile("ActionOnThePasswordRequirementsViolationOnAuthentication.html", EnumPageParser())
 
         Assertions.assertThat(info.nameRu).isEqualTo("ДействиеПриНесоответствииПароляТребованиямПриАутентификации")
@@ -55,4 +52,4 @@ class EnumPageParserTest {
             .assertThat(info.description)
             .isEqualTo("Содержит варианты возможных действий при несоответствии паролей требованиям в ходе аутентификации.")
     }
-}
+})

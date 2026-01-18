@@ -5,18 +5,19 @@
  * Licensed under the MIT License. See LICENSE file in the project root for full license information.
  */
 
-package ru.alkoleft.v8.platform.app.service
+package ru.alkoleft.v8.platform.app.storage
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import jakarta.annotation.PostConstruct
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
+import ru.alkoleft.v8.platform.app.config.ApplicationConfiguration
 import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbk.util.LocaleExtractor
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.streams.asSequence
+import kotlin.time.measureTimedValue
 
 private val logger = KotlinLogging.logger { }
 
@@ -26,45 +27,70 @@ private val logger = KotlinLogging.logger { }
  * При старте приложения сканирует указанный каталог и формирует
  * перечень доступных HBK книг с их метаданными.
  */
-@Service
-class HbkFileScannerService(
-    @Value("\${hbk.files.directory:}")
-    val hbkDirectory: String,
+@Component
+class BookRegistry(
     private val hbkContentReader: HbkContentReader,
+    applicationConfiguration: ApplicationConfiguration
 ) {
-    private val books: MutableMap<String, BookInfo> = mutableMapOf()
+    private val hbkDirectory = applicationConfiguration.hbkFilesDirectory
+    val books: List<BookInfo> by lazy(::loadBooksWithMeasure)
+    private val booksByFile: Map<String, BookInfo> by lazy {
+        books.associateBy { it.filename }
+    }
 
     /**
-     * Инициализация при старте приложения.
-     * Сканирует каталог и загружает список HBK книг с метаданными.
+     * Получает список всех найденных HBK книг.
+     *
+     * @return Список информации о книгах
      */
-    @PostConstruct
-    fun scanDirectory() {
+    fun getAllFiles(): List<BookInfo> = books
+
+    /**
+     * Получает полную информацию о книге по имени.
+     *
+     * @param filename Имя файла
+     * @return Информация о книге или null, если книга не найдена
+     */
+    fun getBookInfo(filename: String): BookInfo? = booksByFile[filename]
+
+    /**
+     * Получает путь к HBK файлу по имени.
+     *
+     * @param filename Имя файла
+     * @return Путь к файлу или null, если файл не найден
+     */
+    fun getFilePath(filename: String): Path? = booksByFile[filename]?.let { Paths.get(it.path) }
+
+    private fun loadBooksWithMeasure() =
+        measureTimedValue {
+            loadBooks()
+        }.also {
+            logger.info { "Loading time: ${it.duration}, books count: ${it.value.size}" }
+        }.value
+
+    private fun loadBooks(): List<BookInfo> {
         if (hbkDirectory.isBlank()) {
-            logger.warn { "Каталог с HBK файлами не указан. Используйте параметр hbk.files.directory" }
-            return
+            logger.warn { "Каталог с HBK файлами не указан. Используйте параметр 'application.hbk-files-directory'" }
+            return emptyList()
         }
 
         val directoryPath = Paths.get(hbkDirectory)
         if (!Files.exists(directoryPath) || !Files.isDirectory(directoryPath)) {
             logger.error { "Каталог не существует или не является директорией: $hbkDirectory" }
-            return
+            return emptyList()
         }
 
         logger.info { "Сканирование каталога с HBK книгами: $hbkDirectory" }
 
-        Files.list(directoryPath).use { stream ->
+        return Files.list(directoryPath).use { stream ->
             stream
+                .asSequence()
                 .filter { Files.isRegularFile(it) }
                 .filter { it.fileName.toString().endsWith(".hbk", ignoreCase = true) }
-                .forEach { path ->
-                    val bookInfo = loadBookInfo(path)
-                    books[bookInfo.filename] = bookInfo
-                    logger.debug { "Найдена HBK книга: ${bookInfo.filename} (локаль: ${bookInfo.locale})" }
-                }
+                .map(::loadBookInfo)
+                .onEach { logger.debug { "Найдена HBK книга: ${it.filename} (локаль: ${it.locale})" } }
+                .toList()
         }
-
-        logger.info { "Найдено HBK книг: ${books.size}" }
     }
 
     /**
@@ -98,35 +124,4 @@ class HbkFileScannerService(
             locale = locale,
         )
     }
-
-    /**
-     * Получает список всех найденных HBK книг.
-     *
-     * @return Список информации о книгах
-     */
-    fun getAllFiles(): List<BookInfo> = books.values.toList()
-
-    /**
-     * Получает полную информацию о книге по имени.
-     *
-     * @param filename Имя файла
-     * @return Информация о книге или null, если книга не найдена
-     */
-    fun getBookInfo(filename: String): BookInfo? = books[filename]
-
-    /**
-     * Получает путь к HBK файлу по имени.
-     *
-     * @param filename Имя файла
-     * @return Путь к файлу или null, если файл не найден
-     */
-    fun getFilePath(filename: String): Path? = books[filename]?.let { Paths.get(it.path) }
-
-    /**
-     * Проверяет, существует ли книга с указанным именем.
-     *
-     * @param filename Имя файла
-     * @return true, если книга найдена
-     */
-    fun fileExists(filename: String): Boolean = books.containsKey(filename)
 }
