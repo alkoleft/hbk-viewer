@@ -11,7 +11,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import ru.alkoleft.v8.platform.app.controller.dto.BookInfo
+import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbk.util.LocaleExtractor
 import java.nio.file.Files

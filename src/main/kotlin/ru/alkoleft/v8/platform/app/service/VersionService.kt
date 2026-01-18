@@ -10,7 +10,7 @@ package ru.alkoleft.v8.platform.app.service
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.HbkReaderApplication
-import ru.alkoleft.v8.platform.app.controller.dto.VersionInfo
+import ru.alkoleft.v8.platform.app.web.controller.dto.VersionInfo
 import ru.alkoleft.v8.platform.app.util.PlatformVersionDetector
 import java.nio.file.Path
 import java.util.jar.Attributes

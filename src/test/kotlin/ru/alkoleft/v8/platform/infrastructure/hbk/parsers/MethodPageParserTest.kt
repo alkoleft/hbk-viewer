@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.MethodPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.MethodPageParser
 import java.io.File
 import kotlin.test.assertFalse
 

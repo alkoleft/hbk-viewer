@@ -1,0 +1,4 @@
+site_name: Документация 1С:Предприятие
+theme:
+  name: material
+nav:

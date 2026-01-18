@@ -12,24 +12,22 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
-import ru.alkoleft.v8.platform.hbk.models.Page
-import ru.alkoleft.v8.platform.hbk.reader.HbkContainerReader
+import ru.alkoleft.v8.platform.shctx.models.Page
+import ru.alkoleft.v8.platform.hbk.reader.ContainerReader
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import java.io.ByteArrayInputStream
-import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.util.zip.ZipInputStream
 
 private const val PACK_BLOCK_NAME = "PackBlock"
 private const val FILE_STORAGE_NAME = "FileStorage"
-private const val TOC_FILE_NAME = "toc.txt"
 
 private val logger = KotlinLogging.logger { }
+
+typealias FileNameResolver = (String) -> String
 
 /**
  * Сервис для экспорта (распаковки) HBK файлов в файловую систему.
@@ -48,14 +46,13 @@ class HbkExportService {
      *
      * @param hbkPath Путь к HBK файлу для экспорта
      * @param outputDir Директория для сохранения распакованных файлов
-     * @param includeToc Если true, сохраняет оглавление в текстовый файл
      * @throws PlatformContextLoadException если не удалось прочитать HBK файл
      * @throws IllegalArgumentException если выходная директория не может быть создана
      */
     fun export(
         hbkPath: Path,
         outputDir: Path,
-        includeToc: Boolean = true,
+        fileNameResolver: FileNameResolver = { it }
     ) {
         logger.info { "Начало экспорта HBK файла $hbkPath в директорию $outputDir" }
 
@@ -75,25 +72,24 @@ class HbkExportService {
             throw IllegalArgumentException("Выходной путь не является директорией: $outputDir")
         }
 
-        val containerReader = HbkContainerReader()
-        containerReader.readHbk(hbkPath) {
-            this.entities.forEach { Files.write(outputDir.resolve(it.key), getEntity(it.key)!!) }
-            val fileStorage =
-                getEntity(FILE_STORAGE_NAME)
-                    ?: throw PlatformContextLoadException("Не найден блок FileStorage в HBK файле")
-
-            val packBlock =
-                getEntity(PACK_BLOCK_NAME)
-                    ?: throw PlatformContextLoadException("Не найден блок PackBlock в HBK файле")
-
-            exportZipFiles(fileStorage, outputDir)
-            if (includeToc) {
-                val toc = Toc.parse(getInflatePackBlock(packBlock))
-                exportToc(toc, outputDir)
-            }
+        val containerReader = ContainerReader()
+        containerReader.readContainer(hbkPath) {
+//            this.entities.forEach { Files.write(outputDir.resolve(it.key), getEntity(it.key)!!) }
+            val fileStorage = getEntity(FILE_STORAGE_NAME)
+                ?: throw PlatformContextLoadException("Не найден блок FileStorage в HBK файле")
+            exportZipFiles(fileStorage, outputDir, fileNameResolver)
         }
 
         logger.info { "Экспорт HBK файла завершен успешно" }
+    }
+
+    fun toc(hbkPath: Path): Toc {
+        val containerReader = ContainerReader()
+        return containerReader.readContainer(hbkPath) {
+            val packBlock = getEntity(PACK_BLOCK_NAME)
+                ?: throw PlatformContextLoadException("Не найден блок PackBlock в HBK файле")
+            return@readContainer Toc.parse(getInflatePackBlock(packBlock))
+        }
     }
 
     /**
@@ -105,64 +101,41 @@ class HbkExportService {
     private fun exportZipFiles(
         fileStorage: ByteArray,
         outputDir: Path,
+        fileNameResolver: FileNameResolver
     ) {
         logger.debug { "Начало экспорта файлов из ZIP архива" }
 
         var exportedCount = 0
 
         SeekableInMemoryByteChannel(fileStorage).use { channel ->
-            ZipFile
-                .builder()
-                .setSeekableByteChannel(channel)
-                .get()
-                .use { zipFile ->
-                    val entries = zipFile.entries
+            ZipFile.builder().setSeekableByteChannel(channel).get().use { zipFile ->
+                val entries = zipFile.entries
 
-                    while (entries.hasMoreElements()) {
-                        val entry = entries.nextElement() as ZipArchiveEntry
+                while (entries.hasMoreElements()) {
+                    val entry = entries.nextElement() as ZipArchiveEntry
 
-                        if (entry.isDirectory) {
-                            continue
-                        }
-
-                        val entryName = entry.name
-                        val outputFile = outputDir.resolve(entryName).toFile()
-
-                        outputFile.parentFile?.mkdirs()
-
-                        zipFile.getInputStream(entry).use { inputStream ->
-                            FileOutputStream(outputFile).use { outputStream ->
-                                inputStream.copyTo(outputStream)
-                            }
-                        }
-
-                        exportedCount++
-                        logger.trace { "Экспортирован файл: $entryName" }
+                    if (entry.isDirectory) {
+                        continue
                     }
+
+                    val entryName = entry.name
+                    val outputFile = outputDir.resolve(fileNameResolver(entryName)).toFile()
+
+                    outputFile.parentFile?.mkdirs()
+
+                    zipFile.getInputStream(entry).use { inputStream ->
+                        FileOutputStream(outputFile).use { outputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                    }
+
+                    exportedCount++
+                    logger.trace { "Экспортирован файл: $entryName" }
                 }
+            }
         }
 
         logger.info { "Экспортировано файлов: $exportedCount" }
-    }
-
-    /**
-     * Экспортирует оглавление (TOC) в текстовый файл.
-     *
-     * @param toc Оглавление для экспорта
-     * @param outputDir Директория для сохранения файла TOC
-     */
-    private fun exportToc(
-        toc: Toc,
-        outputDir: Path,
-    ) {
-        logger.debug { "Начало экспорта оглавления" }
-
-        val tocFile = outputDir.resolve(TOC_FILE_NAME).toFile()
-        val tocContent = buildTocContent(toc.pages, 0)
-
-        tocFile.writeText(tocContent, Charsets.UTF_8)
-
-        logger.info { "Оглавление экспортировано в файл: ${tocFile.absolutePath}" }
     }
 
     /**
@@ -180,12 +153,11 @@ class HbkExportService {
         val builder = StringBuilder()
 
         for (page in pages) {
-            val title =
-                if (page.title.ru.isNotEmpty()) {
-                    "${page.title.ru} (${page.title.en})"
-                } else {
-                    page.title.en
-                }
+            val title = if (page.title.ru.isNotEmpty()) {
+                "${page.title.ru} (${page.title.en})"
+            } else {
+                page.title.en
+            }
 
             builder.append(indent)
             builder.append("- ")
@@ -204,84 +176,6 @@ class HbkExportService {
         }
 
         return builder.toString()
-    }
-
-    /**
-     * Экспортирует только HTML файлы страниц, указанных в оглавлении.
-     *
-     * @param hbkPath Путь к HBK файлу
-     * @param outputDir Директория для сохранения файлов
-     * @param preserveStructure Если true, сохраняет структуру каталогов из путей страниц
-     */
-    fun exportPagesOnly(
-        hbkPath: Path,
-        outputDir: Path,
-        preserveStructure: Boolean = true,
-    ) {
-        logger.info { "Начало экспорта только страниц из HBK файла $hbkPath" }
-
-        val outputDirectory = outputDir.toFile()
-        if (!outputDirectory.exists()) {
-            outputDirectory.mkdirs()
-        }
-
-        val reader = HbkContentReader()
-        var exportedCount = 0
-
-        reader.read(hbkPath) {
-            val pagesToExport = collectAllPages(toc.pages)
-
-            for (page in pagesToExport) {
-                if (page.htmlPath.isEmpty()) {
-                    continue
-                }
-
-                try {
-                    val outputPath =
-                        if (preserveStructure) {
-                            outputDir.resolve(page.htmlPath)
-                        } else {
-                            val fileName = File(page.htmlPath).name
-                            outputDir.resolve(fileName)
-                        }
-
-                    outputPath.parent.toFile().mkdirs()
-
-                    getEntryStream(page).use { inputStream ->
-                        Files.copy(inputStream, outputPath, StandardCopyOption.REPLACE_EXISTING)
-                    }
-
-                    exportedCount++
-                    logger.trace { "Экспортирована страница: ${page.htmlPath}" }
-                } catch (e: PlatformContextLoadException) {
-                    logger.warn(e) { "Не удалось экспортировать страницу: ${page.htmlPath}" }
-                }
-            }
-        }
-
-        logger.info { "Экспортировано страниц: $exportedCount" }
-    }
-
-    /**
-     * Собирает все страницы из иерархии в плоский список.
-     *
-     * @param pages Список страниц для обхода
-     * @return Плоский список всех страниц
-     */
-    private fun collectAllPages(pages: List<Page>): List<Page> {
-        val result = mutableListOf<Page>()
-
-        fun traverse(pages: List<Page>) {
-            for (page in pages) {
-                result.add(page)
-                if (page.children.isNotEmpty()) {
-                    traverse(page.children)
-                }
-            }
-        }
-
-        traverse(pages)
-        return result
     }
 
     /**

@@ -9,6 +9,7 @@ package ru.alkoleft.v8.platform.hbk
 
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import ru.alkoleft.v8.platform.shctx.PlatformContextReader
 import java.nio.file.Files
 import kotlin.io.path.Path
 

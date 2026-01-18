@@ -11,6 +11,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import ru.alkoleft.v8.platform.shctx.parsers.core.DescriptionBlockHandler
+import ru.alkoleft.v8.platform.shctx.parsers.core.NameBlockHandler
+import ru.alkoleft.v8.platform.shctx.parsers.core.ParametersBlockHandler
+import ru.alkoleft.v8.platform.shctx.parsers.core.SyntaxBlockHandler
 
 class BlockHandlerTest {
     private lateinit var nameHandler: NameBlockHandler

@@ -8,8 +8,8 @@
 package ru.alkoleft.v8.platform.hbk.parsers
 
 import org.assertj.core.api.Assertions
-import ru.alkoleft.v8.platform.hbk.parsers.core.PageParser
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.EnumPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.core.PageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser
 import java.io.FileInputStream
 import java.nio.file.Paths
 import kotlin.test.Test

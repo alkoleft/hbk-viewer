@@ -9,7 +9,7 @@ package ru.alkoleft.v8.platform.hbk.parsers
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.ObjectPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.ObjectPageParser
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

@@ -2,4 +2,4 @@
 logging:
   level:
     root: WARN
-    ru.alkoleft.context.platform: INFO 
+    ru.alkoleft: INFO

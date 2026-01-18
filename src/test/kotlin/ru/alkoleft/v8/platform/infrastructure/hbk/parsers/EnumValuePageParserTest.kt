@@ -10,7 +10,7 @@ package ru.alkoleft.v8.platform.hbk.parsers
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.EnumValuePageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumValuePageParser
 import java.io.File
 
 class EnumValuePageParserTest {

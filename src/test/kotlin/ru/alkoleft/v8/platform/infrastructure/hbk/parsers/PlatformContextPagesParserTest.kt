@@ -9,12 +9,12 @@ package ru.alkoleft.v8.platform.hbk.parsers
 
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.ConstructorPageParser
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.EnumPageParser
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.EnumValuePageParser
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.MethodPageParser
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.ObjectPageParser
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.PropertyPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.ConstructorPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumValuePageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.MethodPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.ObjectPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.PropertyPageParser
 
 class PlatformContextPagesParserTest {
     @Test

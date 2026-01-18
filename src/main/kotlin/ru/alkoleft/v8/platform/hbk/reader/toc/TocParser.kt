@@ -9,10 +9,10 @@ package ru.alkoleft.v8.platform.hbk.reader.toc
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.alkoleft.v8.platform.hbk.exceptions.TocParsingError
-import ru.alkoleft.v8.platform.hbk.models.Chunk
-import ru.alkoleft.v8.platform.hbk.models.NameContainer
-import ru.alkoleft.v8.platform.hbk.models.NameObject
-import ru.alkoleft.v8.platform.hbk.models.PropertiesContainer
+import ru.alkoleft.v8.platform.shctx.models.Chunk
+import ru.alkoleft.v8.platform.shctx.models.NameContainer
+import ru.alkoleft.v8.platform.shctx.models.NameObject
+import ru.alkoleft.v8.platform.shctx.models.PropertiesContainer
 
 private val logger = KotlinLogging.logger {}
 

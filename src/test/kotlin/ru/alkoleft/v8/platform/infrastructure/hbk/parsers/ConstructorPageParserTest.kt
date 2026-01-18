@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.ConstructorPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.ConstructorPageParser
 import java.io.File
 
 class ConstructorPageParserTest {

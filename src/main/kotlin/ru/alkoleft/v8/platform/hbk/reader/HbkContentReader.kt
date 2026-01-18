@@ -12,7 +12,7 @@ import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
-import ru.alkoleft.v8.platform.hbk.models.Page
+import ru.alkoleft.v8.platform.shctx.models.Page
 import ru.alkoleft.v8.platform.hbk.reader.meta.BookMeta
 import ru.alkoleft.v8.platform.hbk.reader.meta.BookMetaParser
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
@@ -40,9 +40,9 @@ private val log = KotlinLogging.logger { }
  * - Доступ к HTML файлам документации через ZIP-архив
  * - Предоставление контекста для парсинга страниц
  *
- * @see HbkContainerReader для извлечения данных из HBK контейнера
+ * @see ContainerReader для извлечения данных из HBK контейнера
  * @see Toc для работы с оглавлением
- * @see ru.alkoleft.v8.platform.hbk.PlatformContextReader для полного процесса чтения контекста
+ * @see ru.alkoleft.v8.platform.shctx.PlatformContextReader для полного процесса чтения контекста
  */
 @Service
 class HbkContentReader {
@@ -56,62 +56,50 @@ class HbkContentReader {
         path: Path,
         block: Context.() -> Unit,
     ) {
-        val extractor = HbkContainerReader()
-
-        extractor.readHbk(path) {
-            val toc = Toc.parse(getInflatePackBlock(getEntity(PACK_BLOCK_NAME) as ByteArray))
-            val fileStorage = getEntity(FILE_STORAGE_NAME)
-
-            SeekableInMemoryByteChannel(fileStorage).use {
-                val zip =
-                    ZipFile
-                        .builder()
-                        .setSeekableByteChannel(it)
-                        .get()
-                zip.use { file ->
-                    val context = Context(toc, file)
-                    context.apply(block)
-                }
+        ContainerReader.readContainer(path) {
+            val toc = toc()
+            zipContent {
+                val context = Context(toc, it)
+                context.apply(block)
             }
         }
     }
 
-    fun readToc(path: Path): Toc {
-        val extractor = HbkContainerReader()
-        return extractor.readHbk(path) {
-            Toc.parse(getInflatePackBlock(getEntity(PACK_BLOCK_NAME)!!))
+    fun readToc(path: Path): Toc =
+        ContainerReader.readContainer(path) {
+            toc()
         }
-    }
 
     fun getPage(
         path: Path,
         pagePath: String,
-    ): ByteArray {
-        val extractor = HbkContainerReader()
-        return extractor.readHbk(path) {
-            val fileStorage = getEntity(FILE_STORAGE_NAME)
-            SeekableInMemoryByteChannel(fileStorage).use {
-                val zip =
-                    ZipFile
-                        .builder()
-                        .setSeekableByteChannel(it)
-                        .get()
-                zip.use { file ->
-                    return@readHbk getEntryStream(file, pagePath).readAllBytes()
-                }
+    ): ByteArray =
+        ContainerReader.readContainer(path) {
+            zipContent {
+                getEntryStream(it, pagePath).readAllBytes()
             }
         }
-    }
 
-    fun getMeta(path: Path): BookMeta {
-        val extractor = HbkContainerReader()
-
-        return extractor.readHbk(path) {
+    fun getMeta(path: Path): BookMeta =
+        ContainerReader.readContainer(path) {
             log.debug { "Reading BOOK info: $path" }
             val parser = BookMetaParser()
             parser
                 .parseContent(getEntity(BOOK_NAME)!!)
                 .also { log.debug { it } }
+        }
+
+    private fun ContainerReader.EntitiesScope.toc() =
+        Toc.parse(getInflatePackBlock(getEntity(PACK_BLOCK_NAME) as ByteArray))
+
+    private fun <R> ContainerReader.EntitiesScope.zipContent(block: (ZipFile) -> R): R {
+        val fileStorage = getEntity(FILE_STORAGE_NAME)
+        return SeekableInMemoryByteChannel(fileStorage).use {
+            ZipFile
+                .builder()
+                .setSeekableByteChannel(it)
+                .get()
+                .use(block)
         }
     }
 

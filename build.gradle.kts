@@ -160,10 +160,10 @@ val copyWebAssets = tasks.register<Copy>("copyWebAssets") {
     }
 }
 
-// Настраиваем зависимость processResources от copyWebAssets
-tasks.named("processResources") {
-    dependsOn(copyWebAssets)
-}
+//// Настраиваем зависимость processResources от copyWebAssets
+//tasks.named("processResources") {
+//    dependsOn(copyWebAssets)
+//}
 
 tasks.bootJar {
     enabled = true

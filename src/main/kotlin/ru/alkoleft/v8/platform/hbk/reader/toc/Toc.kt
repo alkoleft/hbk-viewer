@@ -7,11 +7,11 @@
 
 package ru.alkoleft.v8.platform.hbk.reader.toc
 
-import ru.alkoleft.v8.platform.hbk.models.Chunk
-import ru.alkoleft.v8.platform.hbk.models.DoubleLanguageString
-import ru.alkoleft.v8.platform.hbk.models.NameContainer
-import ru.alkoleft.v8.platform.hbk.models.NameObject
-import ru.alkoleft.v8.platform.hbk.models.Page
+import ru.alkoleft.v8.platform.shctx.models.Chunk
+import ru.alkoleft.v8.platform.shctx.models.DoubleLanguageString
+import ru.alkoleft.v8.platform.shctx.models.NameContainer
+import ru.alkoleft.v8.platform.shctx.models.NameObject
+import ru.alkoleft.v8.platform.shctx.models.Page
 
 /**
  * Представляет оглавление (Table of Contents) HBK файла.
@@ -31,7 +31,7 @@ import ru.alkoleft.v8.platform.hbk.models.Page
  * @see Page для представления отдельных страниц
  */
 class Toc {
-    private constructor(pages: List<Page>) {
+    constructor(pages: List<Page>) {
         this.pages = pages
     }
 
@@ -146,6 +146,8 @@ class Toc {
     }
 
     companion object {
+        val EMPTY = Toc(emptyList())
+
         /**
          * Парсит оглавление из сжатого блока данных.
          *

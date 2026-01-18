@@ -7,6 +7,7 @@
 
 package ru.alkoleft.v8.platform.hbk
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
@@ -50,7 +51,7 @@ class HbkExportServiceTest {
     fun `should export all files from HBK archive`() {
         val outputDir = Path.of("/tmp", "export_all")
 
-        service.export(Path("/opt/1cv8/x86_64/8.3.21.1895/accntui_ru.hbk"), outputDir, includeToc = true)
+        service.export(Path("/opt/1cv8/x86_64/8.3.21.1895/plnnrui_root.hbk"), outputDir)
 
         assertThat(outputDir).exists()
         assertThat(outputDir).isDirectory()
@@ -68,7 +69,7 @@ class HbkExportServiceTest {
     fun `should export all files from HBK archive bad`() {
         val outputDir = Path.of("", "tmp", "export_all")
 
-        service.export(Path("/opt/1cv8/x86_64/8.3.21.1895/1cv8_root.hbk"), outputDir, includeToc = true)
+        service.export(Path("/opt/1cv8/x86_64/8.3.21.1895/1cv8_root.hbk"), outputDir)
 
         assertThat(outputDir).exists()
         assertThat(outputDir).isDirectory()
