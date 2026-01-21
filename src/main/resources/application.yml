@@ -5,6 +5,8 @@ spring:
     type: simple
   main:
     banner-mode: off
+  jackson:
+    default-property-inclusion: NON_NULL
 
 # Настройки HBK файлов для REST API
 application:

@@ -24,7 +24,7 @@ class ExportCommand : Subcommand("export", "Экспортирует HBK фай�
         subcommands(
             ExportBookCommand(),
             ExportAllCommand(),
-            ExportMkDocsCommand()
+            ExportMkDocsCommand(),
         )
     }
 

@@ -101,8 +101,7 @@ class NameBlockHandler : BlockHandler<Pair<String, String>> {
         }
     }
 
-    override fun getResult(): Pair<String, String> =
-        readName(if (heading.isNotEmpty()) heading.trim() else title.trim())
+    override fun getResult(): Pair<String, String> = readName(if (heading.isNotEmpty()) heading.trim() else title.trim())
 
     override fun cleanState() {
         heading.clear()

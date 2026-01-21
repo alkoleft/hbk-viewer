@@ -1,19 +1,18 @@
 import { create } from 'zustand';
-import type { BookInfo } from '../types/api';
 import { STORAGE } from '../constants/config';
 
 export interface AppState {
   // UI состояние
   sidebarWidth: number;
-  isBookSelectorOpen: boolean;
-  isFileSelectorOpen: boolean;
   setSidebarWidth: (width: number) => void;
-  setIsBookSelectorOpen: (isOpen: boolean) => void;
-  setIsFileSelectorOpen: (isOpen: boolean) => void;
   
-  // Выбранная книга (для удобства, основное состояние в React Query)
-  selectedBook: BookInfo | null;
-  setSelectedBook: (book: BookInfo | null) => void;
+  // Локализация и разделы
+  currentLocale: string;
+  activeSection: string;
+  availableLocales: string[];
+  setCurrentLocale: (locale: string) => void;
+  setActiveSection: (section: string) => void;
+  setAvailableLocales: (locales: string[]) => void;
 }
 
 // Загружаем сохраненную ширину из localStorage
@@ -25,27 +24,39 @@ const getInitialSidebarWidth = (): number => {
   return savedWidth ? parseInt(savedWidth, 10) : STORAGE.DEFAULT_SIDEBAR_WIDTH;
 };
 
+// Загружаем сохраненную локаль из localStorage
+const getInitialLocale = (): string => {
+  if (typeof window === 'undefined') {
+    return 'ru';
+  }
+  const savedLocale = localStorage.getItem('selectedLocale');
+  return savedLocale || 'ru';
+};
+
 export const useAppStore = create<AppState>((set) => ({
   // UI состояние
   sidebarWidth: getInitialSidebarWidth(),
-  isBookSelectorOpen: false,
-  isFileSelectorOpen: false,
   setSidebarWidth: (width: number) => {
     set({ sidebarWidth: width });
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE.SIDEBAR_WIDTH_KEY, width.toString());
     }
   },
-  setIsBookSelectorOpen: (isOpen: boolean) => {
-    set({ isBookSelectorOpen: isOpen });
-  },
-  setIsFileSelectorOpen: (isOpen: boolean) => {
-    set({ isFileSelectorOpen: isOpen });
-  },
   
-  // Выбранная книга
-  selectedBook: null,
-  setSelectedBook: (book: BookInfo | null) => {
-    set({ selectedBook: book });
+  // Локализация и разделы
+  currentLocale: getInitialLocale(),
+  activeSection: '',
+  availableLocales: [],
+  setCurrentLocale: (locale: string) => {
+    set({ currentLocale: locale });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedLocale', locale);
+    }
+  },
+  setActiveSection: (section: string) => {
+    set({ activeSection: section });
+  },
+  setAvailableLocales: (locales: string[]) => {
+    set({ availableLocales: locales });
   },
 }));

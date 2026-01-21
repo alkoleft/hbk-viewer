@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2025-2026 alkoleft. All rights reserved.
- * This file is part of the mcp-bsl-context project.
+ * This file is part of the hbk-reader project.
  *
  * Licensed under the MIT License. See LICENSE file in the project root for full license information.
  */
@@ -16,15 +16,11 @@ package ru.alkoleft.v8.platform.hbk.model
  *
  * @property id Уникальный идентификатор чанка
  * @property parentId Идентификатор родительского чанка
- * @property childCount Количество дочерних чанков
- * @property childIds Список идентификаторов дочерних чанков
  * @property properties Контейнер со свойствами чанка
  */
 data class Chunk(
     val id: Int,
     val parentId: Int,
-    val childCount: Int,
-    val childIds: List<Int>,
     val properties: PropertiesContainer,
 )
 
@@ -34,14 +30,10 @@ data class Chunk(
  * Содержит метаданные чанка, включая числовые параметры,
  * контейнер с названиями и путь к HTML файлу.
  *
- * @property number1 Первый числовой параметр (служебное поле)
- * @property number2 Второй числовой параметр (служебное поле)
  * @property nameContainer Контейнер с названиями на разных языках
  * @property htmlPath Путь к HTML файлу страницы документации
  */
 data class PropertiesContainer(
-    val number1: Int,
-    val number2: Int,
     val nameContainer: NameContainer,
     val htmlPath: String,
 )
@@ -52,13 +44,9 @@ data class PropertiesContainer(
  * Содержит числовые параметры и список объектов названий,
  * каждый из которых представляет название на определенном языке.
  *
- * @property number1 Первый числовой параметр (служебное поле)
- * @property number2 Второй числовой параметр (служебное поле)
  * @property nameObjects Список объектов названий на разных языках
  */
 data class NameContainer(
-    val number1: Int,
-    val number2: Int,
     val nameObjects: List<NameObject>,
 )
 

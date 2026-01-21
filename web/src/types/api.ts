@@ -8,11 +8,11 @@ export interface DoubleLanguageString {
 }
 
 export interface PageDto {
-  title: DoubleLanguageString;
-  htmlPath: string;
-  path?: number[]; // Путь от корня (массив индексов от корня до элемента) для уникальной идентификации элементов с одинаковым htmlPath
+  title: string;
+  pagePath: string;
+  path: number[]; // Путь от корня (массив индексов от корня до элемента)
   children: PageDto[];
-  hasChildren?: boolean; // Флаг наличия дочерних элементов (для оптимизации)
+  hasChildren: boolean; // Флаг наличия дочерних элементов
 }
 
 export interface BookMeta {

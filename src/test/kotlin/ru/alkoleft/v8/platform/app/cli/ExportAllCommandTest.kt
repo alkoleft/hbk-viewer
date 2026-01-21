@@ -113,11 +113,12 @@ class ExportAllCommandTest {
         val book1 = sourceDir.resolve("book1.hbk")
         book1.createFile()
 
-        val command = createCommand(
-            sourceDir = sourceDir.toString(),
-            outputDir = outputDir.toString(),
-            pagesOnly = true,
-        )
+        val command =
+            createCommand(
+                sourceDir = sourceDir.toString(),
+                outputDir = outputDir.toString(),
+                pagesOnly = true,
+            )
         command.execute()
 
         assertThat(outputDir).exists()
@@ -130,11 +131,12 @@ class ExportAllCommandTest {
         val book1 = sourceDir.resolve("book1.hbk")
         book1.createFile()
 
-        val command = createCommand(
-            sourceDir = sourceDir.toString(),
-            outputDir = outputDir.toString(),
-            includeToc = true,
-        )
+        val command =
+            createCommand(
+                sourceDir = sourceDir.toString(),
+                outputDir = outputDir.toString(),
+                includeToc = true,
+            )
         command.execute()
 
         assertThat(outputDir).exists()
@@ -147,12 +149,13 @@ class ExportAllCommandTest {
         val book1 = sourceDir.resolve("book1.hbk")
         book1.createFile()
 
-        val command = createCommand(
-            sourceDir = sourceDir.toString(),
-            outputDir = outputDir.toString(),
-            pagesOnly = true,
-            preserveStructure = true,
-        )
+        val command =
+            createCommand(
+                sourceDir = sourceDir.toString(),
+                outputDir = outputDir.toString(),
+                pagesOnly = true,
+                preserveStructure = true,
+            )
         command.execute()
 
         assertThat(outputDir).exists()
@@ -240,12 +243,13 @@ class ExportAllCommandTest {
                 "Тест будет пропущен, если директория не существует.",
         )
 
-        val hbkFiles = Files.list(realSourceDir).use { stream ->
-            stream
-                .filter { Files.isRegularFile(it) }
-                .filter { it.fileName.toString().endsWith(".hbk", ignoreCase = true) }
-                .toList()
-        }
+        val hbkFiles =
+            Files.list(realSourceDir).use { stream ->
+                stream
+                    .filter { Files.isRegularFile(it) }
+                    .filter { it.fileName.toString().endsWith(".hbk", ignoreCase = true) }
+                    .toList()
+            }
 
         assumeTrue(
             hbkFiles.isNotEmpty(),
@@ -266,9 +270,11 @@ class ExportAllCommandTest {
             assertThat(exportedDir).exists()
             assertThat(exportedDir).isDirectory()
 
-            val files = Files.walk(exportedDir)
-                .filter { it.isRegularFile() }
-                .toList()
+            val files =
+                Files
+                    .walk(exportedDir)
+                    .filter { it.isRegularFile() }
+                    .toList()
 
             assertThat(files).isNotEmpty()
         }

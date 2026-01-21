@@ -7,10 +7,10 @@ import { buildPageUrl } from './urlUtils';
 
 /**
  * Парсит v8help:// ссылку
- * @param link - ссылка вида v8help://bookName/htmlPath
- * @returns объект с bookName и htmlPath или null, если ссылка невалидна
+ * @param link - ссылка вида v8help://bookName/pagePath
+ * @returns объект с bookName и pagePath или null, если ссылка невалидна
  */
-export function parseV8HelpLink(link: string): { bookName: string; htmlPath: string } | null {
+export function parseV8HelpLink(link: string): { bookName: string; pagePath: string } | null {
   const v8helpRegex = /^v8help:\/\/([^/]+)\/(.+)$/;
   const match = link.match(v8helpRegex);
   
@@ -20,7 +20,7 @@ export function parseV8HelpLink(link: string): { bookName: string; htmlPath: str
   
   return {
     bookName: match[1],
-    htmlPath: match[2],
+    pagePath: match[2],
   };
 }
 
@@ -91,7 +91,7 @@ export function findBookByNameAndLocale(
 
 /**
  * Преобразует v8help:// ссылку в URL приложения
- * @param v8helpLink - ссылка вида v8help://bookName/htmlPath
+ * @param v8helpLink - ссылка вида v8help://bookName/pagePath
  * @param books - список доступных книг
  * @param currentLocale - локаль текущей книги
  * @returns URL строку или null, если не удалось преобразовать
@@ -111,11 +111,11 @@ export function convertV8HelpLinkToUrl(
     return null;
   }
   
-  // htmlPath должен начинаться с /
-  const htmlPath = parsed.htmlPath.startsWith('/') 
-    ? parsed.htmlPath 
-    : `/${parsed.htmlPath}`;
+  // pagePath должен начинаться с /
+  const pagePath = parsed.pagePath.startsWith('/') 
+    ? parsed.pagePath 
+    : `/${parsed.pagePath}`;
   
   // Используем buildPageUrl для консистентного построения URL
-  return buildPageUrl(targetBook.filename, htmlPath);
+  return buildPageUrl(targetBook.filename, pagePath);
 }

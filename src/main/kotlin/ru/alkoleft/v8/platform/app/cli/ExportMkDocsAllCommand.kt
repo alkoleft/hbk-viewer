@@ -121,13 +121,13 @@ class ExportMkDocsAllCommand : Subcommand("all", "Экспортирует вс�
         hbkFile: Path,
         baseOutputPath: Path,
         exportService: HbkExportService,
-    ): Boolean {
-        return try {
+    ): Boolean =
+        try {
             logger.info { "Экспорт книги: ${hbkFile.fileName} в $baseOutputPath" }
             exportService.export(
                 hbkPath = hbkFile,
                 outputDir = baseOutputPath.resolve("docs"),
-                fileNameResolver = { name -> if (name.contains(".")) name else "$name.md" }
+                fileNameResolver = { name -> if (name.contains(".")) name else "$name.md" },
             )
             logger.info { "Книга ${hbkFile.fileName} экспортирована успешно" }
             tocList.add(exportService.toc(hbkFile))
@@ -136,5 +136,4 @@ class ExportMkDocsAllCommand : Subcommand("all", "Экспортирует вс�
             logger.error(e) { "Ошибка при экспорте книги: ${hbkFile.fileName}" }
             false
         }
-    }
 }

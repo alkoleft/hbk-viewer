@@ -8,15 +8,18 @@
 package ru.alkoleft.v8.platform.app.storage
 
 import io.kotest.core.spec.style.ShouldSpec
-import ru.alkoleft.v8.platform.app.config.ApplicationConfiguration
+import ru.alkoleft.v8.platform.app.config.ApplicationProperties
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbkFilesDirectory
 
-class BookRegistryTest : ShouldSpec({
-    var bookRegistry = BookRegistry(
-        HbkContentReader(), ApplicationConfiguration(hbkFilesDirectory())
-    )
-    should("load books") {
-        bookRegistry.getAllFiles()
-    }
-})
+class BookRegistryTest :
+    ShouldSpec({
+        var bookRegistry =
+            BookRegistry(
+                HbkContentReader(),
+                ApplicationProperties(hbkFilesDirectory()),
+            )
+        should("load books") {
+            bookRegistry.getAllFiles()
+        }
+    })

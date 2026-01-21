@@ -67,16 +67,16 @@ class HbkPathService {
     fun findPathToPage(
         toc: Toc,
         targetPage: Page,
-    ): List<Int>? {
+    ): List<String>? {
         fun searchInPages(
             pages: List<Page>,
-            currentPath: List<Int>,
-        ): List<Int>? {
+            currentPath: List<String>,
+        ): List<String>? {
             for ((index, page) in pages.withIndex()) {
                 if (page === targetPage) {
-                    return currentPath + index
+                    return currentPath + page.location
                 }
-                val found = searchInPages(page.children, currentPath + index)
+                val found = searchInPages(page.children, currentPath + page.location)
                 if (found != null) {
                     return found
                 }
@@ -98,13 +98,13 @@ class HbkPathService {
         htmlPath: String,
     ): Page? {
         val normalizedPath = normalizeHtmlPath(htmlPath)
-        val page = toc.findPageByHtmlPath(normalizedPath)
+        val page = toc.findPageByLocation(normalizedPath)
         if (page != null) {
             logger.debug { "Страница найдена по нормализованному пути: '$normalizedPath'" }
             return page
         }
         // Если не найдено с нормализованным путем, пробуем исходный
-        val pageByOriginal = toc.findPageByHtmlPath(htmlPath)
+        val pageByOriginal = toc.findPageByLocation(htmlPath)
         if (pageByOriginal != null) {
             logger.debug { "Страница найдена по исходному пути: '$htmlPath'" }
             return pageByOriginal
@@ -146,7 +146,7 @@ class HbkPathService {
      */
     fun getFirstPageHtmlPath(toc: Toc): String =
         if (toc.pages.isNotEmpty()) {
-            toc.pages.first().htmlPath
+            toc.pages.first().location
         } else {
             throw PlatformContextLoadException("Оглавление файла пусто")
         }

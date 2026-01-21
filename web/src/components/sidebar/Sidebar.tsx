@@ -1,66 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
   Typography,
-  IconButton,
+  CircularProgress,
 } from '@mui/material';
-import type { PageDto, BookInfo } from '../../types/api';
-import { useSearchStructure } from '../../api/queries';
-import { extractErrorMessage } from '../../utils/errorUtils';
-import { useDebounce } from '../../hooks/useDebounce';
-import { useSidebarPages } from '../../hooks/useSidebarPages';
+import { useSectionNavigation } from '../../hooks/useSectionNavigation';
 import { useSidebarResize } from '../../hooks/ui/useSidebarResize';
-import { SidebarHeader } from './SidebarHeader';
 import { SidebarSearch } from './SidebarSearch';
 import { NavigationTree } from './NavigationTree';
 
-interface SidebarProps {
-  selectedFile?: string;
-  selectedBookInfo?: BookInfo | null;
-  onFileSelectClick: () => void;
-  pages: PageDto[];
-  onPageSelect: (htmlPath: string) => void;
-  selectedPage?: string;
-  loading?: boolean;
-  error?: string | null;
-  onRetry?: () => void;
-}
-
-export function Sidebar({
-  selectedFile,
-  selectedBookInfo,
-  onFileSelectClick,
-  pages,
-  onPageSelect,
-  selectedPage,
-  loading,
-  error,
-  onRetry,
-}: SidebarProps) {
+export function Sidebar() {
   const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery);
-
-  // Используем React Query для поиска
-  const {
-    data: searchResults = [],
-    isLoading: isSearching,
-    error: searchError,
-  } = useSearchStructure(selectedFile, debouncedSearchQuery);
-
-  // Определяем, какие страницы показывать: результаты поиска или обычный список
-  const displayPages = useSidebarPages({
-    pages,
-    searchResults,
-    searchQuery: debouncedSearchQuery,
-  });
-
+  const { locale, section, sectionPages, currentSection, isLoading, error } = useSectionNavigation();
+  
   // Используем хук для изменения размера
   const { sidebarWidth, isResizing, handleResizeStart } = useSidebarResize();
 
-  const searchErrorText = searchError 
-    ? extractErrorMessage(searchError, 'Ошибка поиска')
-    : null;
+  // Отладочная информация
+  useEffect(() => {
+    console.log('Section changed:', { 
+      section, 
+      sectionPagesCount: sectionPages.length, 
+      currentSection: currentSection?.title,
+      isLoading,
+      error
+    });
+  }, [section, sectionPages, currentSection, isLoading, error]);
+
+  const handlePageSelect = (htmlPath: string) => {
+    // TODO: Implement page navigation within section
+    console.log('Navigate to page:', htmlPath);
+  };
 
   return (
     <Box
@@ -87,53 +58,57 @@ export function Sidebar({
         }}
         elevation={0}
       >
-        <SidebarHeader
-          selectedFile={selectedFile}
-          selectedBookInfo={selectedBookInfo}
-          onFileSelectClick={onFileSelectClick}
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+            {section || 'Выберите раздел'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {sectionPages.length > 0 
+              ? `${sectionPages.length} страниц` 
+              : 'Нет страниц в разделе'
+            }
+          </Typography>
+        </Box>
+
+        <SidebarSearch
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          isSearching={false}
+          searchError={null}
         />
 
-        {loading && (
+        {isLoading && (
           <Box sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              Загрузка структуры...
+            <CircularProgress size={24} />
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Загрузка содержимого раздела...
             </Typography>
           </Box>
         )}
 
         {error && (
           <Box sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="body2" color="error" sx={{ mb: 1 }}>
-              Ошибка: {error}
+            <Typography variant="body2" color="error">
+              Ошибка загрузки: {error.message}
             </Typography>
-            {onRetry && (
-              <IconButton size="small" onClick={onRetry}>
-                Повторить
-              </IconButton>
-            )}
           </Box>
         )}
 
-        {!loading && !error && (
-          <>
-            <SidebarSearch
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              isSearching={isSearching}
-              searchError={searchErrorText}
-            />
-
-            <NavigationTree
-              pages={displayPages}
-              onPageSelect={onPageSelect}
-              selectedPage={selectedPage}
-              searchQuery={debouncedSearchQuery}
-              filename={selectedFile}
-              isSearchResult={!!debouncedSearchQuery.trim()}
-            />
-          </>
+        {!isLoading && !error && (
+          <NavigationTree
+            key={section} // Принудительный перерендер при смене раздела
+            pages={sectionPages}
+            onPageSelect={handlePageSelect}
+            selectedPage=""
+            searchQuery={searchQuery}
+            filename={`global-${locale}`}
+            isSearchResult={false}
+            locale={locale}
+            isGlobalToc={true}
+          />
         )}
       </Paper>
+      
       {/* Resize handle */}
       <Box
         onMouseDown={handleResizeStart}

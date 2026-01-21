@@ -15,12 +15,18 @@ import java.nio.file.Path
 private val logger = KotlinLogging.logger { }
 
 class ExportService {
-    fun exportBook(hbkFilePath: Path, outputPath: Path) {
+    fun exportBook(
+        hbkFilePath: Path,
+        outputPath: Path,
+    ) {
         performExportBook(hbkFilePath, outputPath)
         logger.info { "Экспорт завершен успешно" }
     }
 
-    fun exportBookToMkDocs(hbkFilePath: Path, outputPath: Path) {
+    fun exportBookToMkDocs(
+        hbkFilePath: Path,
+        outputPath: Path,
+    ) {
         performExportBook(hbkFilePath, outputPath.resolve("docs"))
         performExportBookToc(hbkFilePath, outputPath, MkDocsToc())
         logger.info { "Экспорт завершен успешно" }
@@ -46,7 +52,7 @@ class ExportService {
     private fun performExportBookToc(
         hbkFilePath: Path,
         outputPath: Path,
-        formatter: TocFormatter
+        formatter: TocFormatter,
     ) {
         logger.info { "Экспорт книги $hbkFilePath в $outputPath" }
         val toc = HbkExportService().toc(hbkFilePath)

@@ -9,24 +9,28 @@ package ru.alkoleft.v8.platform.app.service
 
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldNotBeEmpty
-import ru.alkoleft.v8.platform.app.config.ApplicationConfiguration
+import ru.alkoleft.v8.platform.app.config.ApplicationProperties
 import ru.alkoleft.v8.platform.app.storage.BookRegistry
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbkFilesDirectory
 
-class BooksServiceTest : ShouldSpec({
-    val reader = HbkContentReader()
-    val bookService = BooksService(
-        BookRegistry(
-            reader, ApplicationConfiguration(hbkFilesDirectory())
-        ), reader
-    )
+class BooksServiceTest :
+    ShouldSpec({
+        val reader = HbkContentReader()
+        val bookService =
+            BooksService(
+                BookRegistry(
+                    reader,
+                    ApplicationProperties(hbkFilesDirectory()),
+                ),
+                reader,
+            )
 
-    should("load books") {
-        bookService.books.shouldNotBeEmpty()
-    }
+        should("load books") {
+            bookService.books.shouldNotBeEmpty()
+        }
 
-    should("load global toc") {
-        bookService.globalTocRu.pages.shouldNotBeEmpty()
-    }
-})
+        should("load global toc") {
+            bookService.globalTocRu.pages.shouldNotBeEmpty()
+        }
+    })

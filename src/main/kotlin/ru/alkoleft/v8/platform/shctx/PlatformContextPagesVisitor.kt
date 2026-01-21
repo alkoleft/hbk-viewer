@@ -30,7 +30,7 @@ class PagesVisitor(
         val types = mutableListOf<Page>()
 
         pages
-            .filter { it.htmlPath.isNotEmpty() }
+            .filter { it.location.isNotEmpty() }
             .forEach {
                 val pageType = rootPageType(it)
                 when (pageType) {
@@ -61,7 +61,7 @@ class PagesVisitor(
     fun visitEnumPage(page: Page): EnumInfo {
         val values =
             page.children
-                .filter { it.htmlPath.contains("/properties/") }
+                .filter { it.location.contains("/properties/") }
                 .map { parser.parseEnumValuePage(it) }
         return parser.parseEnumPage(page).apply { this.values.addAll(values) }
     }
@@ -95,7 +95,7 @@ class PagesVisitor(
     fun visitPropertiesPage(page: Page) =
         page.children
             .asSequence()
-            .filter { it.htmlPath.contains("/properties/") } // TODO проверить на обязательность
+            .filter { it.location.contains("/properties/") } // TODO проверить на обязательность
             .filter { !it.title.ru.startsWith("<") }
             .map { parser.parsePropertyPage(it) }
 
@@ -107,7 +107,7 @@ class PagesVisitor(
     private fun getConstructorsFromPage(page: Page) =
         page.children
             .asSequence()
-            .filter { it.htmlPath.contains("/ctors/") }
+            .filter { it.location.contains("/ctors/") }
             .map { parser.parseConstructorPage(it) }
 }
 
@@ -118,17 +118,16 @@ private fun rootPageType(page: Page) =
         else -> PageType.TYPES_CATALOG
     }
 
-private fun isGlobalContextPage(page: Page): Boolean = page.htmlPath.contains("Global context.html")
+private fun isGlobalContextPage(page: Page): Boolean = page.location.contains("Global context.html")
 
-private fun isCatalogPage(page: Page) = CATALOG_PAGE_PATTERN.find(page.htmlPath) != null
+private fun isCatalogPage(page: Page) = CATALOG_PAGE_PATTERN.find(page.location) != null
 
-private fun isEnumCatalog(page: Page) =
-    page.title.en == "Системные наборы значений" || page.title.en == "Системные перечисления"
+private fun isEnumCatalog(page: Page) = page.title.en == "Системные наборы значений" || page.title.en == "Системные перечисления"
 
 suspend fun SequenceScope<Page>.drillDown(base: Page) {
     base.children.forEach { child ->
         when {
-            child.htmlPath.isEmpty() -> {}
+            child.location.isEmpty() -> {}
             isCatalogPage(child) -> drillDown(child)
             else -> yield(child)
         }

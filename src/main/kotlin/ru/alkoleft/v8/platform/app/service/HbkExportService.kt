@@ -52,7 +52,7 @@ class HbkExportService {
     fun export(
         hbkPath: Path,
         outputDir: Path,
-        fileNameResolver: FileNameResolver = { it }
+        fileNameResolver: FileNameResolver = { it },
     ) {
         logger.info { "Начало экспорта HBK файла $hbkPath в директорию $outputDir" }
 
@@ -75,8 +75,9 @@ class HbkExportService {
         val containerReader = ContainerReader()
         containerReader.readContainer(hbkPath) {
 //            this.entities.forEach { Files.write(outputDir.resolve(it.key), getEntity(it.key)!!) }
-            val fileStorage = getEntity(FILE_STORAGE_NAME)
-                ?: throw PlatformContextLoadException("Не найден блок FileStorage в HBK файле")
+            val fileStorage =
+                getEntity(FILE_STORAGE_NAME)
+                    ?: throw PlatformContextLoadException("Не найден блок FileStorage в HBK файле")
             exportZipFiles(fileStorage, outputDir, fileNameResolver)
         }
 
@@ -86,8 +87,9 @@ class HbkExportService {
     fun toc(hbkPath: Path): Toc {
         val containerReader = ContainerReader()
         return containerReader.readContainer(hbkPath) {
-            val packBlock = getEntity(PACK_BLOCK_NAME)
-                ?: throw PlatformContextLoadException("Не найден блок PackBlock в HBK файле")
+            val packBlock =
+                getEntity(PACK_BLOCK_NAME)
+                    ?: throw PlatformContextLoadException("Не найден блок PackBlock в HBK файле")
             return@readContainer Toc.parse(getInflatePackBlock(packBlock))
         }
     }
@@ -101,7 +103,7 @@ class HbkExportService {
     private fun exportZipFiles(
         fileStorage: ByteArray,
         outputDir: Path,
-        fileNameResolver: FileNameResolver
+        fileNameResolver: FileNameResolver,
     ) {
         logger.debug { "Начало экспорта файлов из ZIP архива" }
 
@@ -153,19 +155,20 @@ class HbkExportService {
         val builder = StringBuilder()
 
         for (page in pages) {
-            val title = if (page.title.ru.isNotEmpty()) {
-                "${page.title.ru} (${page.title.en})"
-            } else {
-                page.title.en
-            }
+            val title =
+                if (page.title.ru.isNotEmpty()) {
+                    "${page.title.ru} (${page.title.en})"
+                } else {
+                    page.title.en
+                }
 
             builder.append(indent)
             builder.append("- ")
             builder.append(title)
 
-            if (page.htmlPath.isNotEmpty()) {
+            if (page.location.isNotEmpty()) {
                 builder.append(" -> ")
-                builder.append(page.htmlPath)
+                builder.append(page.location)
             }
 
             builder.appendLine()

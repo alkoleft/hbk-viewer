@@ -11,5 +11,8 @@ import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import java.nio.file.Path
 
 interface TocFormatter {
-    fun export(toc: Toc, output: Path)
+    fun export(
+        toc: Toc,
+        output: Path,
+    )
 }

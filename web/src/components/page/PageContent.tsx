@@ -1,55 +1,8 @@
-import { Box, Typography, CircularProgress, Button, Alert } from '@mui/material';
-import type { BookStructure, BookInfo } from '../../types/api';
-import { useBookPageContent } from '../../api/queries';
-import { extractErrorMessage } from '../../utils/errorUtils';
-import { usePageTitle } from '../../hooks/usePageTitle';
-import { PageHeader } from './PageHeader';
-import { PageViewer } from './PageViewer';
+import { Box, Typography } from '@mui/material';
+import { useSectionNavigation } from '../../hooks/useSectionNavigation';
 
-interface PageContentProps {
-  filename: string | undefined;
-  pageName?: string;
-  structure?: BookStructure | null;
-  onPageSelect: (htmlPath: string) => void;
-  books?: BookInfo[];
-  currentLocale?: string;
-}
-
-export function PageContent({ 
-  filename, 
-  pageName, 
-  structure, 
-  onPageSelect,
-  books = [],
-  currentLocale = 'ru',
-}: PageContentProps) {
-  // Используем React Query для загрузки контента
-  // placeholderData сохраняет предыдущие данные при переходе между страницами
-  const {
-    data: content,
-    isLoading: loading,
-    error: contentError,
-    refetch: loadContent,
-    isFetching,
-    isPlaceholderData,
-  } = useBookPageContent(filename, pageName);
-
-  // Безопасное извлечение сообщения об ошибке
-  const error = contentError ? extractErrorMessage(contentError, 'Ошибка загрузки контента') : null;
-
-  // Используем данные напрямую из React Query
-  // placeholderData автоматически сохраняет предыдущие данные при переключении
-  const displayContent = content || null;
-
-  // Показываем индикатор загрузки только при первой загрузке (когда нет данных)
-  const showLoadingIndicator = loading && !displayContent;
-
-  // Обновляем заголовок страницы в браузере
-  usePageTitle({
-    structure: structure ?? null,
-    pageName,
-    currentLocale,
-  });
+export function PageContent() {
+  const { section, sectionPages } = useSectionNavigation();
 
   return (
     <Box
@@ -61,97 +14,36 @@ export function PageContent({
         bgcolor: 'background.default',
       }}
     >
-      {!filename || !pageName ? (
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Typography variant="body1" color="text.secondary">
-            Выберите файл и страницу для просмотра
-          </Typography>
-        </Box>
-      ) : (
-        <>
-          <PageHeader
-            structure={structure ?? null}
-            pageName={pageName}
-            filename={filename}
-            onPageSelect={onPageSelect}
-          />
-
-          <Box
-            sx={{
-              flex: 1,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              minHeight: 0,
-              position: 'relative',
-            }}
-          >
-            {showLoadingIndicator && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '200px',
-                  position: 'relative',
-                  bgcolor: 'background.default',
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
-
-            {isFetching && displayContent && !loading && !isPlaceholderData && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '200px',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  bgcolor: 'rgba(255, 255, 255, 0.7)',
-                  zIndex: 1,
-                  pointerEvents: 'none',
-                  opacity: 0.3,
-                  transition: 'opacity 0.2s ease-in-out',
-                }}
-              >
-                <CircularProgress size={40} />
-              </Box>
-            )}
-
-            {error && (
-              <Box sx={{ p: 3 }}>
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  Ошибка: {error}
-                </Alert>
-                <Button variant="contained" onClick={() => loadContent()}>
-                  Повторить
-                </Button>
-              </Box>
-            )}
-
-            {displayContent && displayContent.content && typeof displayContent.content === 'string' && (
-              <PageViewer
-                content={displayContent.content}
-                isTransitioning={false}
-                books={books}
-                currentLocale={currentLocale}
-              />
-            )}
-          </Box>
-        </>
-      )}
+      <Box
+        sx={{
+          p: 3,
+          borderBottom: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Typography variant="h4" component="h1" gutterBottom>
+          {section || 'Выберите раздел'}
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          {sectionPages.length > 0 
+            ? `В этом разделе ${sectionPages.length} страниц`
+            : 'Выберите страницу из бокового меню'
+          }
+        </Typography>
+      </Box>
+      
+      <Box
+        sx={{
+          flex: 1,
+          p: 3,
+          overflow: 'auto',
+        }}
+      >
+        <Typography variant="body1">
+          Содержимое страницы будет отображаться здесь после выбора конкретной страницы из навигационного дерева.
+        </Typography>
+      </Box>
     </Box>
   );
 }

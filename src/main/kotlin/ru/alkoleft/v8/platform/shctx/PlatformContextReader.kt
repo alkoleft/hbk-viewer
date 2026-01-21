@@ -84,7 +84,7 @@ class PlatformContextReader {
         fun globalMethods() =
             sequence {
                 for (page in globalContextPage.children) {
-                    if (page.htmlPath.contains("/methods/")) {
+                    if (page.location.contains("/methods/")) {
                         yield(page)
                     }
                 }

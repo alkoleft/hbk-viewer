@@ -10,9 +10,6 @@ package ru.alkoleft.v8.platform
 import io.kotest.core.spec.style.ShouldSpec
 import kotlin.io.path.Path
 
-fun ShouldSpec.hbkFilesDirectory() =
-    "/opt/1cv8/x86_64/8.3.21.1895"
+fun ShouldSpec.hbkFilesDirectory() = "/opt/1cv8/x86_64/8.3.21.1895"
 
-
-fun ShouldSpec.hbkFilesPath() =
-    Path(hbkFilesDirectory())
+fun ShouldSpec.hbkFilesPath() = Path(hbkFilesDirectory())

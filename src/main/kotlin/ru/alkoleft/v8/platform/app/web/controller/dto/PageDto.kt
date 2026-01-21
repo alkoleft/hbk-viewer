@@ -7,23 +7,22 @@
 
 package ru.alkoleft.v8.platform.app.web.controller.dto
 
-import ru.alkoleft.v8.platform.hbk.model.DoubleLanguageString
 import ru.alkoleft.v8.platform.hbk.model.Page
 
 /**
  * DTO для представления страницы в REST API.
  *
  * @property title Заголовок страницы на двух языках
- * @property htmlPath Путь к HTML файлу в архиве
- * @property path Путь от корня (массив индексов от корня до элемента) для уникальной идентификации элементов с одинаковым htmlPath
+ * @property pagePath Путь к HTML файлу в архиве
+ * @property tocPath Путь от корня (массив индексов от корня до элемента) для уникальной идентификации элементов с одинаковым htmlPath
  * @property children Список дочерних страниц
  * @property hasChildren Флаг наличия дочерних элементов (для оптимизации)
  */
 data class PageDto(
-    val title: DoubleLanguageString,
-    val htmlPath: String,
-    val path: List<Int> = emptyList(),
-    val children: List<PageDto> = emptyList(),
+    val title: String,
+    val pagePath: String,
+    val tocPath: List<String>?,
+    val children: List<PageDto>?,
     val hasChildren: Boolean = false,
 ) {
     companion object {
@@ -35,13 +34,13 @@ data class PageDto(
          */
         fun from(
             page: Page,
-            path: List<Int> = emptyList(),
+            path: List<String> = emptyList(),
         ): PageDto =
             PageDto(
-                title = page.title,
-                htmlPath = page.htmlPath,
-                path = path,
-                children = page.children.mapIndexed { index, child -> from(child, path + index) },
+                title = page.title.get(),
+                pagePath = page.location,
+                tocPath = path.ifEmpty { null },
+                children = page.children.map { child -> from(child) }.ifEmpty { null },
                 hasChildren = page.children.isNotEmpty(),
             )
 
@@ -54,13 +53,13 @@ data class PageDto(
          */
         fun fromLite(
             page: Page,
-            path: List<Int> = emptyList(),
+            path: List<String> = emptyList(),
         ): PageDto =
             PageDto(
-                title = page.title,
-                htmlPath = page.htmlPath,
-                path = path,
-                children = emptyList(),
+                title = page.title.get(),
+                pagePath = page.location,
+                tocPath = path.ifEmpty { null },
+                children = null,
                 hasChildren = page.children.isNotEmpty(),
             )
 
@@ -74,16 +73,23 @@ data class PageDto(
         fun fromWithDepth(
             page: Page,
             maxDepth: Int,
-            path: List<Int> = emptyList(),
+            path: List<String> = emptyList(),
         ): PageDto {
             if (maxDepth <= 0) {
                 return fromLite(page, path)
             }
             return PageDto(
-                title = page.title,
-                htmlPath = page.htmlPath,
-                path = path,
-                children = page.children.mapIndexed { index, child -> fromWithDepth(child, maxDepth - 1, path + index) },
+                title = page.title.get(),
+                pagePath = page.location,
+                tocPath = path.ifEmpty { null },
+                children =
+                    page.children
+                        .map { child ->
+                            fromWithDepth(
+                                child,
+                                maxDepth - 1,
+                            )
+                        }.ifEmpty { null },
                 hasChildren = page.children.isNotEmpty(),
             )
         }

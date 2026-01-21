@@ -8,14 +8,17 @@
 package ru.alkoleft.v8.platform.app.storage
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
-import ru.alkoleft.v8.platform.app.config.ApplicationConfiguration
+import ru.alkoleft.v8.platform.app.config.ApplicationProperties
 import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
+import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import ru.alkoleft.v8.platform.hbk.util.LocaleExtractor
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.Path
 import kotlin.streams.asSequence
 import kotlin.time.measureTimedValue
 
@@ -29,10 +32,10 @@ private val logger = KotlinLogging.logger { }
  */
 @Component
 class BookRegistry(
-    private val hbkContentReader: HbkContentReader,
-    applicationConfiguration: ApplicationConfiguration
+    applicationProperties: ApplicationProperties,
 ) {
-    private val hbkDirectory = applicationConfiguration.hbkFilesDirectory
+    private val hbkContentReader = HbkContentReader()
+    private val hbkDirectory = applicationProperties.hbkFilesDirectory
     val books: List<BookInfo> by lazy(::loadBooksWithMeasure)
     private val booksByFile: Map<String, BookInfo> by lazy {
         books.associateBy { it.filename }
@@ -60,6 +63,12 @@ class BookRegistry(
      * @return Путь к файлу или null, если файл не найден
      */
     fun getFilePath(filename: String): Path? = booksByFile[filename]?.let { Paths.get(it.path) }
+
+    @Cacheable(value = ["tocCache"], key = "#book.path")
+    fun getBookToc(book: BookInfo): Toc? {
+        logger.debug { "Чтение оглавления из файла ${book.path}" }
+        return hbkContentReader.readToc(Path(book.path))
+    }
 
     private fun loadBooksWithMeasure() =
         measureTimedValue {

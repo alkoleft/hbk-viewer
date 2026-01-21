@@ -19,12 +19,20 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.moveTo
 
 class MkDocsToc : TocFormatter {
-    override fun export(toc: Toc, output: Path) {
-        val header = this.javaClass.classLoader.getResource("mkdocs.yml").readText()
+    override fun export(
+        toc: Toc,
+        output: Path,
+    ) {
+        val header =
+            this.javaClass.classLoader
+                .getResource("mkdocs.yml")
+                .readText()
         val filePath =
-            if (output.isDirectory())
+            if (output.isDirectory()) {
                 output.resolve("mkdocs.yml")
-            else output
+            } else {
+                output
+            }
         Files.newBufferedWriter(filePath).use { stream ->
             stream.appendLine(header)
             writeChildren(stream, toc.pages, 1)
@@ -32,12 +40,16 @@ class MkDocsToc : TocFormatter {
         renameFiles(toc, output)
     }
 
-    private fun writeChildren(stream: BufferedWriter, pages: List<Page>, level: Int) {
+    private fun writeChildren(
+        stream: BufferedWriter,
+        pages: List<Page>,
+        level: Int,
+    ) {
         val indent = "  ".repeat(level)
         pages.forEach { page ->
             stream.write("$indent- ${title(page)}:")
-            if (page.htmlPath.isNotBlank() && page.children.isEmpty()) {
-                stream.write(" ${page.htmlPath.trimStart('/')}.md")
+            if (page.location.isNotBlank() && page.children.isEmpty()) {
+                stream.write(" ${page.location}.md")
             }
 
             stream.newLine()
@@ -45,16 +57,21 @@ class MkDocsToc : TocFormatter {
         }
     }
 
-    private fun renameFiles(toc: Toc, output: Path) {
+    private fun renameFiles(
+        toc: Toc,
+        output: Path,
+    ) {
         val docsPath = output.resolve("docs")
         renameChildrenFiles(toc.pages, docsPath)
-
     }
 
-    private fun renameChildrenFiles(pages: List<Page>, docsPath: Path) {
+    private fun renameChildrenFiles(
+        pages: List<Page>,
+        docsPath: Path,
+    ) {
         pages.forEach { page ->
-            if (page.htmlPath.isNotBlank() && page.children.isEmpty()) {
-                val pagePath = docsPath.resolve(page.htmlPath.trimStart('/'))
+            if (page.location.isNotBlank() && page.children.isEmpty()) {
+                val pagePath = docsPath.resolve(page.location)
                 if (pagePath.exists() && !pagePath.isDirectory()) {
                     pagePath.moveTo(Path(pagePath.absolutePathString() + ".md"))
                 }
@@ -67,11 +84,11 @@ class MkDocsToc : TocFormatter {
         val title = page.title.ru.ifBlank { page.title.en }
         return when {
             title.isBlank() -> "<Blank title>"
-            title.contains("@")
-                || title.contains(":")
-                || title.contains("[")
-                || title.contains("]")
-                || title.contains("?") -> "\"$title\""
+            title.contains("@") ||
+                title.contains(":") ||
+                title.contains("[") ||
+                title.contains("]") ||
+                title.contains("?") -> "\"$title\""
 
             else -> title
         }

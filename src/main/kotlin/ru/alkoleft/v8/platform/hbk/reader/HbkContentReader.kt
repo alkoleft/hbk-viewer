@@ -93,8 +93,7 @@ class HbkContentReader {
                 .also { log.debug { it } }
         }
 
-    private fun ContainerReader.EntitiesScope.toc() =
-        getEntity(PACK_BLOCK_NAME)?.let { Toc.parse(getInflatePackBlock(it)) }
+    private fun ContainerReader.EntitiesScope.toc() = getEntity(PACK_BLOCK_NAME)?.let { Toc.parse(getInflatePackBlock(it)) }
 
     private fun <R> ContainerReader.EntitiesScope.zipContent(block: (ZipFile) -> R): R {
         val fileStorage = getEntity(FILE_STORAGE_NAME)
@@ -126,7 +125,7 @@ class HbkContentReader {
          * @return Поток для чтения HTML содержимого
          * @throws PlatformContextLoadException если файл не найден или имя не указано
          */
-        fun getEntryStream(page: Page) = getEntryStream(page.htmlPath)
+        fun getEntryStream(page: Page) = getEntryStream(page.location)
 
         /**
          * Получает поток для чтения HTML файла по имени.

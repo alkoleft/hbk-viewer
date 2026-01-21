@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2025-2026 alkoleft. All rights reserved.
- * This file is part of the mcp-bsl-context project.
+ * This file is part of the hbk-reader project.
  *
  * Licensed under the MIT License. See LICENSE file in the project root for full license information.
  */
@@ -14,12 +14,12 @@ package ru.alkoleft.v8.platform.hbk.model
  * и список дочерних страниц, формируя иерархическую структуру документации.
  *
  * @property title Заголовок страницы на двух языках
- * @property htmlPath Путь к HTML файлу в архиве
+ * @property location Путь к HTML файлу в архиве
  * @property children Список дочерних страниц
  */
 data class Page(
     val title: DoubleLanguageString,
-    val htmlPath: String,
+    val location: String,
     val children: MutableList<Page> = mutableListOf(),
 )
 
@@ -35,4 +35,6 @@ data class Page(
 data class DoubleLanguageString(
     val en: String,
     val ru: String,
-)
+) {
+    fun get() = ru.ifEmpty { en }
+}

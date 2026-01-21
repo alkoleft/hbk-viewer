@@ -23,7 +23,6 @@ private const val BLOCK_HEADER_SIZE = 31
 private const val CONTAINER_HEADER_SIZE = 16
 private const val SPLITTER = Int.MAX_VALUE
 
-
 private val log = KotlinLogging.logger { }
 
 /**
@@ -35,9 +34,7 @@ class ContainerReader {
         fun <T> readContainer(
             path: Path,
             block: EntitiesScope.() -> T,
-        ): T {
-            return ContainerReader().readContainer(path, block)
-        }
+        ): T = ContainerReader().readContainer(path, block)
     }
 
     /**
@@ -67,7 +64,7 @@ class ContainerReader {
     ): T {
         log.debug { "Reading container file: $path" }
         if (!path.toFile().exists()) {
-            throw IllegalArgumentException("File not exists '${path}'")
+            throw IllegalArgumentException("File not exists '$path'")
         }
         FileInputStream(path.toFile()).use { stream ->
             val channel = stream.channel
@@ -102,7 +99,7 @@ class ContainerReader {
             if (bodyAddress != SPLITTER) {
                 result[name] = bodyAddress
             } else {
-                log.debug { "Skip entry '${name}' with body address $bodyAddress" }
+                log.debug { "Skip entry '$name' with body address $bodyAddress" }
             }
         }
         return result.toMap()
@@ -127,8 +124,7 @@ class ContainerReader {
         }
     }
 
-    private fun readBlock(buffer: ByteBuffer) =
-        readBlockContent(buffer, readBlockHeader(buffer))
+    private fun readBlock(buffer: ByteBuffer) = readBlockContent(buffer, readBlockHeader(buffer))
 
     private fun readBlockHeader(buffer: ByteBuffer): Block {
         // заголовок блока

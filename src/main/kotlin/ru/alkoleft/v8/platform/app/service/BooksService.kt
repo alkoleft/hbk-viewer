@@ -29,40 +29,44 @@ private val logger = KotlinLogging.logger { }
 @Service
 class BooksService(
     private val bookRegistry: BookRegistry,
-    private val hbkContentReader: HbkContentReader,
 ) {
+    private val hbkContentReader = HbkContentReader()
     val books: List<BookInfo> = bookRegistry.books
-    val globalTocRu: Toc by lazy { globalTocByLocale("ru") }
 
-    fun getBookPageContent(hbkFile: String, pagePath: String): String {
+    fun getAvailableLocales(): List<String> = books.map { it.locale }.distinct().sorted()
+
+    @Cacheable("global-toc")
+    fun getGlobalTocByLocale(locale: String): Toc = globalTocByLocale(locale)
+
+    fun getBookPageContent(
+        hbkFile: String,
+        pagePath: String,
+    ): String {
         val bookInfo = getBookInfo(hbkFile)
         return hbkContentReader.getPageText(Path(bookInfo.path), pagePath.normalizePath())
     }
 
-    fun getBookPageInfo(hbkFile: String, pagePath: String): Page {
+    fun getBookPageInfo(
+        hbkFile: String,
+        pagePath: String,
+    ): Page {
         val toc = bookToc(hbkFile)
         val normalizedPath = pagePath.normalizePath()
 
-        return toc.findPageByHtmlPath(normalizedPath) ?: throw BookPageNotFoundException(hbkFile, pagePath)
+        return toc.findPageByLocation(normalizedPath) ?: throw BookPageNotFoundException.byBookAndLocation(
+            hbkFile,
+            pagePath,
+        )
     }
 
-    fun bookToc(hbkFile: String) =
-        bookToc(getBookInfo(hbkFile))
+    fun bookToc(hbkFile: String) = bookToc(getBookInfo(hbkFile))
 
-    fun bookToc(book: BookInfo) =
-        getCacheableBookToc(book) ?: throw TocParsingException("Нет данных оглавления")
+    fun bookToc(book: BookInfo) = bookRegistry.getBookToc(book) ?: throw TocParsingException("Нет данных оглавления")
 
-    @Cacheable(value = ["tocCache"], key = "#book.path")
-    private fun getCacheableBookToc(book: BookInfo): Toc? {
-        logger.debug { "Чтение оглавления из файла ${book.path}" }
-        return hbkContentReader.readToc(Path(book.path))
-    }
-
-    private fun getBookInfo(hbkFile: String) =
-        bookRegistry.getBookInfo(hbkFile) ?: throw BookNotFoundException(hbkFile)
+    private fun getBookInfo(hbkFile: String) = bookRegistry.getBookInfo(hbkFile) ?: throw BookNotFoundException.byFileName(hbkFile)
 
     @EventListener(ApplicationReadyEvent::class)
-    private fun loadBooks() {
+    fun loadBooks() {
         bookRegistry.books
     }
 
@@ -76,12 +80,12 @@ class BooksService(
     private fun globalTocByLocale(locale: String) =
         measureTimedValue {
             TocMergerService.merge(
-                books.asSequence()
+                books
+                    .asSequence()
                     .filter { it.locale.equals(locale, true) }
                     .mapNotNull { book ->
-                        getCacheableBookToc(book)?.let { Pair(book, it) }
-                    }
-                    .toList()
+                        bookRegistry.getBookToc(book)?.let { Pair(book, it) }
+                    }.toList(),
             )
         }.also { logger.info { "Build global TOC($locale): ${it.duration}, root pages: ${it.value.pages.size}" } }
             .value

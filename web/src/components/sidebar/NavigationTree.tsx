@@ -4,11 +4,13 @@ import { TreeNode } from './TreeNode';
 
 interface NavigationTreeProps {
   pages: PageDto[];
-  onPageSelect: (htmlPath: string) => void;
+  onPageSelect: (pagePath: string) => void;
   selectedPage?: string;
   searchQuery?: string;
   filename?: string;
   isSearchResult?: boolean;
+  locale?: string;
+  isGlobalToc?: boolean;
 }
 
 export function NavigationTree({
@@ -18,6 +20,8 @@ export function NavigationTree({
   searchQuery,
   filename,
   isSearchResult,
+  locale,
+  isGlobalToc,
 }: NavigationTreeProps) {
   if (pages.length === 0) {
     return (
@@ -42,7 +46,7 @@ export function NavigationTree({
         {pages.map((page, index) => {
           const uniqueKey = page.path && page.path.length > 0 
             ? `path-${page.path.join(',')}` 
-            : (page.htmlPath || `page-${index}`);
+            : (page.pagePath || `page-${index}`);
           
           return (
             <TreeNode
@@ -54,6 +58,8 @@ export function NavigationTree({
               searchQuery={searchQuery}
               filename={filename}
               isSearchResult={isSearchResult}
+              locale={locale}
+              isGlobalToc={isGlobalToc}
             />
           );
         })}

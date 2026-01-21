@@ -7,5 +7,15 @@
 
 package ru.alkoleft.v8.platform.app.exeption
 
-class BookPageNotFoundException(book: String, pagePath: String) :
-    Exception("Не удалось найти страницу по пути '$pagePath' в книге '$book'")
+class BookPageNotFoundException(
+    message: String,
+) : Exception(message) {
+    companion object {
+        fun byBookAndLocation(
+            book: String,
+            location: String,
+        ) = BookPageNotFoundException("Не удалось найти страницу по пути '$location' в книге '$book'")
+
+        fun byLocationOnly(location: String) = BookPageNotFoundException("Не удалось найти страницу по пути '$location'")
+    }
+}

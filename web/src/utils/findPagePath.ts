@@ -1,47 +1,48 @@
-import type { PageDto } from '../types/api';
+/**
+ * Утилиты для поиска страниц в дереве
+ */
 
 /**
- * Рекурсивно находит путь к странице в дереве страниц
- * @param pagesList - список страниц для поиска
- * @param targetHtmlPath - htmlPath искомой страницы
- * @param currentPath - текущий путь (для рекурсии)
- * @param visitedPaths - множество посещенных путей для предотвращения циклов
- * @returns путь к странице или null, если не найдена
+ * Находит путь к странице в дереве страниц по pagePath
+ * @param pages - массив страниц для поиска
+ * @param targetPagePath - pagePath искомой страницы
+ * @param currentPath - текущий путь (массив индексов)
+ * @param visitedPaths - множество уже посещенных путей для предотвращения циклов
+ * @returns путь к странице (массив индексов) или null, если страница не найдена
  */
 export function findPagePath(
-  pagesList: PageDto[],
-  targetHtmlPath: string,
-  currentPath: PageDto[] = [],
+  pages: any[],
+  targetPagePath: string,
+  currentPath: number[] = [],
   visitedPaths: Set<string> = new Set()
-): PageDto[] | null {
-  for (const page of pagesList) {
-    // Используем path для уникальной идентификации страницы, если он доступен
-    const pageKey = page.path && page.path.length > 0 
-      ? page.path.join(',') 
-      : `${page.htmlPath}-${currentPath.length}`;
-    
-    // Проверяем, не посещали ли мы уже эту страницу
-    if (visitedPaths.has(pageKey)) {
+): number[] | null {
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
+    const newPath = [...currentPath, i];
+    const pathKey = page.pagePath 
+      ? `${page.pagePath}-${currentPath.length}`
+      : `page-${i}`;
+
+    // Проверяем, не посещали ли мы уже эту страницу на этом уровне
+    if (visitedPaths.has(pathKey)) {
       continue;
     }
-    
-    const newPath = [...currentPath, page];
-    const newVisitedPaths = new Set(visitedPaths);
-    newVisitedPaths.add(pageKey);
-    
-    // Если это искомая страница, возвращаем путь
-    if (page.htmlPath === targetHtmlPath) {
+    visitedPaths.add(pathKey);
+
+    // Проверяем, является ли текущая страница искомой
+    if (page.pagePath === targetPagePath) {
       return newPath;
     }
-    
-    // Ищем в children, если они есть
-    const children = page.children || [];
-    if (children.length > 0 && currentPath.length < 50) {
-      const found = findPagePath(children, targetHtmlPath, newPath, newVisitedPaths);
+
+    // Рекурсивно ищем в дочерних элементах
+    if (page.children && page.children.length > 0) {
+      const newVisitedPaths = new Set(visitedPaths);
+      const found = findPagePath(page.children, targetPagePath, newPath, newVisitedPaths);
       if (found) {
         return found;
       }
     }
   }
+
   return null;
 }

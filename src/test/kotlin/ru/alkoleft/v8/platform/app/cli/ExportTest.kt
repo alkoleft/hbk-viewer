@@ -12,11 +12,12 @@ import ru.alkoleft.v8.platform.app.service.ExportService
 import ru.alkoleft.v8.platform.hbkFilesPath
 import java.nio.file.Path
 
-class ExportTest : ShouldSpec({
-    val outputDir: Path = Path.of("/tmp", "export_all")
-    val service = ExportService()
+class ExportTest :
+    ShouldSpec({
+        val outputDir: Path = Path.of("/tmp", "export_all")
+        val service = ExportService()
 
-    should("exportBook") {
-        service.exportBookToMkDocs(hbkFilesPath().resolve("shcntx_ru.hbk"), outputDir)
-    }
-})
+        should("exportBook") {
+            service.exportBookToMkDocs(hbkFilesPath().resolve("shcntx_ru.hbk"), outputDir)
+        }
+    })

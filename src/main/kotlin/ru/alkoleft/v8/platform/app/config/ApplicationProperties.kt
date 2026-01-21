@@ -8,10 +8,11 @@
 package ru.alkoleft.v8.platform.app.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.context.annotation.Configuration
+import org.springframework.boot.context.properties.bind.ConstructorBinding
 
-@Configuration
 @ConfigurationProperties(prefix = "application")
-class ApplicationConfiguration(
-    val hbkFilesDirectory: String
-)
+data class ApplicationProperties
+    @ConstructorBinding
+    constructor(
+        val hbkFilesDirectory: String,
+    )

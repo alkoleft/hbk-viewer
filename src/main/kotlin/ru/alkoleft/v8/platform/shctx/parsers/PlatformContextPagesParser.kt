@@ -115,7 +115,7 @@ class PlatformContextPagesParser(
             return context.getEntryStream(page).use { parser.parse(it) }
         } catch (ex: Exception) {
             throw PlatformContextLoadException(
-                "Не удалось разобрать страницу документации ${page.title}(${page.htmlPath})",
+                "Не удалось разобрать страницу документации ${page.title}(${page.location})",
                 ex,
             )
         }

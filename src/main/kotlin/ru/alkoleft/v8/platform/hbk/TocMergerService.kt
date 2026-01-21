@@ -56,12 +56,13 @@ object TocMergerService {
 
         val rootPage = PageBuilder(BookMeta("", "", emptyList()), "", "")
 
-        val books = items
-            .asSequence()
-            .map { it.first }
-            .filter { it.meta != null }
-            .sortedByDescending { it.size }
-            .toMutableList()
+        val books =
+            items
+                .asSequence()
+                .map { it.first }
+                .filter { it.meta != null }
+                .sortedByDescending { it.size }
+                .toMutableList()
 
         val tocByBook = items.associate { it }
         val firstBook = books.removeAt(0)
@@ -71,9 +72,27 @@ object TocMergerService {
             mergeTo(rootPage, tocByBook[book]!!.pages, book.meta!!)
         }
 
+        setUniqueLocations(rootPage.children, mutableMapOf())
         return Toc(rootPage.children.map { it.toPage() })
     }
 
+    private fun setUniqueLocations(
+        pages: List<PageBuilder>,
+        locationMap: MutableMap<String, Int>,
+    ) {
+        pages.forEach { page ->
+            val locationIndex: Int = locationMap.getOrDefault(page.location, 0)
+            locationMap.put(page.location, locationIndex + 1)
+
+            page.location = page.location.ifEmpty { "__empty_pl_" } +
+                if (locationIndex == 0) {
+                    ""
+                } else {
+                    locationIndex.toString()
+                }
+            setUniqueLocations(page.children, locationMap)
+        }
+    }
 
     /**
      * Объединяет страницы на одном уровне иерархии.
@@ -94,9 +113,10 @@ object TocMergerService {
                 logger.trace { "Объединение существующей страницы: $key" }
 
                 // Объединяем дочерние элементы рекурсивно
-                val mergedChildren = mergePagesAtLevel(
-                    existingPage.children + page.children
-                )
+                val mergedChildren =
+                    mergePagesAtLevel(
+                        existingPage.children + page.children,
+                    )
 
                 // Обновляем список дочерних элементов
                 existingPage.children.clear()
@@ -104,11 +124,12 @@ object TocMergerService {
             } else {
                 // Создаем новую страницу
                 logger.trace { "Создание новой страницы: $key" }
-                val newPage = Page(
-                    title = page.title,
-                    htmlPath = page.htmlPath,
-                    children = mutableListOf(),
-                )
+                val newPage =
+                    Page(
+                        title = page.title,
+                        location = page.location,
+                        children = mutableListOf(),
+                    )
 
                 // Рекурсивно объединяем дочерние элементы
                 val mergedChildren = mergePagesAtLevel(page.children)
@@ -137,7 +158,10 @@ object TocMergerService {
      * @param toc Оглавление для экспорта
      * @param outputPath Путь к файлу для сохранения
      */
-    fun exportMergedToc(toc: Toc, outputPath: Path) {
+    fun exportMergedToc(
+        toc: Toc,
+        outputPath: Path,
+    ) {
         logger.info { "Экспорт объединенного TOC в файл: $outputPath" }
 
         val content = buildTocContent(toc.pages, 0)
@@ -163,22 +187,23 @@ object TocMergerService {
         val builder = StringBuilder()
 
         for (page in pages) {
-            val title = when {
-                page.title.ru.isNotEmpty() && page.title.en.isNotEmpty() -> {
-                    "${page.title.ru} (${page.title.en})"
-                }
+            val title =
+                when {
+                    page.title.ru.isNotEmpty() && page.title.en.isNotEmpty() -> {
+                        "${page.title.ru} (${page.title.en})"
+                    }
 
-                page.title.ru.isNotEmpty() -> page.title.ru
-                else -> page.title.en
-            }
+                    page.title.ru.isNotEmpty() -> page.title.ru
+                    else -> page.title.en
+                }
 
             builder.append(indent)
             builder.append("- ")
             builder.append(title)
 
-            if (page.htmlPath.isNotEmpty()) {
+            if (page.location.isNotEmpty()) {
                 builder.append(" -> ")
-                builder.append(page.htmlPath)
+                builder.append(page.location)
             }
 
             builder.appendLine()
@@ -191,23 +216,31 @@ object TocMergerService {
         return builder.toString()
     }
 
-    private fun mergeTo(rootPage: PageBuilder, pages: List<Page>, book: BookMeta) {
+    private fun mergeTo(
+        rootPage: PageBuilder,
+        pages: List<Page>,
+        book: BookMeta,
+    ) {
         for (page in pages) {
             val existsPage = rootPage.getChildren(page.title.get())
             if (existsPage == null) {
                 addRecursive(rootPage, page, book)
             } else {
-                if (existsPage.htmlPath.isEmpty() && page.htmlPath.isNotEmpty()) {
+                if (existsPage.location.isEmpty() && page.location.isNotEmpty()) {
                     existsPage.book = book
-                } else if (page.htmlPath != existsPage.htmlPath && page.htmlPath.isNotEmpty() && existsPage.htmlPath.isNotEmpty()) {
-                    logger.warn { "Разные адреса страниц '${page.title}': '${page.htmlPath}' != '${existsPage.htmlPath}'" }
+                } else if (page.location != existsPage.location && page.location.isNotEmpty() && existsPage.location.isNotEmpty()) {
+                    logger.warn { "Разные адреса страниц '${page.title}': '${page.location}' != '${existsPage.location}'" }
                 }
                 mergeTo(existsPage, page.children, book)
             }
         }
     }
 
-    private fun addRecursive(target: PageBuilder, source: Page, book: BookMeta) {
+    private fun addRecursive(
+        target: PageBuilder,
+        source: Page,
+        book: BookMeta,
+    ) {
         val newPage = target.add(source, book)
         source.children.forEach { addRecursive(newPage, it, book) }
     }
@@ -216,25 +249,24 @@ object TocMergerService {
 private class PageBuilder(
     var book: BookMeta,
     val title: String,
-    val htmlPath: String,
-    val children: MutableList<PageBuilder> = mutableListOf()
+    var location: String,
+    val children: MutableList<PageBuilder> = mutableListOf(),
 ) {
     fun contains(name: String) = false
 
-    fun getChildren(name: String) =
-        children.find { it.title.equals(name, true) }
+    fun getChildren(name: String) = children.find { it.title.equals(name, true) }
 
-    fun add(page: Page, book: BookMeta): PageBuilder {
-        val newPage = PageBuilder(book, page.title.get(), htmlPath)
+    fun add(
+        page: Page,
+        book: BookMeta,
+    ): PageBuilder {
+        val newPage = PageBuilder(book, page.title.get(), page.location)
         children.add(newPage)
         return newPage
     }
 
     fun toPage(): Page {
         val childrenPages = children.map { it.toPage() }.toMutableList()
-        return Page(DoubleLanguageString(title, ""), htmlPath, childrenPages)
+        return Page(DoubleLanguageString(title, ""), location, childrenPages)
     }
 }
-
-private fun DoubleLanguageString.get() =
-    en.ifEmpty { ru }

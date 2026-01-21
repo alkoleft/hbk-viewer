@@ -6,6 +6,73 @@ import { API } from '../constants/config';
  */
 export class HbkApiClient {
   /**
+   * Получает информацию о приложении (версии + локали)
+   * @param signal - опциональный AbortSignal для отмены запроса
+   */
+  async getAppInfo(signal?: AbortSignal): Promise<{ version: any; availableLocales: string[] }> {
+    const response = await fetch(`${API.BASE_URL.replace('/hbk', '')}/app/info`, { signal });
+    if (!response.ok) {
+      throw new Error(`Ошибка при получении информации о приложении: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  /**
+   * Получает глобальное оглавление для указанной локали
+   * @param locale - локаль (ru, en, root и т.д.)
+   * @param depth - глубина вложенности (должна быть >= 0)
+   * @param signal - опциональный AbortSignal для отмены запроса
+   */
+  async getGlobalToc(locale: string, depth?: number, signal?: AbortSignal): Promise<PageDto[]> {
+    const url = new URL(`${API.BASE_URL.replace('/hbk', '')}/toc/`, window.location.origin);
+    if (depth !== undefined) {
+      url.searchParams.set('depth', depth.toString());
+    }
+    
+    const headers: HeadersInit = {};
+    if (locale !== 'root') {
+      headers['Accept-Language'] = locale;
+    }
+    
+    const response = await fetch(url.toString(), { signal, headers });
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Локаль "${locale}" не найдена`);
+      }
+      throw new Error(`Ошибка при получении глобального оглавления: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  /**
+   * Получает дочерние элементы раздела глобального оглавления
+   * @param locale - локаль
+   * @param sectionPath - путь к разделу
+   * @param depth - глубина вложенности (должна быть >= 0)
+   * @param signal - опциональный AbortSignal для отмены запроса
+   */
+  async getGlobalTocSection(locale: string, sectionPath: string, depth?: number, signal?: AbortSignal): Promise<PageDto[]> {
+    const url = new URL(`${API.BASE_URL.replace('/hbk', '')}/toc/${sectionPath}`, window.location.origin);
+    if (depth !== undefined) {
+      url.searchParams.set('depth', depth.toString());
+    }
+    
+    const headers: HeadersInit = {};
+    if (locale !== 'root') {
+      headers['Accept-Language'] = locale;
+    }
+    
+    const response = await fetch(url.toString(), { signal, headers });
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Раздел не найден`);
+      }
+      throw new Error(`Ошибка при получении содержимого раздела: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  /**
    * Получает список всех доступных HBK файлов
    * @param signal - опциональный AbortSignal для отмены запроса
    */

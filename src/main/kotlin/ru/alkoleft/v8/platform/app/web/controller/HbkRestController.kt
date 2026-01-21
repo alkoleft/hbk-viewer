@@ -53,6 +53,48 @@ class HbkRestController(
     }
 
     /**
+     * Получает список всех доступных локалей.
+     *
+     * @return Список доступных локалей
+     */
+    @GetMapping("/locales")
+    fun getAvailableLocales(): ResponseEntity<List<String>> {
+        logger.debug { "Запрос списка доступных локалей" }
+        return ResponseEntity.ok(booksService.getAvailableLocales())
+    }
+
+    /**
+     * Получает глобальное оглавление для указанной локали.
+     *
+     * @param locale Локаль (ru, en, root и т.д.)
+     * @return Глобальное оглавление для локали
+     */
+    @GetMapping("/global-toc/{locale}")
+    fun getGlobalToc(
+        @PathVariable locale: String,
+    ): ResponseEntity<FileStructure> {
+        logger.debug { "Запрос глобального оглавления для локали: $locale" }
+
+        val availableLocales = booksService.getAvailableLocales()
+        if (locale !in availableLocales) {
+            return ResponseEntity.notFound().build()
+        }
+
+        val globalToc = booksService.getGlobalTocByLocale(locale)
+        val pages =
+            globalToc.pages.map { page ->
+                PageDto.fromLite(page)
+            }
+
+        val structure =
+            FileStructure(
+                filename = "global-$locale",
+                pages = pages,
+            )
+        return ResponseEntity.ok(structure)
+    }
+
+    /**
      * Получает содержимое страницы из HBK файла.
      *
      * @param filename Имя HBK файла
@@ -75,7 +117,7 @@ class HbkRestController(
                 filename = filename,
                 pageName = page.title.ru.ifEmpty { page.title.en },
                 content = content,
-            )
+            ),
         )
     }
 
@@ -93,16 +135,14 @@ class HbkRestController(
         @RequestParam(required = false) depth: Int?,
     ): ResponseEntity<FileStructure> {
         logger.debug { "Запрос структуры файла: $filename, depth: $depth" }
+        checkDepthParameter(depth)
 
         val toc = booksService.bookToc(filename)
         val pages =
             if (depth != null) {
-                if (depth < 0) {
-                    return ResponseEntity.badRequest().build()
-                }
-                toc.pages.mapIndexed { index, page -> PageDto.fromWithDepth(page, depth, listOf(index)) }
+                toc.pages.map { page -> PageDto.fromWithDepth(page, depth, listOf(page.location)) }
             } else {
-                toc.pages.mapIndexed { index, page -> PageDto.fromLite(page, listOf(index)) }
+                toc.pages.map { page -> PageDto.fromLite(page, listOf(page.location)) }
             }
 
         val structure =
@@ -153,21 +193,21 @@ class HbkRestController(
         } else if (htmlPath != null && htmlPath.isNotBlank()) {
             // Для обратной совместимости используем htmlPath
             val normalizedHtmlPath = pathService.validateAndNormalizeHtmlPath(htmlPath)
-            children = toc.getChildrenByHtmlPath(normalizedHtmlPath)
+            children = toc.getChildrenByContentPath(normalizedHtmlPath)
 
             // Находим путь к родителю
             val parentPage =
                 pathService.findPageByHtmlPath(toc, normalizedHtmlPath)
                     ?: return ResponseEntity.notFound().build()
 
-            parentPath = pathService.findPathToPage(toc, parentPage) ?: emptyList()
+//            parentPath = pathService.findPathToPage(toc, parentPage) ?: emptyList()
         } else {
             return ResponseEntity.badRequest().build()
         }
 
         val childrenDto =
             children.mapIndexed { index, child ->
-                PageDto.fromLite(child, parentPath + index)
+                PageDto.fromLite(child, emptyList())
             }
         return ResponseEntity.ok(childrenDto)
     }

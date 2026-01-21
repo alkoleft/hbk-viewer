@@ -7,9 +7,12 @@
 
 package ru.alkoleft.v8.platform.app.exeption
 
-class BookNotFoundException(message: String) : Exception(message) {
+class BookNotFoundException(
+    message: String,
+) : Exception(message) {
     companion object {
         fun byFileName(name: String) = BookNotFoundException("Не удалось найти книгу по имени файла '$name'")
+
         fun byBookName(name: String) = BookNotFoundException("Не удалось найти книгу по имени '$name'")
     }
 }

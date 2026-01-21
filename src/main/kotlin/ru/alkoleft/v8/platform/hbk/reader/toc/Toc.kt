@@ -7,6 +7,7 @@
 
 package ru.alkoleft.v8.platform.hbk.reader.toc
 
+import ru.alkoleft.v8.platform.app.exeption.BookPageNotFoundException
 import ru.alkoleft.v8.platform.hbk.model.Chunk
 import ru.alkoleft.v8.platform.hbk.model.DoubleLanguageString
 import ru.alkoleft.v8.platform.hbk.model.NameContainer
@@ -38,19 +39,31 @@ class Toc {
     val pages: List<Page>
 
     /**
-     * Находит страницу по htmlPath в иерархии оглавления.
+     * Находит страницу по contentPath в иерархии оглавления.
      *
-     * @param htmlPath Путь к HTML файлу
+     * @param location Путь к HTML файлу
      * @return Найденная страница или null
      */
-    fun findPageByHtmlPath(htmlPath: String): Page? {
+    fun findPageByLocation(location: String) = getPageByContentPath(location, null)?.first
+
+    fun findPageWithTruckByLocation(location: String) =
+        getPageByContentPath(location, mutableListOf())?.let { it.first to it.second!! }
+            ?: throw BookPageNotFoundException.byLocationOnly(location)
+
+    private fun getPageByContentPath(
+        location: String,
+        truck: MutableList<String>?,
+    ): Pair<Page, MutableList<String>?>? {
+        val key = location
+
         fun searchInPages(pages: List<Page>): Page? {
             for (page in pages) {
-                if (page.htmlPath == htmlPath) {
+                if (page.location == key) {
                     return page
                 }
                 if (page.children.isNotEmpty()) {
                     val found = searchInPages(page.children)
+                    truck?.add(page.location)
                     if (found != null) {
                         return found
                     }
@@ -58,17 +71,17 @@ class Toc {
             }
             return null
         }
-        return searchInPages(this.pages)
+        return searchInPages(this.pages)?.let { it to truck }
     }
 
     /**
-     * Получает дочерние элементы страницы по htmlPath.
+     * Получает дочерние элементы страницы по contentPath.
      *
-     * @param htmlPath Путь к HTML файлу родительской страницы
+     * @param location Путь к HTML файлу родительской страницы
      * @return Список дочерних страниц или пустой список, если страница не найдена
      */
-    fun getChildrenByHtmlPath(htmlPath: String): List<Page> {
-        val page = findPageByHtmlPath(htmlPath)
+    fun getChildrenByContentPath(location: String): List<Page> {
+        val page = findPageByLocation(location)
         return page?.children ?: emptyList()
     }
 
@@ -101,7 +114,7 @@ class Toc {
 
     /**
      * Получает дочерние элементы страницы по пути от корня.
-     * Это позволяет однозначно идентифицировать элемент даже если несколько элементов имеют одинаковый htmlPath.
+     * Это позволяет однозначно идентифицировать элемент даже если несколько элементов имеют одинаковый contentPath.
      *
      * @param path Путь от корня до родительской страницы (массив индексов)
      * @return Список дочерних страниц или пустой список, если страница не найдена
@@ -158,11 +171,12 @@ class Toc {
             val parser = TocParser()
             val toc = Page(DoubleLanguageString("TOC", "TOC"), "")
             val pagesById = mutableMapOf(0 to toc)
+
             parser.parseContent(packBlock).forEach { chunk ->
                 pagesById[chunk.id] =
                     Page(
                         title = chunk.title,
-                        htmlPath = chunk.htmlPath,
+                        location = chunk.contentPath.trimStart('/'),
                         children = mutableListOf(),
                     ).also { pagesById[chunk.parentId]?.children?.add(it) }
             }
@@ -194,7 +208,7 @@ class Toc {
         /**
          * Получает путь к HTML файлу чанка.
          */
-        val Chunk.htmlPath: String
+        val Chunk.contentPath: String
             get() = properties.htmlPath.replace("\"", "")
     }
 }

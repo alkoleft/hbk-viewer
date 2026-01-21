@@ -18,16 +18,19 @@ import {
 } from '@mui/icons-material';
 import type { PageDto } from '../../types/api';
 import { useBookStructureChildren } from '../../api/queries';
+import { useGlobalTocSection } from '../../hooks/useGlobalData';
 import { hasPageChildren, shouldLoadPageChildren, getPageTitle } from '../../utils/pageUtils';
 
 interface TreeNodeProps {
   page: PageDto;
-  onPageSelect: (htmlPath: string) => void;
+  onPageSelect: (pagePath: string) => void;
   selectedPage?: string;
   level: number;
   searchQuery?: string;
   filename?: string;
   isSearchResult?: boolean;
+  locale?: string; // Для глобального TOC
+  isGlobalToc?: boolean; // Флаг для определения типа источника
 }
 
 export function TreeNode({
@@ -38,6 +41,8 @@ export function TreeNode({
   searchQuery,
   filename,
   isSearchResult,
+  locale,
+  isGlobalToc,
 }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(isSearchResult ?? false);
   
@@ -49,9 +54,11 @@ export function TreeNode({
   const {
     data: loadedChildren = [],
     isLoading: isLoadingChildren,
-  } = useBookStructureChildren(
+  } = isGlobalToc && locale
+    ? useGlobalTocSection(locale, page.pagePath, 1)
+    : useBookStructureChildren(
     filename,
-    page.htmlPath,
+    page.pagePath,
     page.path,
     isExpanded && shouldLoad
   );
@@ -62,11 +69,11 @@ export function TreeNode({
     : (page.children || []);
   
   const pageTitle = getPageTitle(page);
-  const isSelected = selectedPage === page.htmlPath;
+  const isSelected = selectedPage === page.pagePath;
 
   const handleClick = () => {
-    if (page.htmlPath) {
-      onPageSelect(page.htmlPath);
+    if (page.pagePath) {
+      onPageSelect(page.pagePath);
     }
   };
 
@@ -220,6 +227,8 @@ export function TreeNode({
                     searchQuery={searchQuery}
                     filename={filename}
                     isSearchResult={isSearchResult}
+                    locale={locale}
+                    isGlobalToc={isGlobalToc}
                   />
                 );
               })

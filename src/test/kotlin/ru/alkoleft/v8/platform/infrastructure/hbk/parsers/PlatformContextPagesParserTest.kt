@@ -16,15 +16,16 @@ import ru.alkoleft.v8.platform.shctx.parsers.specialized.MethodPageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.ObjectPageParser
 import ru.alkoleft.v8.platform.shctx.parsers.specialized.PropertyPageParser
 
-class PlatformContextPagesParserTest : ShouldSpec({
-    should("test all parsers are available") {
-        // Создаем временный парсер для проверки доступности всех парсеров
-        // В реальном использовании PlatformContextPagesParser требует Context, который сложно замокать
-        ConstructorPageParser().shouldNotBeNull()
-        EnumPageParser().shouldNotBeNull()
-        EnumValuePageParser().shouldNotBeNull()
-        MethodPageParser().shouldNotBeNull()
-        ObjectPageParser().shouldNotBeNull()
-        PropertyPageParser().shouldNotBeNull()
-    }
-})
+class PlatformContextPagesParserTest :
+    ShouldSpec({
+        should("test all parsers are available") {
+            // Создаем временный парсер для проверки доступности всех парсеров
+            // В реальном использовании PlatformContextPagesParser требует Context, который сложно замокать
+            ConstructorPageParser().shouldNotBeNull()
+            EnumPageParser().shouldNotBeNull()
+            EnumValuePageParser().shouldNotBeNull()
+            MethodPageParser().shouldNotBeNull()
+            ObjectPageParser().shouldNotBeNull()
+            PropertyPageParser().shouldNotBeNull()
+        }
+    })

@@ -1,20 +1,50 @@
-import { Box } from '@mui/material';
+import { useEffect } from 'react';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { BookSelector } from '../components/book/BookSelector';
-import { BookSelectorPopup } from '../components/book/BookSelectorPopup';
 import { AppHeader } from '../components/layout/AppHeader';
-import { useAppStore } from '../store/useAppStore';
-import { buildPageUrl } from '../utils/urlUtils';
+import { useAvailableLocales } from '../hooks/useGlobalData';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const isBookSelectorOpen = useAppStore((state) => state.isBookSelectorOpen);
-  const setIsBookSelectorOpen = useAppStore((state) => state.setIsBookSelectorOpen);
+  const { data: availableLocales, isLoading, error } = useAvailableLocales();
 
-  const handleBookSelect = (filename: string) => {
-    navigate(buildPageUrl(filename));
-    setIsBookSelectorOpen(false);
-  };
+  useEffect(() => {
+    if (availableLocales && availableLocales.length > 0) {
+      // Redirect to the first available locale
+      const defaultLocale = availableLocales.includes('ru') ? 'ru' : availableLocales[0];
+      navigate(`/${defaultLocale}`, { replace: true });
+    }
+  }, [availableLocales, navigate]);
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        <AppHeader />
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'background.default',
+            p: { xs: 2, md: 0 },
+            mt: '64px',
+          }}
+        >
+          <Typography color="error">
+            Ошибка загрузки: {error.message}
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -37,14 +67,15 @@ export function HomePage() {
           mt: '64px',
         }}
       >
-        <BookSelector onBookSelect={handleBookSelect} selectedBook={undefined} />
+        {isLoading ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <CircularProgress />
+            <Typography>Загрузка...</Typography>
+          </Box>
+        ) : (
+          <Typography>Перенаправление...</Typography>
+        )}
       </Box>
-      <BookSelectorPopup
-        isOpen={isBookSelectorOpen}
-        onClose={() => setIsBookSelectorOpen(false)}
-        onBookSelect={handleBookSelect}
-        selectedBook={undefined}
-      />
     </Box>
   );
 }

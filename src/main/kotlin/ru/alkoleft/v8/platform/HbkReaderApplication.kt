@@ -11,13 +11,16 @@ package ru.alkoleft.v8.platform
 
 import kotlinx.cli.ArgParser
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.annotation.EnableCaching
 import ru.alkoleft.v8.platform.app.cli.ExportCommand
 import ru.alkoleft.v8.platform.app.cli.ServerCommand
+import ru.alkoleft.v8.platform.app.config.ApplicationProperties
 import kotlin.system.exitProcess
 
 @SpringBootApplication
 @EnableCaching
+@EnableConfigurationProperties(ApplicationProperties::class)
 class HbkReaderApplication
 
 fun main(args: Array<String>) {

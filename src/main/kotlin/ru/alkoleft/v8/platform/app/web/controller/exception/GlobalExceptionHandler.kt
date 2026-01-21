@@ -14,6 +14,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import ru.alkoleft.v8.platform.app.exeption.BookNotFoundException
+import ru.alkoleft.v8.platform.app.exeption.BookPageNotFoundException
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
 import java.util.stream.Collectors
 
@@ -38,6 +40,20 @@ class GlobalExceptionHandler {
                 ErrorResponse(
                     error = "CONTEXT_LOAD_ERROR",
                     message = ex.message ?: "Ошибка загрузки контекста платформы",
+                    status = HttpStatus.NOT_FOUND.value(),
+                ),
+            )
+    }
+
+    @ExceptionHandler(BookNotFoundException::class, BookPageNotFoundException::class)
+    fun handleNotFoundException(ex: Exception): ResponseEntity<ErrorResponse> {
+        logger.error(ex) { "Необработанное исключение: ${ex.message}" }
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(
+                ErrorResponse(
+                    error = "NOT_FOUND",
+                    message = ex.message!!,
                     status = HttpStatus.NOT_FOUND.value(),
                 ),
             )
