@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 
 export function useSectionNavigation() {
   const { locale, section } = useParams<{ locale: string; section: string }>();
-  const { data: globalToc } = useGlobalToc(locale || 'ru', 1);
+  const { data: globalToc } = useGlobalToc(locale || 'ru'); // Убираем depth - по умолчанию загружаем только корневые элементы
 
   const currentSection = useMemo(() => {
     if (!globalToc || !section) return null;
@@ -14,8 +14,8 @@ export function useSectionNavigation() {
 
   const { data: sectionPages = [], isLoading, error } = useGlobalTocSection(
     locale || 'ru', 
-    currentSection?.pagePath || '',
-    1
+    currentSection?.pagePath || ''
+    // Убираем depth - по умолчанию загружаем только первый уровень без дочерних элементов
   );
 
   return {

@@ -27,23 +27,23 @@ export function useGlobalToc(locale: string, depth?: number) {
 /**
  * Хук для получения дочерних элементов раздела
  */
-export function useGlobalTocSection(locale: string, sectionPath: string, depth?: number) {
+export function useGlobalTocSection(locale: string, sectionPath: string, depth?: number, enabled: boolean = true) {
   return useQuery({
     queryKey: ['global-toc-section', locale, sectionPath, depth],
     queryFn: ({ signal }) => apiClient.getGlobalTocSection(locale, sectionPath, depth, signal),
-    enabled: !!locale && !!sectionPath,
+    enabled: !!locale && !!sectionPath && enabled,
     staleTime: 5 * 60 * 1000,
   });
 }
 
 /**
- * Хук для получения содержимого страницы
+ * Хук для получения содержимого страницы по пути
  */
-export function usePageContent(bookName: string, pagePath: string) {
+export function usePageContentByPath(pagePath: string, locale: string = 'ru') {
   return useQuery({
-    queryKey: ['page-content', bookName, pagePath],
-    queryFn: ({ signal }) => apiClient.getPageContent(bookName, pagePath, signal),
-    enabled: !!bookName && !!pagePath,
+    queryKey: ['page-content-by-path', pagePath, locale],
+    queryFn: ({ signal }) => apiClient.getPageContentByPath(pagePath, locale, signal),
+    enabled: !!pagePath && !pagePath.includes('__empty_pl'), // Не загружаем пустые страницы
     staleTime: 10 * 60 * 1000,
   });
 }

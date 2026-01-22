@@ -56,8 +56,6 @@ export const AppHeader = memo(function AppHeader() {
             gap: 2,
           }}
         >
-          {isAppView && <LanguageSelector />}
-          
           {!isLoading && versionInfo?.platform && (
             <Chip
               label={`1С: ${versionInfo.platform}`}
@@ -73,6 +71,8 @@ export const AppHeader = memo(function AppHeader() {
             />
           )}
           
+          {isAppView && <LanguageSelector />}
+
           <Tooltip title="GitHub репозиторий">
             <IconButton
               color="inherit"
@@ -139,39 +139,6 @@ export const AppHeader = memo(function AppHeader() {
             position: 'relative',
           }}
         >
-          
-          {/* Version Info at bottom */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 2,
-              right: 16,
-              display: { xs: 'none', sm: 'flex' },
-              alignItems: 'center',
-              gap: 1,
-            }}
-          >
-            {!isLoading && versionInfo?.application && (
-              <Typography
-                variant="caption"
-                sx={{
-                  color: 'text.secondary',
-                  fontSize: '0.65rem',
-                }}
-              >
-                Backend: v{versionInfo.application}
-              </Typography>
-            )}
-            <Typography
-              variant="caption"
-              sx={{
-                color: 'text.secondary',
-                fontSize: '0.65rem',
-              }}
-            >
-              Frontend: v{WEB_VERSION}
-            </Typography>
-          </Box>
           <SectionTabs />
         </Box>
       )}

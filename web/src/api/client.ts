@@ -26,7 +26,7 @@ export class HbkApiClient {
     }
     
     const headers: HeadersInit = {};
-    if (locale !== 'root') {
+    if (locale !== undefined) {
       headers['Accept-Language'] = locale;
     }
     
@@ -47,7 +47,7 @@ export class HbkApiClient {
     }
     
     const headers: HeadersInit = {};
-    if (locale !== 'root') {
+    if (locale !== undefined) {
       headers['Accept-Language'] = locale;
     }
     
@@ -59,14 +59,22 @@ export class HbkApiClient {
   }
 
   /**
-   * Получает содержимое страницы
+   * Получает содержимое страницы по пути (возвращает HTML)
    */
-  async getPageContent(bookName: string, pagePath: string, signal?: AbortSignal): Promise<PageContent> {
-    const response = await fetch(`${API.BASE_URL}/books/${bookName}/${pagePath}`, { signal });
+  async getPageContentByPath(pagePath: string, locale: string = 'ru', signal?: AbortSignal): Promise<string> {
+    const headers: HeadersInit = {};
+    if (locale !== undefined) {
+      headers['Accept-Language'] = locale;
+    }
+    
+    const response = await fetch(`${API.BASE_URL.replace('/hbk', '')}/content/${pagePath}`, { 
+      signal, 
+      headers 
+    });
     if (!response.ok) {
       throw new Error(`Ошибка при получении содержимого страницы: ${response.statusText}`);
     }
-    return response.json();
+    return response.text(); // Получаем HTML как текст
   }
 }
 

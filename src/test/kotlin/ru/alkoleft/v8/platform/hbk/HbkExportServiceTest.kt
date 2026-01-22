@@ -285,7 +285,7 @@ class HbkExportServiceTest {
 //            .toSet()
 //
 //        val pagesWithPaths = mutableListOf<String>()
-//        fun collectPagePaths(pages: List<ru.alkoleft.v8.platform.hbk.models.Page>) {
+//        fun collectPagePaths(pages: List<ru.alkoleft.v8.platform.hbk.models.TocRecord>) {
 //            pages.forEach { page ->
 //                if (page.htmlPath.isNotEmpty()) {
 //                    pagesWithPaths.add(page.htmlPath)

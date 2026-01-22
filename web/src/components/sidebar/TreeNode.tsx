@@ -53,7 +53,12 @@ export function TreeNode({
   const {
     data: loadedChildren = [],
     isLoading: isLoadingChildren,
-  } = useGlobalTocSection(locale || 'ru', page.pagePath, 1);
+  } = useGlobalTocSection(
+    locale || 'ru',
+    page.pagePath,
+    undefined, // Не указываем depth - по умолчанию загружаем только первый уровень
+    isExpanded && shouldLoad // Загружаем только когда узел раскрыт и нужно загружать
+  );
   
   // Используем загруженные children или children из page
   const children = isExpanded && loadedChildren.length > 0 

@@ -28,9 +28,14 @@ export function Sidebar() {
     });
   }, [section, sectionPages, currentSection, isLoading, error]);
 
-  const handlePageSelect = (htmlPath: string) => {
-    // TODO: Implement page navigation within section
-    console.log('Navigate to page:', htmlPath);
+  const handlePageSelect = (pagePath: string) => {
+    // Обновляем URL с параметром page для загрузки содержимого
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('page', pagePath);
+    window.history.pushState({}, '', currentUrl.toString());
+    
+    // Принудительно обновляем компонент через событие
+    window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
   return (
@@ -58,18 +63,6 @@ export function Sidebar() {
         }}
         elevation={0}
       >
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
-            {section || 'Выберите раздел'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {sectionPages.length > 0 
-              ? `${sectionPages.length} страниц` 
-              : 'Нет страниц в разделе'
-            }
-          </Typography>
-        </Box>
-
         <SidebarSearch
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

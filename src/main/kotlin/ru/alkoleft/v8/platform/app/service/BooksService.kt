@@ -7,24 +7,17 @@
 
 package ru.alkoleft.v8.platform.app.service
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.boot.context.event.ApplicationReadyEvent
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.app.exeption.BookNotFoundException
 import ru.alkoleft.v8.platform.app.exeption.BookPageNotFoundException
 import ru.alkoleft.v8.platform.app.storage.BookRegistry
 import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
-import ru.alkoleft.v8.platform.hbk.TocMergerService
 import ru.alkoleft.v8.platform.hbk.exceptions.TocParsingException
 import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
-import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import kotlin.io.path.Path
-import kotlin.time.measureTimedValue
-
-private val logger = KotlinLogging.logger { }
 
 @Service
 class BooksService(
@@ -35,16 +28,15 @@ class BooksService(
 
     fun getAvailableLocales(): List<String> = books.map { it.locale }.distinct().sorted()
 
-    @Cacheable("global-toc")
-    fun getGlobalTocByLocale(locale: String): Toc = globalTocByLocale(locale)
-
     fun getBookPageContent(
         hbkFile: String,
         pagePath: String,
-    ): String {
-        val bookInfo = getBookInfo(hbkFile)
-        return hbkContentReader.getPageText(Path(bookInfo.path), pagePath.normalizePath())
-    }
+    ) = getBookPageContent(getBookInfo(hbkFile), pagePath)
+
+    fun getBookPageContent(
+        bookInfo: BookInfo,
+        pagePath: String,
+    ) = hbkContentReader.getPageText(Path(bookInfo.path), pagePath.normalizePath())
 
     fun getBookPageInfo(
         hbkFile: String,
@@ -76,17 +68,4 @@ class BooksService(
         } else {
             this
         }
-
-    private fun globalTocByLocale(locale: String) =
-        measureTimedValue {
-            TocMergerService.merge(
-                books
-                    .asSequence()
-                    .filter { it.locale.equals(locale, true) }
-                    .mapNotNull { book ->
-                        bookRegistry.getBookToc(book)?.let { Pair(book, it) }
-                    }.toList(),
-            )
-        }.also { logger.info { "Build global TOC($locale): ${it.duration}, root pages: ${it.value.pages.size}" } }
-            .value
 }

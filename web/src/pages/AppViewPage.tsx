@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AppHeader } from '../components/layout/AppHeader';
 import { Sidebar } from '../components/sidebar/Sidebar';
 import { PageContent } from '../components/page/PageContent';
@@ -10,15 +11,20 @@ import { useGlobalToc } from '../hooks/useGlobalData';
 export function AppViewPage() {
   const { locale, section } = useParams<{ locale: string; section: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  const { setCurrentLocale, setActiveSection } = useAppStore();
-  const { data: globalToc } = useGlobalToc(locale || 'ru', 1);
+  const { currentLocale, setCurrentLocale, setActiveSection } = useAppStore();
+  const { data: globalToc } = useGlobalToc(locale || 'ru');
 
-  // Update store when URL params change
+  // Update store when URL params change and clear cache on locale change
   useEffect(() => {
-    if (locale) setCurrentLocale(locale);
+    if (locale && locale !== currentLocale) {
+      // Сбрасываем кэш при смене локали
+      queryClient.clear();
+      setCurrentLocale(locale);
+    }
     if (section) setActiveSection(decodeURIComponent(section));
-  }, [locale, section, setCurrentLocale, setActiveSection]);
+  }, [locale, section, currentLocale, setCurrentLocale, setActiveSection, queryClient]);
 
   // Redirect to first section if no section specified
   useEffect(() => {

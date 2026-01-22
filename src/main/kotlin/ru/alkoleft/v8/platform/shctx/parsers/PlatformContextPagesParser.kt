@@ -8,7 +8,7 @@
 package ru.alkoleft.v8.platform.shctx.parsers
 
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
-import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.shctx.models.EnumInfo
 import ru.alkoleft.v8.platform.shctx.models.ObjectInfo
@@ -57,7 +57,7 @@ class PlatformContextPagesParser(
      * @param page Страница свойства
      * @return Информация о свойстве
      */
-    fun parsePropertyPage(page: Page) = parsePage(page, propertyPageParser)
+    fun parsePropertyPage(page: TocRecord) = parsePage(page, propertyPageParser)
 
     /**
      * Парсит страницу метода.
@@ -65,7 +65,7 @@ class PlatformContextPagesParser(
      * @param page Страница метода
      * @return Информация о методе
      */
-    fun parseMethodPage(page: Page) = parsePage(page, methodPageParser)
+    fun parseMethodPage(page: TocRecord) = parsePage(page, methodPageParser)
 
     /**
      * Парсит страницу перечисления.
@@ -73,7 +73,7 @@ class PlatformContextPagesParser(
      * @param page Страница перечисления
      * @return Информация о перечислении
      */
-    fun parseEnumPage(page: Page): EnumInfo = parsePage(page, enumPageParser)
+    fun parseEnumPage(page: TocRecord): EnumInfo = parsePage(page, enumPageParser)
 
     /**
      * Парсит страницу значения перечисления.
@@ -81,7 +81,7 @@ class PlatformContextPagesParser(
      * @param page Страница значения перечисления
      * @return Информация о значении перечисления
      */
-    fun parseEnumValuePage(page: Page) = parsePage(page, enumValuePageParser)
+    fun parseEnumValuePage(page: TocRecord) = parsePage(page, enumValuePageParser)
 
     /**
      * Парсит страницу объекта.
@@ -89,7 +89,7 @@ class PlatformContextPagesParser(
      * @param page Страница объекта
      * @return Информация об объекте
      */
-    fun parseObjectPage(page: Page): ObjectInfo = parsePage(page, objectPageParser)
+    fun parseObjectPage(page: TocRecord): ObjectInfo = parsePage(page, objectPageParser)
 
     /**
      * Парсит страницу конструктора.
@@ -97,7 +97,7 @@ class PlatformContextPagesParser(
      * @param page Страница конструктора
      * @return Информация о конструкторе
      */
-    fun parseConstructorPage(page: Page) = parsePage(page, constructorPageParser)
+    fun parseConstructorPage(page: TocRecord) = parsePage(page, constructorPageParser)
 
     /**
      * Универсальный метод для парсинга страниц с использованием соответствующего парсера.
@@ -108,7 +108,7 @@ class PlatformContextPagesParser(
      * @throws PlatformContextLoadException если не удалось разобрать страницу
      */
     private fun <T> parsePage(
-        page: Page,
+        page: TocRecord,
         parser: PageParser<T>,
     ): T {
         try {

@@ -15,13 +15,17 @@ package ru.alkoleft.v8.platform.hbk.model
  *
  * @property title Заголовок страницы на двух языках
  * @property location Путь к HTML файлу в архиве
- * @property children Список дочерних страниц
+ * @property subRecords Список дочерних страниц
  */
-data class Page(
+data class TocRecord(
     val title: DoubleLanguageString,
-    val location: String,
-    val children: MutableList<Page> = mutableListOf(),
-)
+    override val location: String,
+    val subRecords: MutableList<TocRecord> = mutableListOf(),
+) : Page {
+    override fun getTitle() = title.get()
+
+    override fun getChildren() = subRecords
+}
 
 /**
  * Строка на двух языках (русский и английский).
@@ -37,4 +41,12 @@ data class DoubleLanguageString(
     val ru: String,
 ) {
     fun get() = ru.ifEmpty { en }
+}
+
+interface Page {
+    val location: String
+
+    fun getTitle(): String
+
+    fun getChildren(): List<Page>?
 }

@@ -8,6 +8,7 @@
 package ru.alkoleft.v8.platform.app.web.controller.dto
 
 import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
 
 /**
  * DTO для представления страницы в REST API.
@@ -27,25 +28,25 @@ data class PageDto(
 ) {
     companion object {
         /**
-         * Преобразует модель Page в DTO с полной рекурсией.
+         * Преобразует модель TocRecord в DTO с полной рекурсией.
          *
          * @param page Страница для преобразования
          * @param path Путь от корня до текущей страницы (массив индексов)
          */
         fun from(
-            page: Page,
+            page: TocRecord,
             path: List<String> = emptyList(),
         ): PageDto =
             PageDto(
                 title = page.title.get(),
                 pagePath = page.location,
                 tocPath = path.ifEmpty { null },
-                children = page.children.map { child -> from(child) }.ifEmpty { null },
-                hasChildren = page.children.isNotEmpty(),
+                children = page.subRecords.map { child -> from(child) }.ifEmpty { null },
+                hasChildren = page.subRecords.isNotEmpty(),
             )
 
         /**
-         * Преобразует модель Page в DTO без дочерних элементов (только корневой уровень).
+         * Преобразует модель TocRecord в DTO без дочерних элементов (только корневой уровень).
          * Используется для оптимизации загрузки больших оглавлений.
          *
          * @param page Страница для преобразования
@@ -56,15 +57,15 @@ data class PageDto(
             path: List<String> = emptyList(),
         ): PageDto =
             PageDto(
-                title = page.title.get(),
+                title = page.getTitle(),
                 pagePath = page.location,
                 tocPath = path.ifEmpty { null },
                 children = null,
-                hasChildren = page.children.isNotEmpty(),
+                hasChildren = !page.getChildren().isNullOrEmpty(),
             )
 
         /**
-         * Преобразует модель Page в DTO с ограниченной глубиной рекурсии.
+         * Преобразует модель TocRecord в DTO с ограниченной глубиной рекурсии.
          *
          * @param page Страница для преобразования
          * @param maxDepth Максимальная глубина вложенности (0 = только текущий уровень)
@@ -79,18 +80,19 @@ data class PageDto(
                 return fromLite(page, path)
             }
             return PageDto(
-                title = page.title.get(),
+                title = page.getTitle(),
                 pagePath = page.location,
                 tocPath = path.ifEmpty { null },
                 children =
-                    page.children
-                        .map { child ->
+                    page
+                        .getChildren()
+                        ?.map { child ->
                             fromWithDepth(
                                 child,
                                 maxDepth - 1,
                             )
-                        }.ifEmpty { null },
-                hasChildren = page.children.isNotEmpty(),
+                        }?.ifEmpty { null },
+                hasChildren = !page.getChildren().isNullOrEmpty(),
             )
         }
     }

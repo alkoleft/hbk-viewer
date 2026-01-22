@@ -12,7 +12,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
-import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
 import ru.alkoleft.v8.platform.hbk.reader.ContainerReader
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
@@ -148,7 +148,7 @@ class HbkExportService {
      * @return Текстовое представление оглавления
      */
     private fun buildTocContent(
-        pages: List<Page>,
+        pages: List<TocRecord>,
         indentLevel: Int,
     ): String {
         val indent = "  ".repeat(indentLevel)
@@ -173,8 +173,8 @@ class HbkExportService {
 
             builder.appendLine()
 
-            if (page.children.isNotEmpty()) {
-                builder.append(buildTocContent(page.children, indentLevel + 1))
+            if (page.subRecords.isNotEmpty()) {
+                builder.append(buildTocContent(page.subRecords, indentLevel + 1))
             }
         }
 

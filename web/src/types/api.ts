@@ -6,7 +6,7 @@ export interface PageDto {
   title: string;
   pagePath: string;
   path: number[];
-  children: PageDto[];
+  children: PageDto[] | null; // null = не загружено, [] = загружено но пусто, [...] = загружено с данными
   hasChildren: boolean;
 }
 

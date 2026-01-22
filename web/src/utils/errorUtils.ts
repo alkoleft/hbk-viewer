@@ -24,7 +24,7 @@ export function extractErrorMessage(
     return error;
   }
 
-  if (typeof error === 'object' && error !== null && 'message' in error) {
+  if (typeof error === 'object' && error !== undefined && 'message' in error) {
     const message = (error as { message: unknown }).message;
     if (typeof message === 'string') {
       return message;

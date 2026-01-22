@@ -11,6 +11,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
 import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 
 private val logger = KotlinLogging.logger { }
@@ -66,17 +67,17 @@ class HbkPathService {
      */
     fun findPathToPage(
         toc: Toc,
-        targetPage: Page,
+        targetPage: TocRecord,
     ): List<String>? {
         fun searchInPages(
-            pages: List<Page>,
+            pages: List<TocRecord>,
             currentPath: List<String>,
         ): List<String>? {
             for ((index, page) in pages.withIndex()) {
                 if (page === targetPage) {
                     return currentPath + page.location
                 }
-                val found = searchInPages(page.children, currentPath + page.location)
+                val found = searchInPages(page.subRecords, currentPath + page.location)
                 if (found != null) {
                     return found
                 }

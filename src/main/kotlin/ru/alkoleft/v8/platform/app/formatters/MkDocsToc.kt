@@ -7,7 +7,7 @@
 
 package ru.alkoleft.v8.platform.app.formatters
 
-import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
 import java.io.BufferedWriter
 import java.nio.file.Files
@@ -42,18 +42,18 @@ class MkDocsToc : TocFormatter {
 
     private fun writeChildren(
         stream: BufferedWriter,
-        pages: List<Page>,
+        pages: List<TocRecord>,
         level: Int,
     ) {
         val indent = "  ".repeat(level)
         pages.forEach { page ->
             stream.write("$indent- ${title(page)}:")
-            if (page.location.isNotBlank() && page.children.isEmpty()) {
+            if (page.location.isNotBlank() && page.subRecords.isEmpty()) {
                 stream.write(" ${page.location}.md")
             }
 
             stream.newLine()
-            writeChildren(stream, page.children, level + 1)
+            writeChildren(stream, page.subRecords, level + 1)
         }
     }
 
@@ -66,21 +66,21 @@ class MkDocsToc : TocFormatter {
     }
 
     private fun renameChildrenFiles(
-        pages: List<Page>,
+        pages: List<TocRecord>,
         docsPath: Path,
     ) {
         pages.forEach { page ->
-            if (page.location.isNotBlank() && page.children.isEmpty()) {
+            if (page.location.isNotBlank() && page.subRecords.isEmpty()) {
                 val pagePath = docsPath.resolve(page.location)
                 if (pagePath.exists() && !pagePath.isDirectory()) {
                     pagePath.moveTo(Path(pagePath.absolutePathString() + ".md"))
                 }
             }
-            renameChildrenFiles(page.children, docsPath)
+            renameChildrenFiles(page.subRecords, docsPath)
         }
     }
 
-    private fun title(page: Page): String {
+    private fun title(page: TocRecord): String {
         val title = page.title.ru.ifBlank { page.title.en }
         return when {
             title.isBlank() -> "<Blank title>"

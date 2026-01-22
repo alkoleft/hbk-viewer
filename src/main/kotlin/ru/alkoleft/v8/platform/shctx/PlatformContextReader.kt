@@ -8,7 +8,7 @@
 package ru.alkoleft.v8.platform.shctx
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.shctx.models.EnumInfo
 import ru.alkoleft.v8.platform.shctx.models.ObjectInfo
@@ -63,9 +63,9 @@ class PlatformContextReader {
 
     class Context(
         private val visitor: PagesVisitor,
-        private val globalContextPage: Page,
-        private val enumPages: List<Page>,
-        private val typePages: List<Page>,
+        private val globalContextPage: TocRecord,
+        private val enumPages: List<TocRecord>,
+        private val typePages: List<TocRecord>,
     ) {
         fun types() =
             sequence {
@@ -83,7 +83,7 @@ class PlatformContextReader {
 
         fun globalMethods() =
             sequence {
-                for (page in globalContextPage.children) {
+                for (page in globalContextPage.subRecords) {
                     if (page.location.contains("/methods/")) {
                         yield(page)
                     }
@@ -91,7 +91,7 @@ class PlatformContextReader {
             }.flatMap(visitor::visitMethodsPage)
 
         fun globalProperties() =
-            globalContextPage.children
+            globalContextPage.subRecords
                 .first { it.title.en == "Свойства" }
                 .let(visitor::visitPropertiesPage)
     }

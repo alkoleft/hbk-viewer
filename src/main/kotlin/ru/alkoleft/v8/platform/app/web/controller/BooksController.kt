@@ -59,9 +59,9 @@ class BooksController(
         val (page, truck) = toc.findPageWithTruckByLocation(pagePath)
         val pages =
             if (depth != null) {
-                page.children.map { PageDto.fromWithDepth(it, depth, truck) }
+                page.getChildren()?.map { PageDto.fromWithDepth(it, depth, truck) }
             } else {
-                page.children.map { PageDto.fromLite(it, truck) }
+                page.getChildren()?.map { PageDto.fromLite(it, truck) }
             }
         return ResponseEntity.ok(pages)
     }
@@ -104,7 +104,7 @@ class BooksController(
         return ResponseEntity.ok(
             FileContent(
                 filename = book,
-                pageName = pageInfo.title.get(),
+                pageName = pageInfo.getTitle(),
                 content = content,
             ),
         )

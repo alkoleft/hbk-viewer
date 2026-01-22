@@ -23,7 +23,7 @@ export function hasPageChildren(page: PageDto): boolean {
  */
 export function shouldLoadPageChildren(page: PageDto, isSearchResult: boolean): boolean {
   const hasChildren = hasPageChildren(page);
-  const hasChildrenFromInitialLoad = page.children && page.children.length > 0;
+  const hasChildrenFromInitialLoad = page.children !== undefined && page.children.length > 0;
   const hasNoPagePath = !page.pagePath || page.pagePath.trim() === '';
   
   return hasChildren && !isSearchResult && !hasChildrenFromInitialLoad && !hasNoPagePath;

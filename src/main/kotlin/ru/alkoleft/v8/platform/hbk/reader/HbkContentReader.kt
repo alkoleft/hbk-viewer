@@ -12,7 +12,7 @@ import org.apache.commons.compress.archivers.zip.ZipFile
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel
 import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
 import ru.alkoleft.v8.platform.hbk.exceptions.TocParsingException
-import ru.alkoleft.v8.platform.hbk.model.Page
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
 import ru.alkoleft.v8.platform.hbk.reader.meta.BookMeta
 import ru.alkoleft.v8.platform.hbk.reader.meta.BookMetaParser
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
@@ -125,7 +125,7 @@ class HbkContentReader {
          * @return Поток для чтения HTML содержимого
          * @throws PlatformContextLoadException если файл не найден или имя не указано
          */
-        fun getEntryStream(page: Page) = getEntryStream(page.location)
+        fun getEntryStream(page: TocRecord) = getEntryStream(page.location)
 
         /**
          * Получает поток для чтения HTML файла по имени.

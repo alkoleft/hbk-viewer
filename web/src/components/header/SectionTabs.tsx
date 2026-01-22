@@ -6,7 +6,7 @@ import { useAppStore } from '../../store/useAppStore';
 export function SectionTabs() {
   const { locale, section } = useParams<{ locale: string; section: string }>();
   const navigate = useNavigate();
-  const { data: globalToc } = useGlobalToc(locale || 'ru', 1);
+  const { data: globalToc } = useGlobalToc(locale || 'ru'); // Убираем depth
   const { setActiveSection } = useAppStore();
 
   if (!globalToc || !globalToc.length) {
