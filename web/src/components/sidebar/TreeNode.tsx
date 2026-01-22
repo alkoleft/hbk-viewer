@@ -17,7 +17,6 @@ import {
   ArticleOutlined,
 } from '@mui/icons-material';
 import type { PageDto } from '../../types/api';
-import { useBookStructureChildren } from '../../api/queries';
 import { useGlobalTocSection } from '../../hooks/useGlobalData';
 import { hasPageChildren, shouldLoadPageChildren, getPageTitle } from '../../utils/pageUtils';
 
@@ -54,19 +53,12 @@ export function TreeNode({
   const {
     data: loadedChildren = [],
     isLoading: isLoadingChildren,
-  } = isGlobalToc && locale
-    ? useGlobalTocSection(locale, page.pagePath, 1)
-    : useBookStructureChildren(
-    filename,
-    page.pagePath,
-    page.path,
-    isExpanded && shouldLoad
-  );
+  } = useGlobalTocSection(locale || 'ru', page.pagePath, 1);
   
   // Используем загруженные children или children из page
   const children = isExpanded && loadedChildren.length > 0 
     ? loadedChildren 
-    : (page.children || []);
+    : page.children || [];
   
   const pageTitle = getPageTitle(page);
   const isSelected = selectedPage === page.pagePath;
@@ -215,7 +207,7 @@ export function TreeNode({
               children.map((child, index) => {
                 const uniqueKey = child.path && child.path.length > 0 
                   ? `path-${child.path.join(',')}` 
-                  : (child.htmlPath || `child-${index}`);
+                  : (child.pagePath || `child-${index}`);
                 
                 return (
                   <TreeNode

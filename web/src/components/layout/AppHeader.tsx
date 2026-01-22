@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { AppBar, Toolbar, Typography, Box, Chip, IconButton, Tooltip } from '@mui/material';
 import { GitHub } from '@mui/icons-material';
 import { useLocation } from 'react-router-dom';
-import { useVersion } from '../../api/queries';
+import { useAppInfo } from '../../api/queries';
 import { SectionTabs } from '../header/SectionTabs';
 import { LanguageSelector } from '../header/LanguageSelector';
 import packageJson from '../../../package.json';
@@ -11,7 +11,8 @@ const GITHUB_URL = 'https://github.com/alkoleft/hbk-viewer';
 const WEB_VERSION = packageJson.version;
 
 export const AppHeader = memo(function AppHeader() {
-  const { data: versionInfo, isLoading } = useVersion();
+  const { data: appInfo, isLoading } = useAppInfo();
+  const versionInfo = appInfo?.version;
   const location = useLocation();
   const isAppView = location.pathname !== '/';
 
@@ -31,6 +32,7 @@ export const AppHeader = memo(function AppHeader() {
           minHeight: 64,
           bgcolor: 'primary.main',
           color: 'primary.contrastText',
+          position: 'relative',
         }}
       >
         <Typography 
@@ -56,9 +58,9 @@ export const AppHeader = memo(function AppHeader() {
         >
           {isAppView && <LanguageSelector />}
           
-          {!isLoading && versionInfo && versionInfo.platformVersion && (
+          {!isLoading && versionInfo?.platform && (
             <Chip
-              label={`1С: ${versionInfo.platformVersion}`}
+              label={`1С: ${versionInfo.platform}`}
               size="small"
               sx={{
                 bgcolor: 'rgba(255, 255, 255, 0.15)',
@@ -88,6 +90,39 @@ export const AppHeader = memo(function AppHeader() {
             </IconButton>
           </Tooltip>
         </Box>
+        
+        {/* Version Info at bottom of main header */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            right: 16,
+            display: { xs: 'none', sm: 'flex' },
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          {!isLoading && versionInfo?.application && (
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: '0.65rem',
+              }}
+            >
+              Backend: v{versionInfo.application}
+            </Typography>
+          )}
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontSize: '0.65rem',
+            }}
+          >
+            Frontend: v{WEB_VERSION}
+          </Typography>
+        </Box>
       </Toolbar>
       
       {/* Navigation Bar */}
@@ -101,44 +136,43 @@ export const AppHeader = memo(function AppHeader() {
             display: 'flex',
             alignItems: 'center',
             px: 2,
+            position: 'relative',
           }}
         >
-          <SectionTabs />
-        </Box>
-      )}
-      
-      {/* Version Info for Home Page */}
-      {!isAppView && (
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 4,
-            right: 16,
-            display: { xs: 'none', sm: 'flex' },
-            alignItems: 'center',
-            gap: 0.5,
-          }}
-        >
-          {!isLoading && versionInfo && versionInfo.applicationVersion && (
+          
+          {/* Version Info at bottom */}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 2,
+              right: 16,
+              display: { xs: 'none', sm: 'flex' },
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            {!isLoading && versionInfo?.application && (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                  fontSize: '0.65rem',
+                }}
+              >
+                Backend: v{versionInfo.application}
+              </Typography>
+            )}
             <Typography
               variant="caption"
               sx={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: 'text.secondary',
                 fontSize: '0.65rem',
               }}
             >
-             Backend: v{versionInfo.applicationVersion}
+              Frontend: v{WEB_VERSION}
             </Typography>
-          )}
-          <Typography
-            variant="caption"
-            sx={{
-              color: 'rgba(255, 255, 255, 0.7)',
-              fontSize: '0.65rem',
-            }}
-          >
-            Frontend: v{WEB_VERSION}
-          </Typography>
+          </Box>
+          <SectionTabs />
         </Box>
       )}
     </AppBar>

@@ -32,8 +32,8 @@ class VersionService(
 ) {
     val versionsInfo: VersionInfo by lazy {
         VersionInfo(
-            applicationVersion = getApplicationVersion(),
-            platformVersion = getPlatformVersion(applicationProperties.hbkFilesDirectory),
+            application = getApplicationVersion(),
+            platform = getPlatformVersion(applicationProperties.hbkFilesDirectory),
         )
     }
 

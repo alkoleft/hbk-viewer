@@ -1,14 +1,23 @@
-import { Routes, Route } from 'react-router-dom';
-import { HomePage } from './pages/HomePage';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
+import { theme } from './theme';
 import { AppViewPage } from './pages/AppViewPage';
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/:locale" element={<AppViewPage />} />
-      <Route path="/:locale/:section/*" element={<AppViewPage />} />
-    </Routes>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Routes>
+          <Route path="/" element={<Navigate to="/ru" replace />} />
+          <Route path="/:locale/:section?" element={<AppViewPage />} />
+        </Routes>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

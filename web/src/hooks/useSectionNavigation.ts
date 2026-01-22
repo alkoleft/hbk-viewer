@@ -1,29 +1,21 @@
 import { useParams } from 'react-router-dom';
-import { useGlobalToc } from './useGlobalData';
-import { useSectionContent } from './useSectionContent';
+import { useGlobalToc, useGlobalTocSection } from './useGlobalData';
 import { useMemo } from 'react';
 
 export function useSectionNavigation() {
   const { locale, section } = useParams<{ locale: string; section: string }>();
   const { data: globalToc } = useGlobalToc(locale || 'ru', 1);
 
-  const currentSectionIndex = useMemo(() => {
-    if (!globalToc || !section) return -1;
-    
+  const currentSection = useMemo(() => {
+    if (!globalToc || !section) return null;
     const decodedSection = decodeURIComponent(section);
-    return globalToc.findIndex(
-      page => page.title === decodedSection
-    );
+    return globalToc.find(page => page.title === decodedSection);
   }, [globalToc, section]);
 
-  const currentSection = useMemo(() => {
-    if (!globalToc || currentSectionIndex < 0) return null;
-    return globalToc[currentSectionIndex];
-  }, [globalToc, currentSectionIndex]);
-
-  const { data: sectionPages = [], isLoading, error } = useSectionContent(
+  const { data: sectionPages = [], isLoading, error } = useGlobalTocSection(
     locale || 'ru', 
-    currentSection?.pagePath || ''
+    currentSection?.pagePath || '',
+    1
   );
 
   return {

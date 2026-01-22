@@ -1,4 +1,4 @@
-import { Tabs, Tab, Box } from '@mui/material';
+import { Tabs, Tab } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGlobalToc } from '../../hooks/useGlobalData';
 import { useAppStore } from '../../store/useAppStore';
@@ -27,8 +27,7 @@ export function SectionTabs() {
       value={currentSectionIndex >= 0 ? currentSectionIndex : 0}
       onChange={(e, newValue) => {
         const selectedPage = globalToc[newValue];
-        const sectionName = selectedPage.title;
-        handleSectionChange(e, sectionName);
+        handleSectionChange(e, selectedPage.title);
       }}
       variant="scrollable"
       scrollButtons="auto"

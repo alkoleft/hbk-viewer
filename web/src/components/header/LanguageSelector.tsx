@@ -1,55 +1,44 @@
-import { FormControl, Select, MenuItem, Box, Typography } from '@mui/material';
+import { FormControl, Select, MenuItem } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppStore } from '../../store/useAppStore';
 import { useAvailableLocales } from '../../hooks/useGlobalData';
-
-const LOCALE_NAMES: Record<string, string> = {
-  ru: 'Русский',
-  en: 'English',
-  root: 'English',
-};
+import { useAppStore } from '../../store/useAppStore';
 
 export function LanguageSelector() {
-  const { locale, section } = useParams<{ locale: string; section: string }>();
+  const { locale } = useParams<{ locale: string }>();
   const navigate = useNavigate();
+  const availableLocales = useAvailableLocales();
   const { setCurrentLocale } = useAppStore();
-  const { data: availableLocales } = useAvailableLocales();
-
-  if (!availableLocales || availableLocales.length <= 1) {
-    return null;
-  }
 
   const handleLocaleChange = (newLocale: string) => {
     setCurrentLocale(newLocale);
-    // Keep the same section when changing locale, or go to root if no section
-    const targetPath = section ? `/${newLocale}/${section}` : `/${newLocale}`;
-    navigate(targetPath);
+    navigate(`/${newLocale}`);
   };
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Typography variant="body2" color="text.secondary">
-        Язык:
-      </Typography>
-      <FormControl size="small" sx={{ minWidth: 120 }}>
-        <Select
-          value={locale || 'ru'}
-          onChange={(e) => handleLocaleChange(e.target.value)}
-          variant="outlined"
-          sx={{ 
-            height: 32,
-            '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: 'divider',
-            },
-          }}
-        >
-          {availableLocales.map((loc) => (
-            <MenuItem key={loc} value={loc}>
-              {LOCALE_NAMES[loc] || loc}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Box>
+    <FormControl size="small" sx={{ minWidth: 80 }}>
+      <Select
+        value={locale || 'ru'}
+        onChange={(e) => handleLocaleChange(e.target.value)}
+        sx={{
+          color: 'white',
+          height: 28,
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'rgba(255, 255, 255, 0.5)',
+          },
+          '& .MuiSvgIcon-root': {
+            color: 'white',
+          },
+        }}
+      >
+        {availableLocales.map((loc) => (
+          <MenuItem key={loc} value={loc}>
+            {loc.toUpperCase()}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
   );
 }

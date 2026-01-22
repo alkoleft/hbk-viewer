@@ -10,10 +10,10 @@ package ru.alkoleft.v8.platform.app.web.controller.dto
 /**
  * Информация о версиях приложения и платформы 1С.
  *
- * @property applicationVersion Версия приложения hbk-reader
- * @property platformVersion Версия платформы 1С:Предприятие (может быть null, если не удалось определить)
+ * @property application Версия приложения hbk-reader
+ * @property platform Версия платформы 1С:Предприятие (может быть null, если не удалось определить)
  */
 data class VersionInfo(
-    val applicationVersion: String,
-    val platformVersion: String?,
+    val application: String,
+    val platform: String?,
 )

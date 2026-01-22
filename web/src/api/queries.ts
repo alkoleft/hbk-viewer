@@ -1,112 +1,49 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from './client';
 
 /**
- * Query keys для React Query
+ * Хук для получения информации о приложении
  */
-export const queryKeys = {
-  books: ['books'] as const,
-  BookStructure: (filename: string, depth?: number) => ['BookStructure', filename, depth] as const,
-  BookPageContent: (filename: string, htmlPath?: string) => ['BookPageContent', filename, htmlPath] as const,
-  BookStructureChildren: (filename: string, htmlPath?: string, path?: number[]) => 
-    ['BookStructureChildren', filename, htmlPath, path] as const,
-  searchStructure: (filename: string, query: string) => 
-    ['searchStructure', filename, query] as const,
-  version: (platformPath?: string) => ['version', platformPath] as const,
-};
-
-/**
- * Хук для получения списка всех доступных HBK файлов
- */
-export function useBooks() {
+export function useAppInfo() {
   return useQuery({
-    queryKey: queryKeys.books,
-    queryFn: () => apiClient.getFiles(),
-    staleTime: 5 * 60 * 1000, // 5 минут
-  });
-}
-
-/**
- * Хук для получения структуры (оглавления) HBK файла
- */
-export function useBookStructure(filename: string | undefined, depth: number = 1) {
-  return useQuery({
-    queryKey: queryKeys.BookStructure(filename || '', depth),
-    queryFn: () => {
-      if (!filename) {
-        throw new Error('Filename is required');
-      }
-      return apiClient.getBookStructure(filename, depth);
-    },
-    enabled: !!filename,
+    queryKey: ['app-info'],
+    queryFn: ({ signal }) => apiClient.getAppInfo(signal),
     staleTime: 5 * 60 * 1000,
   });
 }
 
 /**
- * Хук для получения содержимого страницы из HBK файла
+ * Хук для получения глобального оглавления
  */
-export function useBookPageContent(filename: string | undefined, htmlPath?: string) {
+export function useGlobalToc(locale: string, depth?: number) {
   return useQuery({
-    queryKey: queryKeys.BookPageContent(filename || '', htmlPath),
-    queryFn: () => {
-      if (!filename) {
-        throw new Error('Filename is required');
-      }
-      return apiClient.getBookPageContent(filename, htmlPath);
-    },
-    enabled: !!filename && !!htmlPath,
-    staleTime: 10 * 60 * 1000, // 10 минут для контента
-    placeholderData: keepPreviousData, // Сохраняем предыдущие данные при переходе между страницами
-  });
-}
-
-/**
- * Хук для получения дочерних элементов страницы
- */
-export function useBookStructureChildren(
-  filename: string | undefined,
-  htmlPath?: string,
-  path?: number[],
-  enabled: boolean = true
-) {
-  return useQuery({
-    queryKey: queryKeys.BookStructureChildren(filename || '', htmlPath, path),
-    queryFn: () => {
-      if (!filename) {
-        throw new Error('Filename is required');
-      }
-      return apiClient.getBookStructureChildren(filename, htmlPath, path);
-    },
-    enabled: !!filename && enabled && (!!htmlPath || (path && path.length > 0)),
+    queryKey: ['global-toc', locale, depth],
+    queryFn: ({ signal }) => apiClient.getGlobalToc(locale, depth, signal),
+    enabled: !!locale,
     staleTime: 5 * 60 * 1000,
   });
 }
 
 /**
- * Хук для поиска страниц в оглавлении файла
+ * Хук для получения дочерних элементов раздела
  */
-export function useSearchStructure(filename: string | undefined, query: string) {
+export function useGlobalTocSection(locale: string, sectionPath: string, depth?: number) {
   return useQuery({
-    queryKey: queryKeys.searchStructure(filename || '', query),
-    queryFn: () => {
-      if (!filename) {
-        throw new Error('Filename is required');
-      }
-      return apiClient.searchBookStructure(filename, query);
-    },
-    enabled: !!filename && query.trim().length > 0,
-    staleTime: 2 * 60 * 1000, // 2 минуты для результатов поиска
+    queryKey: ['global-toc-section', locale, sectionPath, depth],
+    queryFn: ({ signal }) => apiClient.getGlobalTocSection(locale, sectionPath, depth, signal),
+    enabled: !!locale && !!sectionPath,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
 /**
- * Хук для получения версий приложения и платформы 1С
+ * Хук для получения содержимого страницы
  */
-export function useVersion(platformPath?: string) {
+export function usePageContent(bookName: string, pagePath: string) {
   return useQuery({
-    queryKey: queryKeys.version(platformPath),
-    queryFn: () => apiClient.getVersion(platformPath),
-    staleTime: 60 * 60 * 1000, // 1 час - версии редко меняются
+    queryKey: ['page-content', bookName, pagePath],
+    queryFn: ({ signal }) => apiClient.getPageContent(bookName, pagePath, signal),
+    enabled: !!bookName && !!pagePath,
+    staleTime: 10 * 60 * 1000,
   });
 }
