@@ -166,9 +166,9 @@ class HbkExportService {
             builder.append("- ")
             builder.append(title)
 
-            if (page.location.isNotEmpty()) {
+            if (page.getRef().isNotEmpty()) {
                 builder.append(" -> ")
-                builder.append(page.location)
+                builder.append(page.getRef())
             }
 
             builder.appendLine()

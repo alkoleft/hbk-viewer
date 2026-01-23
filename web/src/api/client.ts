@@ -1,4 +1,4 @@
-import type { PageDto, AppInfo, PageContent } from '../types/api';
+import type { PageDto, AppInfo, PageContent, V8HelpResolveResult } from '../types/api';
 import { API } from '../constants/config';
 
 /**
@@ -75,6 +75,24 @@ export class HbkApiClient {
       throw new Error(`Ошибка при получении содержимого страницы: ${response.statusText}`);
     }
     return response.text(); // Получаем HTML как текст
+  }
+
+  /**
+   * Резолвинг v8help ссылки
+   */
+  async resolveV8HelpLink(link: string, locale: string = 'ru', signal?: AbortSignal): Promise<V8HelpResolveResult> {
+    const url = new URL(`${API.BASE_URL.replace('/hbk', '')}/toc/resolve/v8help`, window.location.origin);
+    url.searchParams.set('link', link);
+    
+    const headers: HeadersInit = {
+      'Accept-Language': locale
+    };
+    
+    const response = await fetch(url.toString(), { signal, headers });
+    if (!response.ok) {
+      throw new Error(`Ошибка при резолвинге v8help ссылки: ${response.statusText}`);
+    }
+    return response.json();
   }
 }
 

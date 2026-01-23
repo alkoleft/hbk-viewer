@@ -15,7 +15,10 @@ export function SectionTabs() {
 
   const handleSectionChange = (_: React.SyntheticEvent, newSection: string) => {
     setActiveSection(newSection);
-    navigate(`/${locale}/${encodeURIComponent(newSection)}`);
+    // Найдем раздел и его страницу
+    const selectedSection = globalToc.find(page => page.title === newSection);
+    const pageParam = selectedSection?.pagePath ? `?page=${encodeURIComponent(selectedSection.pagePath)}` : '';
+    navigate(`/${locale}/${encodeURIComponent(newSection)}${pageParam}`);
   };
 
   const currentSectionIndex = globalToc.findIndex(

@@ -7,12 +7,15 @@ import {
 } from '@mui/material';
 import { useSectionNavigation } from '../../hooks/useSectionNavigation';
 import { useSidebarResize } from '../../hooks/ui/useSidebarResize';
+import { useSearchParams } from 'react-router-dom';
 import { SidebarSearch } from './SidebarSearch';
 import { NavigationTree } from './NavigationTree';
 
 export function Sidebar() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
   const { locale, section, sectionPages, currentSection, isLoading, error } = useSectionNavigation();
+  const selectedPagePath = searchParams.get('page') || '';
   
   // Используем хук для изменения размера
   const { sidebarWidth, isResizing, handleResizeStart } = useSidebarResize();
@@ -89,10 +92,9 @@ export function Sidebar() {
 
         {!isLoading && !error && (
           <NavigationTree
-            key={section} // Принудительный перерендер при смене раздела
             pages={sectionPages}
             onPageSelect={handlePageSelect}
-            selectedPage=""
+            selectedPage={selectedPagePath}
             searchQuery={searchQuery}
             filename={`global-${locale}`}
             isSearchResult={false}

@@ -44,26 +44,32 @@ object TocExtension {
 
     fun getPageByContentPath(
         pages: List<Page>,
-        location: String,
-        truck: MutableList<String>?,
-    ): Pair<Page, MutableList<String>?>? {
-        val key = location
+        ref: String,
+        truck: MutableList<Page>?,
+    ): Pair<Page, List<Page>?>? =
+        findPage(pages, truck) { page -> page.getRef() == ref }
 
+    fun findPage(
+        pages: List<Page>,
+        truck: MutableList<Page>?,
+        predicate: (Page) -> Boolean,
+    ): Pair<Page, List<Page>?>? {
         fun searchInPages(pages: List<Page>): Page? {
             for (page in pages) {
-                if (page.location == key) {
+                if (predicate(page)) {
                     return page
                 }
                 if (!page.getChildren().isNullOrEmpty()) {
                     val found = searchInPages(page.getChildren()!!)
-                    truck?.add(page.location)
                     if (found != null) {
+                        truck?.add(page)
                         return found
                     }
                 }
             }
             return null
         }
-        return searchInPages(pages)?.let { it to truck }
+
+        return searchInPages(pages)?.let { it to truck?.reversed() }
     }
 }

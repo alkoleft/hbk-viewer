@@ -39,7 +39,7 @@ data class PageDto(
         ): PageDto =
             PageDto(
                 title = page.title.get(),
-                pagePath = page.location,
+                pagePath = page.getRef(),
                 tocPath = path.ifEmpty { null },
                 children = page.subRecords.map { child -> from(child) }.ifEmpty { null },
                 hasChildren = page.subRecords.isNotEmpty(),
@@ -58,7 +58,7 @@ data class PageDto(
         ): PageDto =
             PageDto(
                 title = page.getTitle(),
-                pagePath = page.location,
+                pagePath = page.getRef(),
                 tocPath = path.ifEmpty { null },
                 children = null,
                 hasChildren = !page.getChildren().isNullOrEmpty(),
@@ -81,7 +81,7 @@ data class PageDto(
             }
             return PageDto(
                 title = page.getTitle(),
-                pagePath = page.location,
+                pagePath = page.getRef(),
                 tocPath = path.ifEmpty { null },
                 children =
                     page

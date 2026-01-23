@@ -29,7 +29,8 @@ export function AppViewPage() {
   // Redirect to first section if no section specified
   useEffect(() => {
     if (globalToc && globalToc.length > 0 && !section) {
-      navigate(`/${locale}/${encodeURIComponent(globalToc[0].title)}`, { replace: true });
+      const firstSection = globalToc[0];
+      navigate(`/${locale}/${encodeURIComponent(firstSection.title)}?page=${encodeURIComponent(firstSection.pagePath)}`, { replace: true });
     }
   }, [globalToc, section, locale, navigate]);
 

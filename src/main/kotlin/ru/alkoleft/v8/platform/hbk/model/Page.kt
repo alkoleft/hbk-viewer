@@ -7,6 +7,8 @@
 
 package ru.alkoleft.v8.platform.hbk.model
 
+const val EMPTY_PAGE_LOCATION = "__empty_pl_"
+
 /**
  * Представляет страницу документации в HBK файле.
  *
@@ -14,7 +16,7 @@ package ru.alkoleft.v8.platform.hbk.model
  * и список дочерних страниц, формируя иерархическую структуру документации.
  *
  * @property title Заголовок страницы на двух языках
- * @property location Путь к HTML файлу в архиве
+ * @property getRef Путь к HTML файлу в архиве
  * @property subRecords Список дочерних страниц
  */
 data class TocRecord(
@@ -25,6 +27,7 @@ data class TocRecord(
     override fun getTitle() = title.get()
 
     override fun getChildren() = subRecords
+    override fun getRef() = location
 }
 
 /**
@@ -49,4 +52,6 @@ interface Page {
     fun getTitle(): String
 
     fun getChildren(): List<Page>?
+
+    fun getRef(): String
 }

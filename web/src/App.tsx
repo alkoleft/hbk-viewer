@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { theme } from './theme';
 import { AppViewPage } from './pages/AppViewPage';
+import { TreeStateProvider } from './contexts/TreeStateContext';
 
 const queryClient = new QueryClient();
 
@@ -12,10 +13,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Routes>
-          <Route path="/" element={<Navigate to="/ru" replace />} />
-          <Route path="/:locale/:section?" element={<AppViewPage />} />
-        </Routes>
+        <TreeStateProvider>
+          <Routes>
+            <Route path="/" element={<Navigate to="/ru" replace />} />
+            <Route path="/:locale/:section?" element={<AppViewPage />} />
+          </Routes>
+        </TreeStateProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -8,7 +8,6 @@
 package ru.alkoleft.v8.platform.app.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.app.exeption.BookPageNotFoundException
 import ru.alkoleft.v8.platform.app.storage.BookRegistry
@@ -23,11 +22,15 @@ private val logger = KotlinLogging.logger { }
 class GlobalTocService(
     private val booksService: BooksService,
     private val bookRegistry: BookRegistry,
+    private val globalTocByLocale: MutableMap<String, GlobalToc> = mutableMapOf()
 ) {
-    @Cacheable("global-toc")
-    fun getGlobalTocByLocale(locale: String): GlobalToc = globalTocByLocale(locale)
+    @Synchronized
+    fun getGlobalTocByLocale(locale: String) =
+        globalTocByLocale.getOrPut(locale) {
+            collectGlobalTocByLocale(locale)
+        }
 
-    private fun globalTocByLocale(locale: String) =
+    private fun collectGlobalTocByLocale(locale: String) =
         measureTimedValue {
             TocMergerService.merge(
                 booksService.books
@@ -42,6 +45,8 @@ class GlobalTocService(
 
     fun getAvailableLocales() = booksService.getAvailableLocales()
 
+    fun getBooks() = booksService.books
+
     fun getContent(
         pagePath: String,
         locale: String,
@@ -49,6 +54,6 @@ class GlobalTocService(
         val toc = getGlobalTocByLocale(locale)
         val page =
             toc.findPageByLocation(pagePath) as? BookPage ?: throw BookPageNotFoundException.byLocationOnly(pagePath)
-        return booksService.getBookPageContent(page.book, page.location)
+        return booksService.getBookPageContent(page.book, page.getRef())
     }
 }

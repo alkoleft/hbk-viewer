@@ -23,3 +23,10 @@ export interface PageContent {
   pageName: string;
   content: string;
 }
+
+export interface V8HelpResolveResult {
+  sectionTitle: string;
+  pageLocation: string;
+  sectionPath: string;
+  pagePath: string[];
+}

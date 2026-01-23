@@ -1,30 +1,84 @@
 import { Box, Typography, CircularProgress, IconButton, Tooltip } from '@mui/material';
 import { AspectRatio, Fullscreen } from '@mui/icons-material';
 import { useSectionNavigation } from '../../hooks/useSectionNavigation';
-import { usePageContentByPath } from '../../api/queries';
-import { useSearchParams } from 'react-router-dom';
+import { usePageContentByPath, useResolveV8HelpLink } from '../../api/queries';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useTreeState } from '../../contexts/TreeStateContext';
 
 export function PageContent() {
-  const { section, locale } = useSectionNavigation();
+  const { section, locale, sectionPages } = useSectionNavigation();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { expandPath } = useTreeState();
   const [selectedPagePath, setSelectedPagePath] = useState(searchParams.get('page') || '');
   const [isFullWidth, setIsFullWidth] = useState(false);
+  const [v8helpLink, setV8helpLink] = useState<string>('');
+  const [pendingV8helpResult, setPendingV8helpResult] = useState<any>(null);
   
   // Обновляем selectedPagePath при изменении URL
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
-      setSelectedPagePath(params.get('page') || '');
+      const pagePath = params.get('page') || '';
+      setSelectedPagePath(pagePath);
     };
-    
+
     window.addEventListener('popstate', handlePopState);
-    setSelectedPagePath(searchParams.get('page') || '');
-    
     return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Обновляем selectedPagePath при изменении searchParams
+  useEffect(() => {
+    const pagePath = searchParams.get('page') || '';
+    setSelectedPagePath(pagePath);
   }, [searchParams]);
+
+  // Загружаем содержимое страницы
+  const { data: pageContent, isLoading: isLoadingContent, error: contentError } = usePageContentByPath(
+    selectedPagePath,
+    locale || 'ru',
+    !!selectedPagePath
+  );
+
+  // Резолвинг v8help ссылки
+  const { data: v8helpResult } = useResolveV8HelpLink(v8helpLink, locale, !!v8helpLink);
   
-  const { data: htmlContent, isLoading, error } = usePageContentByPath(selectedPagePath, locale);
+  // Обработка результата резолвинга v8help
+  useEffect(() => {
+    if (v8helpResult) {
+      console.log('📨 V8Help result received:', v8helpResult);
+      
+      // Навигация к разделу и странице
+      navigate(`/${locale}/${encodeURIComponent(v8helpResult.sectionTitle)}?page=${encodeURIComponent(v8helpResult.pageLocation)}`);
+      
+      // Сохраняем результат для отложенного раскрытия
+      setPendingV8helpResult(v8helpResult);
+      
+      setV8helpLink(''); // Сбрасываем ссылку
+    }
+  }, [v8helpResult, locale, navigate]);
+
+  // Отдельный эффект для раскрытия дерева после загрузки данных раздела
+  useEffect(() => {
+    console.log('🔄 Checking delayed expansion:', { 
+      hasPendingResult: !!pendingV8helpResult, 
+      section,
+      sectionPagesCount: sectionPages.length
+    });
+    
+    if (pendingV8helpResult && section && sectionPages.length > 0) {
+      console.log('🚀 Starting delayed tree expansion:', {
+        section,
+        pagePath: pendingV8helpResult.pagePath,
+        sectionPagesCount: sectionPages.length
+      });
+      expandPath(sectionPages, pendingV8helpResult.pagePath, locale || 'ru');
+      setPendingV8helpResult(null); // Очищаем после использования
+    } else {
+      console.log('⏳ Section not ready yet, waiting...');
+    }
+  }, [pendingV8helpResult, section, sectionPages.length, expandPath, locale]);
 
   // Обработка кликов по внутренним ссылкам
   const handleContentClick = (event: React.MouseEvent) => {
@@ -32,115 +86,115 @@ export function PageContent() {
     const link = target.closest('a');
     
     if (link && link.href) {
-      const href = link.getAttribute('href');
+      const url = new URL(link.href);
       
-      // Проверяем, что это относительная ссылка (не начинается с http/https)
-      if (href && !href.startsWith('http') && !href.startsWith('//')) {
+      // Обработка v8help ссылок
+      if (url.protocol === 'v8help:') {
         event.preventDefault();
-        
-        // Резолвим относительный путь относительно текущей страницы
-        let resolvedPath = href;
-        if (selectedPagePath && !href.startsWith('/')) {
-          // Получаем директорию текущей страницы
-          const currentDir = selectedPagePath.substring(0, selectedPagePath.lastIndexOf('/'));
-          if (currentDir) {
-            resolvedPath = `${currentDir}/${href}`;
-          }
-        }
-        
-        // Обновляем URL с новой страницей
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('page', resolvedPath);
-        window.history.pushState({}, '', currentUrl.toString());
-        
-        // Обновляем состояние
-        setSelectedPagePath(resolvedPath);
+        // Используем оригинальный href атрибут, чтобы избежать двойного кодирования
+        const originalHref = link.getAttribute('href') || url.href;
+        console.log('🔗 V8Help link clicked:', originalHref);
+        setV8helpLink(originalHref);
+        return;
+      }
+      
+      // Обработка внутренних ссылок
+      if (url.pathname.endsWith('.html')) {
+        event.preventDefault();
+        const pagePath = url.pathname.substring(1); // Убираем ведущий слэш
+        const newUrl = `/${locale}/${encodeURIComponent(section || '')}?page=${encodeURIComponent(pagePath)}`;
+        navigate(newUrl);
       }
     }
   };
 
+  const toggleFullWidth = () => {
+    setIsFullWidth(!isFullWidth);
+  };
+
+  if (isLoadingContent) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (contentError) {
+    return (
+      <Box p={3}>
+        <Typography color="error">
+          Ошибка загрузки содержимого: {contentError.message}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!selectedPagePath) {
+    return (
+      <Box p={3}>
+        <Typography variant="h6" color="text.secondary">
+          Выберите страницу для просмотра
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
-    <Box
-      sx={{
-        flex: 1,
+    <Box 
+      sx={{ 
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
-        bgcolor: 'background.default',
+        maxWidth: isFullWidth ? 'none' : '1200px',
+        margin: isFullWidth ? 0 : '0 auto',
+        transition: 'max-width 0.3s ease, margin 0.3s ease'
       }}
     >
-      <Box
-        sx={{
-          p: 3,
+      {/* Панель управления */}
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          p: 1,
           borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          borderColor: 'divider'
         }}
       >
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 0 }}>
-          {section || 'Выберите раздел'}
-        </Typography>
-        
-        {htmlContent && (
-          <Tooltip title={isFullWidth ? 'Ограничить ширину' : 'На всю ширину'}>
-            <IconButton onClick={() => setIsFullWidth(!isFullWidth)}>
-              {isFullWidth ? <AspectRatio /> : <Fullscreen />}
-            </IconButton>
-          </Tooltip>
-        )}
+        <Tooltip title={isFullWidth ? "Обычная ширина" : "На всю ширину"}>
+          <IconButton onClick={toggleFullWidth} size="small">
+            {isFullWidth ? <AspectRatio /> : <Fullscreen />}
+          </IconButton>
+        </Tooltip>
       </Box>
-      
-      <Box
-        sx={{
+
+      {/* Содержимое страницы */}
+      <Box 
+        sx={{ 
           flex: 1,
-          p: 3,
           overflow: 'auto',
+          p: 3,
+          '& img': {
+            maxWidth: '100%',
+            height: 'auto'
+          },
+          '& table': {
+            width: '100%',
+            borderCollapse: 'collapse',
+            '& th, & td': {
+              border: 1,
+              borderColor: 'divider',
+              p: 1,
+              textAlign: 'left'
+            },
+            '& th': {
+              backgroundColor: 'grey.100'
+            }
+          }
         }}
-      >
-        {isLoading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress />
-          </Box>
-        )}
-        
-        {error && (
-          <Typography color="error">
-            Ошибка загрузки содержимого: {error.message}
-          </Typography>
-        )}
-        
-        {htmlContent && (
-          <Box
-            sx={{
-              maxWidth: isFullWidth ? 'none' : '800px',
-              mx: 'auto',
-              bgcolor: 'white',
-              p: 3,
-              borderRadius: 1,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              minHeight: '100%',
-            }}
-            onClick={handleContentClick}
-          >
-            <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-          </Box>
-        )}
-        
-        {selectedPagePath && selectedPagePath.includes('__empty_pl') && (
-          <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', p: 4 }}>
-            Эта страница не содержит информации.
-          </Typography>
-        )}
-        
-        {!selectedPagePath && !isLoading && (
-          <Typography variant="body1">
-            Выберите страницу из навигационного дерева для просмотра содержимого.
-          </Typography>
-        )}
-      </Box>
+        onClick={handleContentClick}
+        dangerouslySetInnerHTML={{ __html: pageContent || '' }}
+      />
     </Box>
   );
 }

@@ -57,11 +57,13 @@ class BooksController(
         val toc = booksService.bookToc(book)
 
         val (page, truck) = toc.findPageWithTruckByLocation(pagePath)
+        val truckRefs = truck.map { it.getRef() }
+
         val pages =
             if (depth != null) {
-                page.getChildren()?.map { PageDto.fromWithDepth(it, depth, truck) }
+                page.getChildren()?.map { PageDto.fromWithDepth(it, depth, truckRefs) }
             } else {
-                page.getChildren()?.map { PageDto.fromLite(it, truck) }
+                page.getChildren()?.map { PageDto.fromLite(it, truckRefs) }
             }
         return ResponseEntity.ok(pages)
     }

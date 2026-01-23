@@ -48,8 +48,8 @@ class MkDocsToc : TocFormatter {
         val indent = "  ".repeat(level)
         pages.forEach { page ->
             stream.write("$indent- ${title(page)}:")
-            if (page.location.isNotBlank() && page.subRecords.isEmpty()) {
-                stream.write(" ${page.location}.md")
+            if (page.getRef().isNotBlank() && page.subRecords.isEmpty()) {
+                stream.write(" ${page.getRef()}.md")
             }
 
             stream.newLine()
@@ -70,8 +70,8 @@ class MkDocsToc : TocFormatter {
         docsPath: Path,
     ) {
         pages.forEach { page ->
-            if (page.location.isNotBlank() && page.subRecords.isEmpty()) {
-                val pagePath = docsPath.resolve(page.location)
+            if (page.getRef().isNotBlank() && page.subRecords.isEmpty()) {
+                val pagePath = docsPath.resolve(page.getRef())
                 if (pagePath.exists() && !pagePath.isDirectory()) {
                     pagePath.moveTo(Path(pagePath.absolutePathString() + ".md"))
                 }

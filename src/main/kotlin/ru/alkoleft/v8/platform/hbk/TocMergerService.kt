@@ -9,13 +9,11 @@ package ru.alkoleft.v8.platform.hbk
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
-import ru.alkoleft.v8.platform.hbk.model.DoubleLanguageString
+import ru.alkoleft.v8.platform.hbk.model.PageBuilder
 import ru.alkoleft.v8.platform.hbk.model.TocRecord
 import ru.alkoleft.v8.platform.hbk.reader.toc.BookPage
 import ru.alkoleft.v8.platform.hbk.reader.toc.GlobalToc
 import ru.alkoleft.v8.platform.hbk.reader.toc.Toc
-import java.nio.file.Files
-import java.nio.file.Path
 
 private val logger = KotlinLogging.logger { }
 
@@ -72,7 +70,8 @@ object TocMergerService {
         }
 
         setUniqueLocations(rootPage.children, mutableMapOf())
-        return GlobalToc(rootPage.children.map { it.toBookPage() })
+
+        return GlobalToc(rootPage.children.map(BookPage::fromPageBuilder))
     }
 
     private fun setUniqueLocations(
@@ -80,15 +79,8 @@ object TocMergerService {
         locationMap: MutableMap<String, Int>,
     ) {
         pages.forEach { page ->
-            val locationIndex: Int = locationMap.getOrDefault(page.location, 0)
-            locationMap.put(page.location, locationIndex + 1)
-
-            page.location = page.location.ifEmpty { "__empty_pl_" } +
-                if (locationIndex == 0) {
-                    ""
-                } else {
-                    locationIndex.toString()
-                }
+            page.locationIndex = locationMap.getOrDefault(page.location, 0)
+            locationMap.put(page.location, page.locationIndex + 1)
             setUniqueLocations(page.children, locationMap)
         }
     }
@@ -150,26 +142,6 @@ object TocMergerService {
      * @return Ключ страницы
      */
     private fun createPageKey(page: TocRecord): String = page.title.en
-
-    /**
-     * Экспортирует объединенное оглавление в текстовый файл.
-     *
-     * @param toc Оглавление для экспорта
-     * @param outputPath Путь к файлу для сохранения
-     */
-    fun exportMergedToc(
-        toc: Toc,
-        outputPath: Path,
-    ) {
-        logger.info { "Экспорт объединенного TOC в файл: $outputPath" }
-
-        val content = buildTocContent(toc.pages, 0)
-
-        Files.createDirectories(outputPath.parent)
-        Files.write(outputPath, content.toByteArray(Charsets.UTF_8))
-
-        logger.info { "TOC экспортирован успешно. Размер файла: ${Files.size(outputPath)} байт" }
-    }
 
     /**
      * Строит текстовое представление оглавления.
@@ -242,35 +214,5 @@ object TocMergerService {
     ) {
         val newPage = target.add(source, book)
         source.subRecords.forEach { addRecursive(newPage, it, book) }
-    }
-}
-
-private class PageBuilder(
-    var book: BookInfo,
-    val title: String,
-    var location: String,
-    val children: MutableList<PageBuilder> = mutableListOf(),
-) {
-    fun contains(name: String) = false
-
-    fun getChildren(name: String) = children.find { it.title.equals(name, true) }
-
-    fun add(
-        page: TocRecord,
-        book: BookInfo,
-    ): PageBuilder {
-        val newPage = PageBuilder(book, page.title.get(), page.location)
-        children.add(newPage)
-        return newPage
-    }
-
-    fun toPage(): TocRecord {
-        val childrenPages = children.map { it.toPage() }.toMutableList()
-        return TocRecord(DoubleLanguageString(title, ""), location, childrenPages)
-    }
-
-    fun toBookPage(): BookPage {
-        val childrenPages = children.map { it.toBookPage() }
-        return BookPage(book, title, location, childrenPages)
     }
 }

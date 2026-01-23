@@ -47,3 +47,15 @@ export function usePageContentByPath(pagePath: string, locale: string = 'ru') {
     staleTime: 10 * 60 * 1000,
   });
 }
+
+/**
+ * Хук для резолвинга v8help ссылки
+ */
+export function useResolveV8HelpLink(link: string, locale: string = 'ru', enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['resolve-v8help', link, locale],
+    queryFn: ({ signal }) => apiClient.resolveV8HelpLink(link, locale, signal),
+    enabled: !!link && enabled,
+    staleTime: 10 * 60 * 1000,
+  });
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Box,
   ListItemButton,
@@ -19,6 +20,8 @@ import {
 import type { PageDto } from '../../types/api';
 import { useGlobalTocSection } from '../../hooks/useGlobalData';
 import { hasPageChildren, shouldLoadPageChildren, getPageTitle } from '../../utils/pageUtils';
+import { useTreeState } from '../../contexts/TreeStateContext';
+import { createNodeId } from '../../utils/treeUtils';
 
 interface TreeNodeProps {
   page: PageDto;
@@ -43,7 +46,10 @@ export function TreeNode({
   locale,
   isGlobalToc,
 }: TreeNodeProps) {
-  const [isExpanded, setIsExpanded] = useState(isSearchResult ?? false);
+  const { isNodeExpanded, toggleNode } = useTreeState();
+  const nodeId = createNodeId(page, level);
+  const isExpanded = isNodeExpanded(nodeId) || (isSearchResult ?? false);
+  const nodeRef = useRef<HTMLDivElement>(null);
   
   // Определяем наличие дочерних элементов
   const hasChildren = hasPageChildren(page);
@@ -68,6 +74,20 @@ export function TreeNode({
   const pageTitle = getPageTitle(page);
   const isSelected = selectedPage === page.pagePath;
 
+  // Автоскролл до выбранной страницы
+  useEffect(() => {
+    if (isSelected && nodeRef.current) {
+      const timer = setTimeout(() => {
+        nodeRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
+      }, 1000); // Увеличенная задержка для гарантированной загрузки
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isSelected]);
+
   const handleClick = () => {
     if (page.pagePath) {
       onPageSelect(page.pagePath);
@@ -76,12 +96,13 @@ export function TreeNode({
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsExpanded(!isExpanded);
+    toggleNode(nodeId);
   };
 
   return (
     <>
       <ListItemButton
+        ref={nodeRef}
         selected={isSelected}
         onClick={handleClick}
         aria-selected={isSelected}
