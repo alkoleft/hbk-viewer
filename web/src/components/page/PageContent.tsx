@@ -51,8 +51,8 @@ export function PageContent() {
         bgcolor: 'background.paper',
         position: 'relative',
         pt: 0,
-        px: 2,
-        pb: 2
+        px: { xs: 1, md: 2 },
+        pb: { xs: 1, md: 2 }
       }}
     >
       <Tooltip title={isFullWidth ? "Обычная ширина" : "На всю ширину"}>
@@ -66,6 +66,7 @@ export function PageContent() {
             zIndex: 10,
             bgcolor: 'background.paper',
             boxShadow: 1,
+            display: { xs: 'none', md: 'flex' },
             '&:hover': {
               bgcolor: 'action.hover'
             }
@@ -79,7 +80,7 @@ export function PageContent() {
         sx={{ 
           flex: 1,
           overflow: 'auto',
-          p: 3,
+          p: { xs: 1.5, md: 3 },
           opacity: isLoading ? 0.5 : 1,
           transition: 'opacity 0.2s ease',
           '& img': {
@@ -89,6 +90,8 @@ export function PageContent() {
           '& table': {
             width: '100%',
             borderCollapse: 'collapse',
+            display: 'block',
+            overflowX: 'auto',
             '& th, & td': {
               border: 1,
               borderColor: 'divider',

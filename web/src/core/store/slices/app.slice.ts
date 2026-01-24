@@ -2,9 +2,11 @@ export interface AppSlice {
   sidebarWidth: number;
   currentLocale: string;
   activeSection: string;
+  isMobileDrawerOpen: boolean;
   setSidebarWidth: (width: number) => void;
   setCurrentLocale: (locale: string) => void;
   setActiveSection: (section: string) => void;
+  toggleMobileDrawer: () => void;
 }
 
 const STORAGE_KEYS = {
@@ -29,6 +31,7 @@ export const createAppSlice = (set: any): AppSlice => ({
   sidebarWidth: getInitialSidebarWidth(),
   currentLocale: getInitialLocale(),
   activeSection: '',
+  isMobileDrawerOpen: false,
   
   setSidebarWidth: (width) => {
     set({ sidebarWidth: width });
@@ -46,5 +49,9 @@ export const createAppSlice = (set: any): AppSlice => ({
   
   setActiveSection: (section) => {
     set({ activeSection: section });
+  },
+  
+  toggleMobileDrawer: () => {
+    set((state: AppSlice) => ({ isMobileDrawerOpen: !state.isMobileDrawerOpen }));
   },
 });

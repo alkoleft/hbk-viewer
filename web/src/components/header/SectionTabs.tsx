@@ -35,11 +35,14 @@ export function SectionTabs() {
       variant="scrollable"
       scrollButtons="auto"
       sx={{ 
-        minHeight: 48,
+        minHeight: { xs: 40, md: 48 },
         flex: 1,
         '& .MuiTab-root': {
           textTransform: 'none',
           fontWeight: 500,
+          minHeight: { xs: 40, md: 48 },
+          px: { xs: 1, md: 2 },
+          fontSize: { xs: '0.875rem', md: '1rem' },
         },
         '& .Mui-selected': {
           color: 'primary.main',
@@ -51,7 +54,6 @@ export function SectionTabs() {
         <Tab
           key={index}
           label={page.title}
-          sx={{ minHeight: 48 }}
         />
       ))}
     </Tabs>

@@ -59,10 +59,10 @@ export function AppViewPage() {
       <Box sx={{ 
         display: 'flex', 
         flex: 1, 
-        mt: '112px',
+        mt: { xs: '104px', md: '112px' },
         overflow: 'hidden',
         minHeight: 0,
-        flexDirection: { xs: 'column', md: 'row' }
+        flexDirection: 'row'
       }}>
         <Sidebar />
         <PageContent />

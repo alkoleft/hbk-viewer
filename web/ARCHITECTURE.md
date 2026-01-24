@@ -26,7 +26,7 @@ src/
 ├── shared/                # Shared components and utilities
 │   ├── api/               # API client and React Query hooks
 │   ├── components/        # Reusable UI components
-│   ├── hooks/             # Common hooks
+│   ├── hooks/             # Common hooks (including mobile)
 │   ├── lib/               # Utilities and helpers
 │   └── types/             # Shared types
 └── core/                  # Application core
@@ -62,7 +62,7 @@ Example: `features/navigation/`
 Reusable code across features:
 - **api/** - API client, React Query hooks, query keys
 - **components/** - UI components used in multiple features
-- **hooks/** - Common hooks (e.g., useSidebarResize)
+- **hooks/** - Common hooks (e.g., useSidebarResize, useIsMobile, useSwipeGesture)
 - **lib/** - Utility functions (e.g., urlManager)
 - **types/** - Shared TypeScript types
 
@@ -88,7 +88,7 @@ export const useStore = create<RootStore>((set) => ({
 ```
 
 **Slices:**
-- `app.slice.ts` - App-wide state (locale, sidebar width, active section)
+- `app.slice.ts` - App-wide state (locale, sidebar width, active section, mobile drawer)
 - `navigation.slice.ts` - Navigation state (expanded tree nodes)
 
 **Selectors:**
@@ -132,7 +132,94 @@ Usage:
 import { useStore } from '@core/store';
 import { useGlobalToc } from '@shared/api';
 import { useTreeNavigation } from '@features/navigation/hooks';
+import { useIsMobile, useSwipeGesture } from '@shared/hooks';
 ```
+
+## Mobile Adaptation
+
+The application is fully adapted for mobile devices with a responsive design approach.
+
+### Key Features
+
+1. **Drawer Navigation**
+   - Sidebar opens as a drawer on mobile devices (< 900px)
+   - Swipe gestures for opening/closing
+   - Auto-close on page selection
+   - Adaptive width: 100% on small screens (<360px), 85% on medium screens
+
+2. **Responsive Header**
+   - Hamburger menu button on mobile
+   - Shortened title "HBK Viewer" on mobile
+   - Hidden version info on small screens
+   - Compact section tabs (40px height on mobile)
+
+3. **Optimized Content**
+   - Reduced paddings for mobile
+   - Horizontally scrollable tables
+   - Hidden full-width button on mobile
+   - Responsive font sizes via CSS media queries
+
+### Mobile-Specific Components
+
+**Hooks:**
+- `useIsMobile()` - Detects mobile devices using MUI breakpoints
+- `useSwipeGesture()` - Handles touch events for swipe gestures
+
+**Store:**
+- `isMobileDrawerOpen` - Drawer state for mobile
+- `toggleMobileDrawer()` - Toggle drawer visibility
+
+**Components:**
+- `Sidebar` - Conditional rendering: Drawer on mobile, Paper on desktop
+- `AppHeader` - Hamburger menu button for mobile
+- `PageContent` - Responsive paddings and styles
+
+### Breakpoints
+
+- **xs:** 0px - 600px (mobile phones)
+- **sm:** 600px - 900px (tablets)
+- **md:** 900px+ (desktop)
+
+### Implementation Details
+
+**Drawer Width:**
+```typescript
+width: { 
+  xs: '100%',        // < 600px
+  sm: '85%'          // 600px - 900px
+}
+
+// Additional media query:
+@media (max-width: 360px) {
+  width: '100%'      // < 360px (small phones)
+}
+```
+
+**Swipe Gestures:**
+- Swipe right (from left edge) → Open drawer
+- Swipe left → Close drawer
+- Minimum swipe distance: 50px
+
+**Header Height:**
+- Desktop: 64px (toolbar) + 48px (tabs) = 112px
+- Mobile: 64px (toolbar) + 40px (tabs) = 104px
+
+### Testing Mobile Features
+
+```bash
+# Start dev server
+npm run dev
+
+# Open in browser: http://localhost:3000
+# F12 → Ctrl+Shift+M (responsive design mode)
+# Select device: iPhone, iPad, or set custom resolution
+```
+
+**Recommended test resolutions:**
+- 320px - iPhone SE (small phones)
+- 375px - iPhone X/11/12 (standard phones)
+- 768px - iPad (tablets)
+- 1024px - iPad Pro / small laptops
 
 ## Adding New Features
 
@@ -168,6 +255,7 @@ export * from './hooks/useMyFeature';
 - ✅ **Minimal Code** - Removed duplication and redundancy
 - ✅ **Type Safety** - Full TypeScript support with path aliases
 - ✅ **Performance** - Optimized re-renders with selectors
+- ✅ **Mobile Support** - Full responsive design with drawer navigation and swipe gestures
 
 ## Migration Notes
 
@@ -183,6 +271,14 @@ export * from './hooks/useMyFeature';
 - State management unified in Zustand
 - API calls through typed React Query hooks
 - URL management centralized in `urlManager`
+- Mobile-first responsive design with drawer navigation
+
+### Added
+- `useIsMobile` hook - Mobile device detection
+- `useSwipeGesture` hook - Touch gesture handling
+- Mobile drawer state in app slice
+- Responsive styles and breakpoints
+- Mobile-optimized components
 
 ## Next Steps
 

@@ -375,3 +375,66 @@ table.V8TitleTable td.V8Product a
 {
 	font-size: 130% !important;
 }
+
+/* --------------------------------------------------------------------
+ Мобильные стили
+-------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+	body {
+		font-size: 85%;
+	}
+
+	div#V8TopicString {
+		padding: 0px 8px 0px 12px;
+	}
+
+	div#V8TextArea {
+		padding: 5px 8px 0px 12px;
+	}
+
+	h1 {
+		font-size: 140%;
+	}
+
+	h2 {
+		font-size: 120%;
+	}
+
+	h3 {
+		font-size: 110%;
+	}
+
+	h1.V8TopicText {
+		margin-left: -8px;
+	}
+
+	ol, ul {
+		margin: .5em 0em 0em 1.5em;
+	}
+
+	pre.SyntaxDescription,
+	.Important {
+		padding: 4px 6px;
+		font-size: 90%;
+	}
+
+	table.V8TitleTable td {
+		padding: 4px;
+		font-size: 110%;
+	}
+
+	table.SimplyTable {
+		font-size: 90%;
+	}
+
+	td.NarrowColumn,
+	td.WideColumn,
+	td.NormalColumn,
+	td.NarrowHeading,
+	td.WideHeading,
+	td.NormalHeading {
+		font-size: 85%;
+		padding: 4px;
+	}
+}
