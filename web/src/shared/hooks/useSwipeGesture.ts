@@ -11,7 +11,7 @@ export function useSwipeGesture({
   onSwipeRight,
   minSwipeDistance = 50,
 }: SwipeGestureOptions) {
-  const elementRef = useRef<HTMLElement | null>(null);
+  const elementRef = useRef<HTMLDivElement | null>(null);
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
   const touchEndX = useRef<number>(0);

@@ -4,15 +4,18 @@ import type { PageDto, AppInfo } from '@shared/types';
 const API_BASE = '/api';
 
 export const mockAppInfo: AppInfo = {
-  version: '0.2.0',
-  platformVersion: '8.3.25.1257',
+  version: {
+    application: '0.2.0',
+    platform: '8.3.25.1257',
+  },
+  availableLocales: ['ru', 'en'],
 };
 
 export const mockPages: PageDto[] = [
   {
     title: 'Test Section',
     pagePath: 'test/section',
-    path: ['test', 'section'],
+    path: [0, 1],
     hasChildren: true,
     children: [],
   },
@@ -34,7 +37,7 @@ export const handlers = [
       {
         title: `Child of ${sectionPath}`,
         pagePath: `${sectionPath}/child`,
-        path: [sectionPath, 'child'],
+        path: [0, 1],
         hasChildren: false,
       },
     ]);

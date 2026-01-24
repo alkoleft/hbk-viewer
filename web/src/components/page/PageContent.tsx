@@ -88,10 +88,9 @@ export function PageContent() {
             height: 'auto'
           },
           '& table': {
-            width: '100%',
+            maxWidth: '100%',
+            width: 'auto !important',
             borderCollapse: 'collapse',
-            display: 'block',
-            overflowX: 'auto',
             '& th, & td': {
               border: 1,
               borderColor: 'divider',
