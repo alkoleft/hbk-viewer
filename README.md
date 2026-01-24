@@ -49,29 +49,88 @@
 
 ## Использование
 
-### Запуск приложения
+Приложение поддерживает два режима работы через CLI команды:
+- **server** — запуск веб-сервера для просмотра документации
+- **export** — экспорт HBK файлов в файловую систему
+
+### Команда server
+
+Запускает web сервер приложения.
+
+**Синтаксис:**
 
 ```bash
-java -jar hbk-reader-<версия>.jar [опции]
+java -jar hbk-reader-<версия>.jar server [опции]
 ```
 
 **Опции:**
 
 - `--platform-path`, `-p` - путь к каталогу установки 1С Предприятия (для автоматического поиска HBK файла)
-- `--help`, `-h` - показать справку по использованию
-- `--verbose` - включить отладочное логирование
+- `--verbose`, `-v` - включить отладочное логирование
 
 **Примеры:**
 
 ```bash
 # Основной способ запуска
-java -jar hbk-reader-0.2.0.jar --platform-path "/opt/1cv8/x86_64/8.3.25.1257"
+java -jar hbk-reader-0.2.0.jar server --platform-path "/opt/1cv8/x86_64/8.3.25.1257"
 
 # Сокращенная форма
-java -jar hbk-reader-0.2.0.jar -p "/opt/1cv8/x86_64/8.3.25.1257"
+java -jar hbk-reader-0.2.0.jar server -p "/opt/1cv8/x86_64/8.3.25.1257"
 
-# Показать справку
-java -jar hbk-reader-0.2.0.jar --help
+# С отладочным логированием
+java -jar hbk-reader-0.2.0.jar server -p "/opt/1cv8/x86_64/8.3.25.1257" --verbose
+```
+
+### Команда export
+
+Экспортирует HBK файл в указанную директорию.
+
+**Синтаксис:**
+
+```bash
+java -jar hbk-reader-<версия>.jar export --file <путь-к-hbk> --output <директория> [опции]
+```
+
+**Опции:**
+
+- `--file`, `-f` - путь к HBK файлу для экспорта (обязательно)
+- `--output`, `-o` - директория для сохранения распакованных файлов (обязательно)
+- `--pages-only`, `-p` - экспортировать только HTML страницы (по умолчанию: false)
+- `--include-toc`, `-t` - включить оглавление в экспорт, только для полного экспорта (по умолчанию: true)
+- `--preserve-structure`, `-s` - сохранить структуру каталогов, только для pages-only (по умолчанию: true)
+
+**Примеры:**
+
+```bash
+# Полный экспорт HBK файла
+java -jar hbk-reader-0.2.0.jar export \
+  --file "/path/to/platform.hbk" \
+  --output "/path/to/output"
+
+# Экспорт только HTML страниц
+java -jar hbk-reader-0.2.0.jar export \
+  --file "/path/to/platform.hbk" \
+  --output "/path/to/output" \
+  --pages-only
+
+# Экспорт страниц без сохранения структуры каталогов
+java -jar hbk-reader-0.2.0.jar export \
+  --file "/path/to/platform.hbk" \
+  --output "/path/to/output" \
+  --pages-only \
+  --preserve-structure false
+
+# Полный экспорт без оглавления
+java -jar hbk-reader-0.2.0.jar export \
+  --file "/path/to/platform.hbk" \
+  --output "/path/to/output" \
+  --include-toc false
+```
+
+Для получения справки по конкретной команде используйте:
+
+```bash
+java -jar hbk-reader-0.2.0.jar <команда> --help
 ```
 
 ## Веб-приложение

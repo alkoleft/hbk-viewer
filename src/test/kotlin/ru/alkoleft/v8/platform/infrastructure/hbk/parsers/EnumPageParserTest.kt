@@ -7,52 +7,52 @@
 
 package ru.alkoleft.v8.platform.hbk.parsers
 
+import io.kotest.core.spec.style.ShouldSpec
 import org.assertj.core.api.Assertions
-import ru.alkoleft.v8.platform.hbk.parsers.core.PageParser
-import ru.alkoleft.v8.platform.hbk.parsers.specialized.EnumPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.core.PageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser
 import java.io.FileInputStream
 import java.nio.file.Paths
-import kotlin.test.Test
 
-class EnumPageParserTest {
-    private fun <R> parseFile(
-        fileName: String,
-        parser: PageParser<R>,
-    ): R {
-        FileInputStream(Paths.get("src/test/resources/enums/$fileName").toFile()).use { inputStream ->
-            return parser.parse(inputStream)
+class EnumPageParserTest :
+    ShouldSpec({
+        fun <R> parseFile(
+            fileName: String,
+            parser: PageParser<R>,
+        ): R {
+            FileInputStream(Paths.get("src/test/resources/enums/$fileName").toFile()).use { inputStream ->
+                return parser.parse(inputStream)
+            }
         }
-    }
 
-    @Test
-    fun `test parse FormGroupType`() {
-        val info = parseFile("FormGroupType.html", EnumPageParser())
+        should("parse FormGroupType") {
+            val info = parseFile("FormGroupType.html", EnumPageParser())
 
-        Assertions.assertThat(info.nameRu).isEqualTo("ВидГруппыФормы")
-        Assertions.assertThat(info.nameEn).isEqualTo("FormGroupType")
-        Assertions.assertThat(info.description).isEqualTo("Содержит варианты видов групп формы клиентского приложения.")
-        Assertions.assertThat(info.relatedObjects).hasSize(2) // TODO
-    }
+            Assertions.assertThat(info.nameRu).isEqualTo("ВидГруппыФормы")
+            Assertions.assertThat(info.nameEn).isEqualTo("FormGroupType")
+            Assertions
+                .assertThat(info.description)
+                .isEqualTo("Содержит варианты видов групп формы клиентского приложения.")
+            Assertions.assertThat(info.relatedObjects).hasSize(2) // TODO
+        }
 
-    @Test
-    fun `test parse PictureLib`() {
-        val info = parseFile("PictureLib.html", EnumPageParser())
+        should("parse PictureLib") {
+            val info = parseFile("PictureLib.html", EnumPageParser())
 
-        Assertions.assertThat(info.nameRu).isEqualTo("БиблиотекаКартинок")
-        Assertions.assertThat(info.nameEn).isEqualTo("PictureLib")
-        Assertions
-            .assertThat(info.description)
-            .isEqualTo("Определяет набор картинок, используемых в конфигурации. Значения этого набора имеют тип `Картинка`.")
-    }
+            Assertions.assertThat(info.nameRu).isEqualTo("БиблиотекаКартинок")
+            Assertions.assertThat(info.nameEn).isEqualTo("PictureLib")
+            Assertions
+                .assertThat(info.description)
+                .isEqualTo("Определяет набор картинок, используемых в конфигурации. Значения этого набора имеют тип `Картинка`.")
+        }
 
-    @Test
-    fun `test parse ActionOnThePasswordRequirementsViolationOnAuthentication`() {
-        val info = parseFile("ActionOnThePasswordRequirementsViolationOnAuthentication.html", EnumPageParser())
+        should("parse ActionOnThePasswordRequirementsViolationOnAuthentication") {
+            val info = parseFile("ActionOnThePasswordRequirementsViolationOnAuthentication.html", EnumPageParser())
 
-        Assertions.assertThat(info.nameRu).isEqualTo("ДействиеПриНесоответствииПароляТребованиямПриАутентификации")
-        Assertions.assertThat(info.nameEn).isEqualTo("ActionOnThePasswordRequirementsViolationOnAuthentication")
-        Assertions
-            .assertThat(info.description)
-            .isEqualTo("Содержит варианты возможных действий при несоответствии паролей требованиям в ходе аутентификации.")
-    }
-}
+            Assertions.assertThat(info.nameRu).isEqualTo("ДействиеПриНесоответствииПароляТребованиямПриАутентификации")
+            Assertions.assertThat(info.nameEn).isEqualTo("ActionOnThePasswordRequirementsViolationOnAuthentication")
+            Assertions
+                .assertThat(info.description)
+                .isEqualTo("Содержит варианты возможных действий при несоответствии паролей требованиям в ходе аутентификации.")
+        }
+    })

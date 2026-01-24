@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, memo, useCallback } from 'react';
 import {
   Box,
   ListItemButton,
@@ -16,21 +16,29 @@ import {
   FolderOpen,
   ArticleOutlined,
 } from '@mui/icons-material';
-import type { PageDto } from '../../types/api';
-import { useBookStructureChildren } from '../../api/queries';
-import { hasPageChildren, shouldLoadPageChildren, getPageTitle } from '../../utils/pageUtils';
+import type { PageDto } from '@shared/types';
+import { useGlobalTocSection } from '@shared/api';
+import { useTreeNavigation } from '@features/navigation/hooks';
+import { 
+  hasPageChildren, 
+  shouldLoadPageChildren, 
+  getPageTitle,
+  createNodeId 
+} from '@features/navigation/services/tree-utils.service';
 
 interface TreeNodeProps {
   page: PageDto;
-  onPageSelect: (htmlPath: string) => void;
+  onPageSelect: (pagePath: string) => void;
   selectedPage?: string;
   level: number;
   searchQuery?: string;
   filename?: string;
   isSearchResult?: boolean;
+  locale?: string;
+  isGlobalToc?: boolean;
 }
 
-export function TreeNode({
+function TreeNodeComponent({
   page,
   onPageSelect,
   selectedPage,
@@ -38,48 +46,67 @@ export function TreeNode({
   searchQuery,
   filename,
   isSearchResult,
+  locale,
+  isGlobalToc,
 }: TreeNodeProps) {
-  const [isExpanded, setIsExpanded] = useState(isSearchResult ?? false);
+  const { isNodeExpanded, toggleNode } = useTreeNavigation();
+  const nodeId = createNodeId(page, level);
+  const isExpanded = isNodeExpanded(nodeId) || (isSearchResult ?? false);
+  const nodeRef = useRef<HTMLDivElement>(null);
   
-  // Определяем наличие дочерних элементов
   const hasChildren = hasPageChildren(page);
   const shouldLoad = shouldLoadPageChildren(page, isSearchResult ?? false);
   
-  // Используем React Query для загрузки дочерних элементов
   const {
     data: loadedChildren = [],
     isLoading: isLoadingChildren,
-  } = useBookStructureChildren(
-    filename,
-    page.htmlPath,
-    page.path,
+  } = useGlobalTocSection(
+    locale || 'ru',
+    page.pagePath,
+    undefined,
     isExpanded && shouldLoad
   );
   
-  // Используем загруженные children или children из page
   const children = isExpanded && loadedChildren.length > 0 
     ? loadedChildren 
-    : (page.children || []);
+    : page.children || [];
   
   const pageTitle = getPageTitle(page);
-  const isSelected = selectedPage === page.htmlPath;
+  const isSelected = selectedPage === page.pagePath;
 
-  const handleClick = () => {
-    if (page.htmlPath) {
-      onPageSelect(page.htmlPath);
+  useEffect(() => {
+    if (isSelected && nodeRef.current) {
+      const element = nodeRef.current;
+      const rect = element.getBoundingClientRect();
+      const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      
+      if (!isVisible) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
+      }
     }
-  };
+  }, [isSelected]);
 
-  const handleToggle = (e: React.MouseEvent) => {
+  const handleClick = useCallback(() => {
+    if (page.pagePath) {
+      onPageSelect(page.pagePath);
+    }
+  }, [page.pagePath, onPageSelect]);
+
+  const handleToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsExpanded(!isExpanded);
-  };
+    toggleNode(nodeId);
+  }, [nodeId, toggleNode]);
 
   return (
     <>
       <ListItemButton
+        ref={nodeRef}
         selected={isSelected}
         onClick={handleClick}
+        disableRipple
         aria-selected={isSelected}
         aria-expanded={hasChildren ? isExpanded : undefined}
         aria-level={level + 1}
@@ -92,6 +119,11 @@ export function TreeNode({
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
+          transition: 'background-color 0.15s ease, color 0.15s ease',
+          '&:active': {
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+          },
           '&.Mui-selected': {
             bgcolor: 'primary.main',
             color: 'primary.contrastText',
@@ -208,7 +240,7 @@ export function TreeNode({
               children.map((child, index) => {
                 const uniqueKey = child.path && child.path.length > 0 
                   ? `path-${child.path.join(',')}` 
-                  : (child.htmlPath || `child-${index}`);
+                  : (child.pagePath || `child-${index}`);
                 
                 return (
                   <TreeNode
@@ -220,6 +252,8 @@ export function TreeNode({
                     searchQuery={searchQuery}
                     filename={filename}
                     isSearchResult={isSearchResult}
+                    locale={locale}
+                    isGlobalToc={isGlobalToc}
                   />
                 );
               })
@@ -230,3 +264,13 @@ export function TreeNode({
     </>
   );
 }
+
+export const TreeNode = memo(TreeNodeComponent, (prev, next) => {
+  return (
+    prev.page.pagePath === next.page.pagePath &&
+    prev.selectedPage === next.selectedPage &&
+    prev.level === next.level &&
+    prev.searchQuery === next.searchQuery &&
+    prev.isSearchResult === next.isSearchResult
+  );
+});

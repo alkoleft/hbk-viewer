@@ -1,157 +1,111 @@
-import { Box, Typography, CircularProgress, Button, Alert } from '@mui/material';
-import type { BookStructure, BookInfo } from '../../types/api';
-import { useBookPageContent } from '../../api/queries';
-import { extractErrorMessage } from '../../utils/errorUtils';
-import { usePageTitle } from '../../hooks/usePageTitle';
-import { PageHeader } from './PageHeader';
-import { PageViewer } from './PageViewer';
+import { Box, Typography, IconButton, Tooltip } from '@mui/material';
+import { AspectRatio, Fullscreen } from '@mui/icons-material';
+import { useSectionNavigation } from '@features/navigation/hooks';
+import { useContentNavigation } from '@features/content/hooks';
+import { useState } from 'react';
 
-interface PageContentProps {
-  filename: string | undefined;
-  pageName?: string;
-  structure?: BookStructure | null;
-  onPageSelect: (htmlPath: string) => void;
-  books?: BookInfo[];
-  currentLocale?: string;
-}
+export function PageContent() {
+  const { section, locale, sectionPages } = useSectionNavigation();
+  const { selectedPagePath, pageContent, isLoading, error, handleLinkClick } = useContentNavigation(
+    locale,
+    section,
+    sectionPages
+  );
+  const [isFullWidth, setIsFullWidth] = useState(false);
 
-export function PageContent({ 
-  filename, 
-  pageName, 
-  structure, 
-  onPageSelect,
-  books = [],
-  currentLocale = 'ru',
-}: PageContentProps) {
-  // Используем React Query для загрузки контента
-  // placeholderData сохраняет предыдущие данные при переходе между страницами
-  const {
-    data: content,
-    isLoading: loading,
-    error: contentError,
-    refetch: loadContent,
-    isFetching,
-    isPlaceholderData,
-  } = useBookPageContent(filename, pageName);
+  const toggleFullWidth = () => {
+    setIsFullWidth(!isFullWidth);
+  };
 
-  // Безопасное извлечение сообщения об ошибке
-  const error = contentError ? extractErrorMessage(contentError, 'Ошибка загрузки контента') : null;
+  if (error) {
+    return (
+      <Box p={3}>
+        <Typography color="error">
+          Ошибка загрузки содержимого: {error.message}
+        </Typography>
+      </Box>
+    );
+  }
 
-  // Используем данные напрямую из React Query
-  // placeholderData автоматически сохраняет предыдущие данные при переключении
-  const displayContent = content || null;
-
-  // Показываем индикатор загрузки только при первой загрузке (когда нет данных)
-  const showLoadingIndicator = loading && !displayContent;
-
-  // Обновляем заголовок страницы в браузере
-  usePageTitle({
-    structure: structure ?? null,
-    pageName,
-    currentLocale,
-  });
+  if (!selectedPagePath && !isLoading) {
+    return (
+      <Box p={3}>
+        <Typography variant="h6" color="text.secondary">
+          Выберите страницу для просмотра
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Box
-      sx={{
+    <Box 
+      sx={{ 
         flex: 1,
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
-        bgcolor: 'background.default',
+        maxWidth: isFullWidth ? 'none' : '1200px',
+        width: '100%',
+        margin: isFullWidth ? 0 : '0 auto',
+        transition: 'max-width 0.3s ease, margin 0.3s ease',
+        bgcolor: 'background.paper',
+        position: 'relative',
+        pt: 0,
+        px: { xs: 1, md: 2 },
+        pb: { xs: 1, md: 2 }
       }}
     >
-      {!filename || !pageName ? (
-        <Box
+      <Tooltip title={isFullWidth ? "Обычная ширина" : "На всю ширину"}>
+        <IconButton 
+          onClick={toggleFullWidth} 
+          size="small"
           sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            zIndex: 10,
+            bgcolor: 'background.paper',
+            boxShadow: 1,
+            display: { xs: 'none', md: 'flex' },
+            '&:hover': {
+              bgcolor: 'action.hover'
+            }
           }}
         >
-          <Typography variant="body1" color="text.secondary">
-            Выберите файл и страницу для просмотра
-          </Typography>
-        </Box>
-      ) : (
-        <>
-          <PageHeader
-            structure={structure ?? null}
-            pageName={pageName}
-            filename={filename}
-            onPageSelect={onPageSelect}
-          />
+          {isFullWidth ? <AspectRatio /> : <Fullscreen />}
+        </IconButton>
+      </Tooltip>
 
-          <Box
-            sx={{
-              flex: 1,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              minHeight: 0,
-              position: 'relative',
-            }}
-          >
-            {showLoadingIndicator && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '200px',
-                  position: 'relative',
-                  bgcolor: 'background.default',
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
-
-            {isFetching && displayContent && !loading && !isPlaceholderData && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '200px',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  bgcolor: 'rgba(255, 255, 255, 0.7)',
-                  zIndex: 1,
-                  pointerEvents: 'none',
-                  opacity: 0.3,
-                  transition: 'opacity 0.2s ease-in-out',
-                }}
-              >
-                <CircularProgress size={40} />
-              </Box>
-            )}
-
-            {error && (
-              <Box sx={{ p: 3 }}>
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  Ошибка: {error}
-                </Alert>
-                <Button variant="contained" onClick={() => loadContent()}>
-                  Повторить
-                </Button>
-              </Box>
-            )}
-
-            {displayContent && displayContent.content && typeof displayContent.content === 'string' && (
-              <PageViewer
-                content={displayContent.content}
-                isTransitioning={false}
-                books={books}
-                currentLocale={currentLocale}
-              />
-            )}
-          </Box>
-        </>
-      )}
+      <Box 
+        sx={{ 
+          flex: 1,
+          overflow: 'auto',
+          p: { xs: 1.5, md: 3 },
+          opacity: isLoading ? 0.5 : 1,
+          transition: 'opacity 0.2s ease',
+          '& img': {
+            maxWidth: '100%',
+            height: 'auto'
+          },
+          '& table': {
+            width: '100%',
+            borderCollapse: 'collapse',
+            display: 'block',
+            overflowX: 'auto',
+            '& th, & td': {
+              border: 1,
+              borderColor: 'divider',
+              p: 1,
+              textAlign: 'left'
+            },
+            '& th': {
+              backgroundColor: 'grey.100'
+            }
+          }
+        }}
+        onClick={handleLinkClick}
+        dangerouslySetInnerHTML={{ __html: pageContent || '' }}
+      />
     </Box>
   );
 }

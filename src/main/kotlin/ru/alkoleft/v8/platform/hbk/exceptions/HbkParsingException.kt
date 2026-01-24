@@ -7,7 +7,7 @@
 
 package ru.alkoleft.v8.platform.hbk.exceptions
 
-import ru.alkoleft.v8.platform.hbk.parsers.core.BlockHandler
+import ru.alkoleft.v8.platform.shctx.parsers.core.BlockHandler
 
 /**
  * Базовый класс для исключений, возникающих при разборе HBK файлов.
@@ -46,7 +46,7 @@ class HandlerProcessingNotImplemented(
  *
  * @param message Сообщение об ошибке парсинга
  */
-class TocParsingError(
+class TocParsingException(
     message: String,
 ) : HbkParsingException("Ошибка разбора оглавления (Table of content) файла: $message")
 

@@ -10,8 +10,9 @@ package ru.alkoleft.v8.platform.app.service
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.alkoleft.v8.platform.HbkReaderApplication
-import ru.alkoleft.v8.platform.app.controller.dto.VersionInfo
+import ru.alkoleft.v8.platform.app.config.ApplicationProperties
 import ru.alkoleft.v8.platform.app.util.PlatformVersionDetector
+import ru.alkoleft.v8.platform.app.web.controller.dto.VersionInfo
 import java.nio.file.Path
 import java.util.jar.Attributes
 import java.util.jar.Manifest
@@ -27,12 +28,12 @@ private val logger = KotlinLogging.logger { }
  */
 @Service
 class VersionService(
-    private val fileScannerService: HbkFileScannerService
+    applicationProperties: ApplicationProperties,
 ) {
     val versionsInfo: VersionInfo by lazy {
         VersionInfo(
-            applicationVersion = getApplicationVersion(),
-            platformVersion = getPlatformVersion(fileScannerService.hbkDirectory),
+            application = getApplicationVersion(),
+            platform = getPlatformVersion(applicationProperties.hbkFilesDirectory),
         )
     }
 
@@ -41,8 +42,8 @@ class VersionService(
      *
      * @return Версия приложения или "unknown", если версия не может быть определена
      */
-    fun getApplicationVersion(): String {
-        return try {
+    fun getApplicationVersion(): String =
+        try {
             val packageName = HbkReaderApplication::class.java.`package`
             val implementationVersion = packageName.implementationVersion
             if (implementationVersion != null) {
@@ -58,7 +59,6 @@ class VersionService(
             logger.warn(e) { "Не удалось определить версию приложения" }
             "unknown"
         }
-    }
 
     fun getPlatformVersion(path: String) =
         try {
@@ -72,8 +72,8 @@ class VersionService(
     /**
      * Получает Manifest файл из JAR.
      */
-    private fun getManifest(): Manifest? {
-        return try {
+    private fun getManifest(): Manifest? =
+        try {
             val className = HbkReaderApplication::class.java.simpleName + ".class"
             val classPath = HbkReaderApplication::class.java.getResource(className)?.toString()
             if (classPath != null && classPath.startsWith("jar")) {
@@ -87,6 +87,4 @@ class VersionService(
             logger.debug(e) { "Не удалось прочитать manifest файл" }
             null
         }
-    }
-
 }

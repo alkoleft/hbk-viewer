@@ -52,11 +52,12 @@ object PlatformVersionDetector {
         }
 
         // Определяем имя исполняемого файла в зависимости от платформы
-        val executableFileName = if (isWindows) {
-            EXECUTABLE_FILE_NAME_WINDOWS
-        } else {
-            EXECUTABLE_FILE_NAME_LINUX
-        }
+        val executableFileName =
+            if (isWindows) {
+                EXECUTABLE_FILE_NAME_WINDOWS
+            } else {
+                EXECUTABLE_FILE_NAME_LINUX
+            }
 
         val executableFile = platformDirectory.resolve(executableFileName)
         if (!Files.exists(executableFile) || !Files.isRegularFile(executableFile)) {
@@ -125,7 +126,5 @@ object PlatformVersionDetector {
     /**
      * Проверяет, является ли строка валидной версией платформы 1С.
      */
-    private fun isValidVersion(version: String): Boolean {
-        return version.isNotBlank() && VERSION_PATTERN.matcher(version).matches()
-    }
+    private fun isValidVersion(version: String): Boolean = version.isNotBlank() && VERSION_PATTERN.matcher(version).matches()
 }

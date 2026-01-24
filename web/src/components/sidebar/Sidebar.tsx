@@ -1,144 +1,168 @@
-import { useState } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  IconButton,
-} from '@mui/material';
-import type { PageDto, BookInfo } from '../../types/api';
-import { useSearchStructure } from '../../api/queries';
-import { extractErrorMessage } from '../../utils/errorUtils';
-import { useDebounce } from '../../hooks/useDebounce';
-import { useSidebarPages } from '../../hooks/useSidebarPages';
-import { useSidebarResize } from '../../hooks/ui/useSidebarResize';
-import { SidebarHeader } from './SidebarHeader';
+import { useState, useEffect } from 'react';
+import { Box, Paper, Typography, CircularProgress, Drawer } from '@mui/material';
+import { useSectionNavigation } from '@features/navigation/hooks';
+import { useSidebarResize, useIsMobile, useSwipeGesture } from '@shared/hooks';
+import { useSearchParams } from 'react-router-dom';
 import { SidebarSearch } from './SidebarSearch';
 import { NavigationTree } from './NavigationTree';
+import { urlManager } from '@shared/lib';
+import { useStore } from '@core/store';
 
-interface SidebarProps {
-  selectedFile?: string;
-  selectedBookInfo?: BookInfo | null;
-  onFileSelectClick: () => void;
-  pages: PageDto[];
-  onPageSelect: (htmlPath: string) => void;
-  selectedPage?: string;
-  loading?: boolean;
-  error?: string | null;
-  onRetry?: () => void;
-}
-
-export function Sidebar({
-  selectedFile,
-  selectedBookInfo,
-  onFileSelectClick,
-  pages,
-  onPageSelect,
-  selectedPage,
-  loading,
-  error,
-  onRetry,
-}: SidebarProps) {
+export function Sidebar() {
   const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery);
+  const [searchParams] = useSearchParams();
+  const { locale, sectionPages, isLoading, error } = useSectionNavigation();
+  const selectedPagePath = searchParams.get('page') || '';
+  const [optimisticSelection, setOptimisticSelection] = useState<string>('');
+  
+  const { sidebarWidth, isResizing, handleResizeStart } = useSidebarResize();
+  const isMobile = useIsMobile();
+  const isMobileDrawerOpen = useStore((state) => state.isMobileDrawerOpen);
+  const toggleMobileDrawer = useStore((state) => state.toggleMobileDrawer);
 
-  // Используем React Query для поиска
-  const {
-    data: searchResults = [],
-    isLoading: isSearching,
-    error: searchError,
-  } = useSearchStructure(selectedFile, debouncedSearchQuery);
-
-  // Определяем, какие страницы показывать: результаты поиска или обычный список
-  const displayPages = useSidebarPages({
-    pages,
-    searchResults,
-    searchQuery: debouncedSearchQuery,
+  const swipeHandlers = useSwipeGesture({
+    onSwipeRight: () => {
+      if (isMobile && !isMobileDrawerOpen) {
+        toggleMobileDrawer();
+      }
+    },
   });
 
-  // Используем хук для изменения размера
-  const { sidebarWidth, isResizing, handleResizeStart } = useSidebarResize();
+  const drawerSwipeHandlers = useSwipeGesture({
+    onSwipeLeft: () => {
+      if (isMobile && isMobileDrawerOpen) {
+        toggleMobileDrawer();
+      }
+    },
+  });
 
-  const searchErrorText = searchError 
-    ? extractErrorMessage(searchError, 'Ошибка поиска')
-    : null;
+  useEffect(() => {
+    if (selectedPagePath && optimisticSelection === selectedPagePath) {
+      setOptimisticSelection('');
+    }
+  }, [selectedPagePath, optimisticSelection]);
+
+  const handlePageSelect = (pagePath: string) => {
+    setOptimisticSelection(pagePath);
+    requestAnimationFrame(() => {
+      urlManager.updatePageUrl(pagePath);
+    });
+    if (isMobile) {
+      toggleMobileDrawer();
+    }
+  };
+
+  const displayedSelection = optimisticSelection || selectedPagePath;
+
+  const sidebarContent = (
+    <Paper
+      ref={isMobile ? drawerSwipeHandlers : null}
+      sx={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        borderRadius: 0,
+        borderRight: { xs: 0, md: 0 },
+        borderBottom: { xs: 0, md: 0 },
+        borderColor: 'divider',
+        touchAction: 'pan-y',
+      }}
+      elevation={0}
+    >
+      <SidebarSearch
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        isSearching={false}
+        searchError={null}
+      />
+
+      {isLoading && (
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <CircularProgress size={24} />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Загрузка содержимого раздела...
+          </Typography>
+        </Box>
+      )}
+
+      {error && (
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="body2" color="error">
+            Ошибка загрузки: {error.message}
+          </Typography>
+        </Box>
+      )}
+
+      {!isLoading && !error && (
+        <NavigationTree
+          pages={sectionPages}
+          onPageSelect={handlePageSelect}
+          selectedPage={displayedSelection}
+          searchQuery={searchQuery}
+          filename={`global-${locale}`}
+          isSearchResult={false}
+          locale={locale}
+          isGlobalToc={true}
+        />
+      )}
+    </Paper>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <Box 
+          ref={swipeHandlers}
+          sx={{ 
+            position: 'fixed', 
+            left: 0, 
+            top: 0, 
+            width: 30, 
+            height: '100%', 
+            zIndex: 1,
+            touchAction: 'pan-y',
+          }} 
+        />
+        <Drawer
+          anchor="left"
+          open={isMobileDrawerOpen}
+          onClose={toggleMobileDrawer}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: { xs: '100%', sm: '85%' },
+              maxWidth: { xs: '100%', sm: 'calc(100% - 56px)' },
+              '@media (max-width: 360px)': {
+                width: '100%',
+              },
+            },
+          }}
+        >
+          {sidebarContent}
+        </Drawer>
+      </>
+    );
+  }
 
   return (
     <Box
       sx={{
         display: 'flex',
-        width: { xs: '100%', md: sidebarWidth },
-        height: { xs: '50vh', md: '100%' },
-        maxHeight: { xs: '50vh', md: 'none' },
+        width: sidebarWidth,
+        height: '100%',
         flexShrink: 0,
         position: 'relative',
       }}
     >
-      <Paper
-        sx={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          borderRadius: 0,
-          borderRight: { xs: 0, md: 0 },
-          borderBottom: { xs: 1, md: 0 },
-          borderColor: 'divider',
-        }}
-        elevation={0}
-      >
-        <SidebarHeader
-          selectedFile={selectedFile}
-          selectedBookInfo={selectedBookInfo}
-          onFileSelectClick={onFileSelectClick}
-        />
-
-        {loading && (
-          <Box sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              Загрузка структуры...
-            </Typography>
-          </Box>
-        )}
-
-        {error && (
-          <Box sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="body2" color="error" sx={{ mb: 1 }}>
-              Ошибка: {error}
-            </Typography>
-            {onRetry && (
-              <IconButton size="small" onClick={onRetry}>
-                Повторить
-              </IconButton>
-            )}
-          </Box>
-        )}
-
-        {!loading && !error && (
-          <>
-            <SidebarSearch
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              isSearching={isSearching}
-              searchError={searchErrorText}
-            />
-
-            <NavigationTree
-              pages={displayPages}
-              onPageSelect={onPageSelect}
-              selectedPage={selectedPage}
-              searchQuery={debouncedSearchQuery}
-              filename={selectedFile}
-              isSearchResult={!!debouncedSearchQuery.trim()}
-            />
-          </>
-        )}
-      </Paper>
-      {/* Resize handle */}
+      {sidebarContent}
+      
       <Box
         onMouseDown={handleResizeStart}
         sx={{
-          display: { xs: 'none', md: 'block' },
           width: 4,
           height: '100%',
           cursor: 'col-resize',

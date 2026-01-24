@@ -5,13 +5,12 @@ spring:
     type: simple
   main:
     banner-mode: off
+  jackson:
+    default-property-inclusion: NON_NULL
 
 # Настройки HBK файлов для REST API
-hbk:
-  files:
-    # Путь к каталогу с HBK файлами
-    # Можно переопределить через переменную окружения HBK_FILES_DIRECTORY
-    directory: ${HBK_FILES_DIRECTORY}
+application:
+  hbk-files-directory: ${HBK_FILES_DIRECTORY}
 
 # Настройки логирования
 logging:

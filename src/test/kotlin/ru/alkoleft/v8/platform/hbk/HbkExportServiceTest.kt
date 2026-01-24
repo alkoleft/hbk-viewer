@@ -12,13 +12,14 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.alkoleft.v8.platform.app.service.HbkExportService
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.isRegularFile
 
 /**
- * Интеграционные тесты для [HbkExportService].
+ * Интеграционные тесты для [ru.alkoleft.v8.platform.app.service.HbkExportService].
  *
  * Требует наличия реального HBK файла для выполнения.
  * Путь к файлу можно задать через:
@@ -50,7 +51,7 @@ class HbkExportServiceTest {
     fun `should export all files from HBK archive`() {
         val outputDir = Path.of("/tmp", "export_all")
 
-        service.export(Path("/opt/1cv8/x86_64/8.3.21.1895/accntui_ru.hbk"), outputDir, includeToc = true)
+        service.export(Path("/opt/1cv8/x86_64/8.3.21.1895/plnnrui_root.hbk"), outputDir)
 
         assertThat(outputDir).exists()
         assertThat(outputDir).isDirectory()
@@ -68,7 +69,7 @@ class HbkExportServiceTest {
     fun `should export all files from HBK archive bad`() {
         val outputDir = Path.of("", "tmp", "export_all")
 
-        service.export(Path("/opt/1cv8/x86_64/8.3.21.1895/1cv8_root.hbk"), outputDir, includeToc = true)
+        service.export(Path("/opt/1cv8/x86_64/8.3.21.1895/1cv8_root.hbk"), outputDir)
 
         assertThat(outputDir).exists()
         assertThat(outputDir).isDirectory()
@@ -284,7 +285,7 @@ class HbkExportServiceTest {
 //            .toSet()
 //
 //        val pagesWithPaths = mutableListOf<String>()
-//        fun collectPagePaths(pages: List<ru.alkoleft.v8.platform.hbk.models.Page>) {
+//        fun collectPagePaths(pages: List<ru.alkoleft.v8.platform.hbk.models.TocRecord>) {
 //            pages.forEach { page ->
 //                if (page.htmlPath.isNotEmpty()) {
 //                    pagesWithPaths.add(page.htmlPath)

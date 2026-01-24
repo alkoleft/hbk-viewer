@@ -7,11 +7,8 @@
 
 package ru.alkoleft.v8.platform.hbk.reader.toc
 
-import ru.alkoleft.v8.platform.hbk.models.Chunk
-import ru.alkoleft.v8.platform.hbk.models.DoubleLanguageString
-import ru.alkoleft.v8.platform.hbk.models.NameContainer
-import ru.alkoleft.v8.platform.hbk.models.NameObject
-import ru.alkoleft.v8.platform.hbk.models.Page
+import ru.alkoleft.v8.platform.hbk.model.DoubleLanguageString
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
 
 /**
  * Представляет оглавление (Table of Contents) HBK файла.
@@ -28,88 +25,24 @@ import ru.alkoleft.v8.platform.hbk.models.Page
  * - Получение путей к HTML файлам
  *
  * @see TocParser для парсинга бинарных данных оглавления
- * @see Page для представления отдельных страниц
+ * @see TocRecord для представления отдельных страниц
  */
 class Toc {
-    private constructor(pages: List<Page>) {
+    constructor(pages: List<TocRecord>) {
         this.pages = pages
     }
 
-    val pages: List<Page>
+    val pages: List<TocRecord>
 
     /**
-     * Находит страницу по htmlPath в иерархии оглавления.
+     * Находит страницу по contentPath в иерархии оглавления.
      *
-     * @param htmlPath Путь к HTML файлу
+     * @param location Путь к HTML файлу
      * @return Найденная страница или null
      */
-    fun findPageByHtmlPath(htmlPath: String): Page? {
-        fun searchInPages(pages: List<Page>): Page? {
-            for (page in pages) {
-                if (page.htmlPath == htmlPath) {
-                    return page
-                }
-                if (page.children.isNotEmpty()) {
-                    val found = searchInPages(page.children)
-                    if (found != null) {
-                        return found
-                    }
-                }
-            }
-            return null
-        }
-        return searchInPages(this.pages)
-    }
+    fun findPageByLocation(location: String) = TocExtension.getPageByContentPath(pages, location, null)?.first
 
-    /**
-     * Получает дочерние элементы страницы по htmlPath.
-     *
-     * @param htmlPath Путь к HTML файлу родительской страницы
-     * @return Список дочерних страниц или пустой список, если страница не найдена
-     */
-    fun getChildrenByHtmlPath(htmlPath: String): List<Page> {
-        val page = findPageByHtmlPath(htmlPath)
-        return page?.children ?: emptyList()
-    }
-
-    /**
-     * Находит страницу по пути от корня (breadcrumb path).
-     * Путь представляет собой массив индексов от корня до элемента.
-     * Например, [0, 2, 1] означает: корневой элемент с индексом 0, его дочерний с индексом 2, и дочерний предыдущего с индексом 1.
-     *
-     * @param path Путь от корня (массив индексов)
-     * @return Найденная страница или null, если путь неверен
-     */
-    fun findPageByPath(path: List<Int>): Page? {
-        if (path.isEmpty()) {
-            return null
-        }
-
-        var currentPages = this.pages
-        var currentPage: Page? = null
-
-        for (index in path) {
-            if (index < 0 || index >= currentPages.size) {
-                return null
-            }
-            currentPage = currentPages[index]
-            currentPages = currentPage.children
-        }
-
-        return currentPage
-    }
-
-    /**
-     * Получает дочерние элементы страницы по пути от корня.
-     * Это позволяет однозначно идентифицировать элемент даже если несколько элементов имеют одинаковый htmlPath.
-     *
-     * @param path Путь от корня до родительской страницы (массив индексов)
-     * @return Список дочерних страниц или пустой список, если страница не найдена
-     */
-    fun getChildrenByPath(path: List<Int>): List<Page> {
-        val page = findPageByPath(path)
-        return page?.children ?: emptyList()
-    }
+    fun findPageWithTruckByLocation(location: String) = TocExtension.findPageWithTruckByLocation(pages, location)
 
     /**
      * Выполняет поиск страниц по запросу в заголовках.
@@ -118,13 +51,13 @@ class Toc {
      * @param query Поисковый запрос
      * @return Список найденных страниц с полной иерархией до корня
      */
-    fun searchPages(query: String): List<Page> {
+    fun searchPages(query: String): List<TocRecord> {
         val lowerQuery = query.lowercase()
-        val results = mutableListOf<Page>()
+        val results = mutableListOf<TocRecord>()
 
         fun searchInPages(
-            pages: List<Page>,
-            parentPath: List<Page> = emptyList(),
+            pages: List<TocRecord>,
+            parentPath: List<TocRecord> = emptyList(),
         ) {
             for (page in pages) {
                 val pageTitleRu = page.title.ru.lowercase()
@@ -135,8 +68,8 @@ class Toc {
                     results.add(page)
                 }
 
-                if (page.children.isNotEmpty()) {
-                    searchInPages(page.children, parentPath + page)
+                if (page.subRecords.isNotEmpty()) {
+                    searchInPages(page.subRecords, parentPath + page)
                 }
             }
         }
@@ -146,6 +79,8 @@ class Toc {
     }
 
     companion object {
+        val EMPTY = Toc(emptyList())
+
         /**
          * Парсит оглавление из сжатого блока данных.
          *
@@ -154,17 +89,18 @@ class Toc {
          */
         fun parse(packBlock: ByteArray): Toc {
             val parser = TocParser()
-            val toc = Page(DoubleLanguageString("TOC", "TOC"), "")
+            val toc = TocRecord(DoubleLanguageString("TOC", "TOC"), "")
             val pagesById = mutableMapOf(0 to toc)
+
             parser.parseContent(packBlock).forEach { chunk ->
                 pagesById[chunk.id] =
-                    Page(
+                    TocRecord(
                         title = chunk.title,
-                        htmlPath = chunk.htmlPath,
-                        children = mutableListOf(),
-                    ).also { pagesById[chunk.parentId]?.children?.add(it) }
+                        location = chunk.contentPath.trimStart('/'),
+                        subRecords = mutableListOf(),
+                    ).also { pagesById[chunk.parentId]?.subRecords?.add(it) }
             }
-            return Toc(toc.children.toList())
+            return Toc(toc.subRecords.toList())
         }
 
         private fun getName(nameContext: NameObject): String = nameContext.name.replace("\"", "")
@@ -192,7 +128,7 @@ class Toc {
         /**
          * Получает путь к HTML файлу чанка.
          */
-        val Chunk.htmlPath: String
+        val Chunk.contentPath: String
             get() = properties.htmlPath.replace("\"", "")
     }
 }

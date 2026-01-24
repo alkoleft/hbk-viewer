@@ -1,0 +1,123 @@
+/*
+ * Copyright (c) 2025-2026 alkoleft. All rights reserved.
+ * This file is part of the hbk-reader project.
+ *
+ * Licensed under the MIT License. See LICENSE file in the project root for full license information.
+ */
+
+package ru.alkoleft.v8.platform.shctx.parsers
+
+import ru.alkoleft.v8.platform.hbk.exceptions.PlatformContextLoadException
+import ru.alkoleft.v8.platform.hbk.model.TocRecord
+import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
+import ru.alkoleft.v8.platform.shctx.models.EnumInfo
+import ru.alkoleft.v8.platform.shctx.models.ObjectInfo
+import ru.alkoleft.v8.platform.shctx.parsers.core.PageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.ConstructorPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.EnumValuePageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.MethodPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.ObjectPageParser
+import ru.alkoleft.v8.platform.shctx.parsers.specialized.PropertyPageParser
+
+/**
+ * Координатор парсеров для различных типов страниц HBK документации.
+ *
+ * Этот класс управляет коллекцией специализированных парсеров для
+ * различных типов страниц документации платформы 1С:Предприятие.
+ * Он предоставляет единый интерфейс для парсинга страниц и
+ * делегирует работу соответствующим парсерам.
+ *
+ * Основные возможности:
+ * - Парсинг страниц свойств объектов
+ * - Парсинг страниц методов
+ * - Парсинг страниц перечислений и их значений
+ * - Парсинг страниц объектов
+ * - Парсинг страниц конструкторов
+ *
+ * @see PropertyPageParser для парсинга страниц свойств
+ * @see MethodPageParser для парсинга страниц методов
+ * @see EnumPageParser для парсинга страниц перечислений
+ * @see ObjectPageParser для парсинга страниц объектов
+ * @see ConstructorPageParser для парсинга страниц конструкторов
+ */
+class PlatformContextPagesParser(
+    private val context: HbkContentReader.Context,
+) {
+    val propertyPageParser = PropertyPageParser()
+    val methodPageParser = MethodPageParser()
+    val enumPageParser = EnumPageParser()
+    val enumValuePageParser = EnumValuePageParser()
+    val objectPageParser = ObjectPageParser()
+    val constructorPageParser = ConstructorPageParser()
+
+    /**
+     * Парсит страницу свойства.
+     *
+     * @param page Страница свойства
+     * @return Информация о свойстве
+     */
+    fun parsePropertyPage(page: TocRecord) = parsePage(page, propertyPageParser)
+
+    /**
+     * Парсит страницу метода.
+     *
+     * @param page Страница метода
+     * @return Информация о методе
+     */
+    fun parseMethodPage(page: TocRecord) = parsePage(page, methodPageParser)
+
+    /**
+     * Парсит страницу перечисления.
+     *
+     * @param page Страница перечисления
+     * @return Информация о перечислении
+     */
+    fun parseEnumPage(page: TocRecord): EnumInfo = parsePage(page, enumPageParser)
+
+    /**
+     * Парсит страницу значения перечисления.
+     *
+     * @param page Страница значения перечисления
+     * @return Информация о значении перечисления
+     */
+    fun parseEnumValuePage(page: TocRecord) = parsePage(page, enumValuePageParser)
+
+    /**
+     * Парсит страницу объекта.
+     *
+     * @param page Страница объекта
+     * @return Информация об объекте
+     */
+    fun parseObjectPage(page: TocRecord): ObjectInfo = parsePage(page, objectPageParser)
+
+    /**
+     * Парсит страницу конструктора.
+     *
+     * @param page Страница конструктора
+     * @return Информация о конструкторе
+     */
+    fun parseConstructorPage(page: TocRecord) = parsePage(page, constructorPageParser)
+
+    /**
+     * Универсальный метод для парсинга страниц с использованием соответствующего парсера.
+     *
+     * @param page Страница для парсинга
+     * @param parser Парсер для обработки страницы
+     * @return Результат парсинга
+     * @throws PlatformContextLoadException если не удалось разобрать страницу
+     */
+    private fun <T> parsePage(
+        page: TocRecord,
+        parser: PageParser<T>,
+    ): T {
+        try {
+            return context.getEntryStream(page).use { parser.parse(it) }
+        } catch (ex: Exception) {
+            throw PlatformContextLoadException(
+                "Не удалось разобрать страницу документации ${page.title}(${page.location})",
+                ex,
+            )
+        }
+    }
+}

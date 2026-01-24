@@ -5,42 +5,37 @@
  * Licensed under the MIT License. See LICENSE file in the project root for full license information.
  */
 
+@file:OptIn(kotlinx.cli.ExperimentalCli::class)
+
 package ru.alkoleft.v8.platform
 
 import kotlinx.cli.ArgParser
-import kotlinx.cli.ArgType
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.runApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.annotation.EnableCaching
+import ru.alkoleft.v8.platform.app.cli.ExportCommand
+import ru.alkoleft.v8.platform.app.cli.ServerCommand
+import ru.alkoleft.v8.platform.app.config.ApplicationProperties
+import kotlin.system.exitProcess
 
 @SpringBootApplication
 @EnableCaching
+@EnableConfigurationProperties(ApplicationProperties::class)
 class HbkReaderApplication
 
 fun main(args: Array<String>) {
-    val parser = ArgParser("hbk-reader")
+    val parser = ArgParser("hbk-reader", strictSubcommandOptionsOrder = false)
 
-    val platformPath by parser.option(
-        ArgType.String,
-        shortName = "p",
-        fullName = "platform-path",
-        description = "Путь к каталогу платформы 1С",
-    )
-    val verbose by parser.option(
-        ArgType.Boolean,
-        shortName = "v",
-        fullName = "verbose",
-        description = "Включить отладочное логированиеС",
-    )
+    // Регистрируем CLI команды
+    val serverCommand = ServerCommand()
+    val exportCommand = ExportCommand()
+    parser.subcommands(serverCommand, exportCommand)
 
-    parser.parse(args)
-
-    if (!platformPath.isNullOrBlank()) {
-        System.setProperty("hbk.files.directory", platformPath as String)
+    try {
+        parser.parse(args)
+        // Команда была выполнена автоматически через execute()
+    } catch (e: Exception) {
+        println("Ошибка: ${e.message}")
+        exitProcess(1)
     }
-    if (verbose ?: false) {
-        System.setProperty("logging.level.root", "DEBUG")
-    }
-
-    runApplication<HbkReaderApplication>(*args)
 }

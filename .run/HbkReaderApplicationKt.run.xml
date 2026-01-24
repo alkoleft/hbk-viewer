@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="HbkReaderApplicationKt" type="JetRunConfigurationType" nameIsGenerated="true">
+    <envs>
+      <env name="SPRING_PROFILES_ACTIVE" value="dev" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="ru.alkoleft.v8.platform.HbkReaderApplicationKt" />
+    <module name="hbk-reader.main" />
+    <option name="PROGRAM_PARAMETERS" value="server -p /opt/1cv8/x86_64/8.5.1.189" />
+    <shortenClasspath name="NONE" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
