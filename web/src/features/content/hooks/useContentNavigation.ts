@@ -62,6 +62,24 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   }, [searchParams]);
   
   useEffect(() => {
+    if (selectedPagePath && sectionPages.length > 0) {
+      const findPageTitle = (pages: any[], path: string): string | null => {
+        for (const page of pages) {
+          if (page.pagePath === path) return page.title;
+          if (page.children) {
+            const found = findPageTitle(page.children, path);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      
+      const title = findPageTitle(sectionPages, selectedPagePath);
+      if (title) document.title = `${title} - 1C:Help Book`;
+    }
+  }, [selectedPagePath, sectionPages]);
+  
+  useEffect(() => {
     if (v8helpResult) {
       navigate(`/${locale}/${encodeURIComponent(v8helpResult.sectionTitle)}?page=${encodeURIComponent(v8helpResult.pageLocation)}`);
       setPendingResolveResult(v8helpResult);
