@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useResolveV8HelpLink, usePageContentByPath } from '@shared/api';
+import { useResolveV8HelpLink, usePageContentByPath, useResolvePageLocation } from '@shared/api';
 import { useTreeNavigation } from '@features/navigation/hooks';
 
 export function useContentNavigation(locale: string, section: string, sectionPages: any[]) {
@@ -10,9 +10,11 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   
   const [selectedPagePath, setSelectedPagePath] = useState(searchParams.get('page') || '');
   const [v8helpLink, setV8helpLink] = useState<string>('');
-  const [pendingV8helpResult, setPendingV8helpResult] = useState<any>(null);
+  const [pageLocationToResolve, setPageLocationToResolve] = useState<string>('');
+  const [pendingResolveResult, setPendingResolveResult] = useState<any>(null);
   const [processedContent, setProcessedContent] = useState<string>('');
-  const processedRef = useRef(false);
+  const initialLoadRef = useRef(true);
+  const expandingRef = useRef(false);
   
   const { data: pageContent, isLoading, error } = usePageContentByPath(
     selectedPagePath,
@@ -21,6 +23,7 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   );
   
   const { data: v8helpResult } = useResolveV8HelpLink(v8helpLink, locale, !!v8helpLink);
+  const { data: pageResult } = useResolvePageLocation(pageLocationToResolve, locale, !!pageLocationToResolve);
   
   useEffect(() => {
     if (pageContent) {
@@ -50,25 +53,45 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   }, []);
   
   useEffect(() => {
-    setSelectedPagePath(searchParams.get('page') || '');
+    const page = searchParams.get('page') || '';
+    setSelectedPagePath(page);
+    if (page && initialLoadRef.current) {
+      setPageLocationToResolve(page);
+      initialLoadRef.current = false;
+    }
   }, [searchParams]);
   
   useEffect(() => {
     if (v8helpResult) {
       navigate(`/${locale}/${encodeURIComponent(v8helpResult.sectionTitle)}?page=${encodeURIComponent(v8helpResult.pageLocation)}`);
-      setPendingV8helpResult(v8helpResult);
+      setPendingResolveResult(v8helpResult);
       setV8helpLink('');
-      processedRef.current = false;
     }
   }, [v8helpResult, locale, navigate]);
   
   useEffect(() => {
-    if (pendingV8helpResult && section && sectionPages.length > 0 && !processedRef.current) {
-      processedRef.current = true;
-      expandPath(sectionPages, pendingV8helpResult.pagePath, locale);
-      setPendingV8helpResult(null);
+    if (pageResult) {
+      const needsNavigation = decodeURIComponent(section) !== pageResult.sectionTitle;
+      if (needsNavigation) {
+        navigate(`/${locale}/${encodeURIComponent(pageResult.sectionTitle)}?page=${encodeURIComponent(pageResult.pageLocation)}`);
+      } else {
+        // Обновляем только параметр page, оставаясь в том же разделе
+        navigate(`?page=${encodeURIComponent(pageResult.pageLocation)}`, { replace: true });
+      }
+      setPendingResolveResult(pageResult);
+      setPageLocationToResolve('');
     }
-  }, [pendingV8helpResult, section, sectionPages, expandPath, locale]);
+  }, [pageResult, locale, section, navigate]);
+  
+  useEffect(() => {
+    if (pendingResolveResult && section && sectionPages.length > 0 && !expandingRef.current) {
+      expandingRef.current = true;
+      expandPath(sectionPages, pendingResolveResult.pagePath, locale, () => {
+        setPendingResolveResult(null);
+        expandingRef.current = false;
+      });
+    }
+  }, [pendingResolveResult, section, sectionPages, expandPath, locale]);
   
   const handleLinkClick = useCallback((event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
@@ -95,10 +118,10 @@ export function useContentNavigation(locale: string, section: string, sectionPag
           pagePath = currentDir + originalHref;
         }
         
-        navigate(`/${locale}/${encodeURIComponent(section)}?page=${encodeURIComponent(pagePath)}`);
+        setPageLocationToResolve(pagePath);
       }
     }
-  }, [locale, section, navigate, selectedPagePath]);
+  }, [selectedPagePath]);
   
   return {
     selectedPagePath,

@@ -6,13 +6,18 @@ export function useTreeNavigation() {
   const expandedNodes = useStore(selectExpandedNodes);
   const toggleNode = useStore((state) => state.toggleNode);
   const clearExpansion = useStore((state) => state.clearExpansion);
-  const setExpandedNodes = useStore((state) => state.setExpandedNodes);
+  const expandNode = useStore((state) => state.expandNode);
   
   const isNodeExpanded = (nodeId: string) => expandedNodes.has(nodeId);
   
-  const expandPath = async (pages: PageDto[], pathTitles: string[], locale: string) => {
-    clearExpansion();
-    await treeExpansionService.expandPath(pages, pathTitles, locale, setExpandedNodes);
+  const expandPath = async (
+    pages: PageDto[], 
+    pathTitles: string[], 
+    locale: string,
+    onComplete?: () => void
+  ) => {
+    await treeExpansionService.expandPath(pages, pathTitles, locale, expandNode);
+    onComplete?.();
   };
   
   return {

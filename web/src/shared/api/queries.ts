@@ -50,3 +50,12 @@ export function useResolveV8HelpLink(link: string, locale: string = 'ru', enable
     staleTime: 10 * 60 * 1000,
   });
 }
+
+export function useResolvePageLocation(pageLocation: string, locale: string = 'ru', enabled: boolean = true) {
+  return useQuery({
+    queryKey: queryKeys.toc.resolve(pageLocation, locale),
+    queryFn: ({ signal }) => apiClient.resolvePageLocation(pageLocation, locale, signal),
+    enabled: !!pageLocation && enabled,
+    staleTime: 10 * 60 * 1000,
+  });
+}

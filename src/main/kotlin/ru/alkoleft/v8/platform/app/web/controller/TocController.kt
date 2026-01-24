@@ -28,6 +28,31 @@ class TocController(
     private val tocService: GlobalTocService,
 ) {
     /**
+     * Резолвинг страницы по location
+     */
+    @GetMapping("/resolve")
+    fun resolvePageLocation(
+        @RequestParam pageLocation: String,
+        request: HttpServletRequest,
+    ): ResponseEntity<ru.alkoleft.v8.platform.app.web.controller.dto.V8HelpResolveResult> {
+        val locale = request.locale()
+        logger.debug { "Резолвинг страницы: $pageLocation для локали: $locale" }
+
+        val toc = tocService.getGlobalTocByLocale(locale)
+        val (foundPage, truck) = toc.findPageWithTruckByLocation(pageLocation)
+        val section = truck.firstOrNull()
+
+        return ResponseEntity.ok(
+            ru.alkoleft.v8.platform.app.web.controller.dto.V8HelpResolveResult(
+                sectionTitle = section?.getTitle() ?: "",
+                pageLocation = foundPage.getRef(),
+                sectionPath = section?.getRef() ?: "",
+                pagePath = truck.subList(1, truck.size).map { it.getRef() },
+            ),
+        )
+    }
+
+    /**
      * Получает содержимое раздела по индексу
      */
     @GetMapping("/**")

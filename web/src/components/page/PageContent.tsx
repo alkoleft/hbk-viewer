@@ -57,7 +57,8 @@ export function PageContent() {
         margin: isFullWidth ? 0 : '0 auto',
         transition: 'max-width 0.3s ease, margin 0.3s ease',
         bgcolor: 'background.paper',
-        position: 'relative'
+        position: 'relative',
+        p: 2
       }}
     >
       <Tooltip title={isFullWidth ? "Обычная ширина" : "На всю ширину"}>

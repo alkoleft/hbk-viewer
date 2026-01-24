@@ -9,6 +9,8 @@ export const queryKeys = {
       [...queryKeys.toc.all, 'global', locale, depth] as const,
     section: (locale: string, sectionPath: string, depth?: number) => 
       [...queryKeys.toc.all, 'section', locale, sectionPath, depth] as const,
+    resolve: (pageLocation: string, locale: string) => 
+      [...queryKeys.toc.all, 'resolve', pageLocation, locale] as const,
   },
   
   content: {
