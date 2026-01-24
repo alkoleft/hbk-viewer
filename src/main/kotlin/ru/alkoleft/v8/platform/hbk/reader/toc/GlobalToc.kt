@@ -18,11 +18,23 @@ class GlobalToc {
 
     fun findPageByLocation(location: String) = TocExtension.getPageByContentPath(pages, location, null)?.first
 
-    fun findPageByLocationAndBookName(bookName: String, location: String) =
-        TocExtension.findPage(pages, mutableListOf()) { page ->
+    fun findPageWithTruckByLocationAndBookName(
+        bookName: String,
+        location: String,
+    ) = TocExtension
+        .findPage(pages, mutableListOf()) { page ->
             page.location == location && (page as BookPage).book.meta!!.bookName == bookName
         }?.let { it.first to it.second!! }
-            ?: throw BookPageNotFoundException.byLocationOnly(location)
+        ?: throw BookPageNotFoundException.byLocationOnly(location)
+
+    fun findPageByLocationAndBookName(
+        bookName: String,
+        location: String,
+    ) = TocExtension
+        .findPage(pages, null) { page ->
+            page.location == location && (page as BookPage).book.meta!!.bookName == bookName
+        }?.first
+        ?: throw BookPageNotFoundException.byLocationOnly(location)
 
     companion object {
         val EMPTY = GlobalToc(emptyList())
@@ -62,7 +74,7 @@ data class BookPage(
                 builder.title,
                 builder.location,
                 builder.locationIndex,
-                childrenPages
+                childrenPages,
             )
         }
     }

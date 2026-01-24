@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.alkoleft.v8.platform.app.service.GlobalTocService
 
@@ -24,12 +23,8 @@ class ContentController(
      * Получает содержимое раздела по индексу
      */
     @GetMapping("/**")
-    fun getPageContent(
-        @RequestParam(required = false) depth: Int?,
-        request: HttpServletRequest,
-    ): ResponseEntity<String> {
+    fun getPageContent(request: HttpServletRequest): ResponseEntity<String> {
         val pagePath = request.pagePath("/api/content/")
-        checkDepthParameter(depth)
         val locale = request.locale()
 
         tocService.checkLocale(locale)
@@ -38,6 +33,6 @@ class ContentController(
             throw IllegalArgumentException("Не указан путь к странице")
         }
 
-        return ResponseEntity.ok(tocService.getContent(pagePath, locale))
+        return ResponseEntity.ok(tocService.getContentAsString(pagePath, locale))
     }
 }

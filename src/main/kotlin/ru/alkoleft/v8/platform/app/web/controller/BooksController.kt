@@ -101,7 +101,7 @@ class BooksController(
         logger.debug { "Запрос содержимого: book=$book, page=$page" }
 
         val pageInfo = booksService.getBookPageInfo(book, page)
-        val content = booksService.getBookPageContent(book, page)
+        val content = booksService.getBookPageContentAsString(book, page)
 
         return ResponseEntity.ok(
             FileContent(

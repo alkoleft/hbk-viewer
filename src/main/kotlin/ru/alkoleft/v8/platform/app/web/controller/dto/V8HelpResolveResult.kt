@@ -11,8 +11,8 @@ package ru.alkoleft.v8.platform.app.web.controller.dto
  * DTO для результата резолвинга v8help ссылки
  */
 data class V8HelpResolveResult(
-    val sectionTitle: String,        // "Синтаксис языка"
-    val pageLocation: String,        // "objects/pragma.html"
-    val sectionPath: String,         // "syntax/language"
-    val pagePath: List<String>       // ["Синтаксис языка", "Объекты", "Прагмы"]
+    val sectionTitle: String,
+    val pageLocation: String,
+    val sectionPath: String,
+    val pagePath: List<String>,
 )

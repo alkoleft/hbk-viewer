@@ -46,8 +46,7 @@ object TocExtension {
         pages: List<Page>,
         ref: String,
         truck: MutableList<Page>?,
-    ): Pair<Page, List<Page>?>? =
-        findPage(pages, truck) { page -> page.getRef() == ref }
+    ): Pair<Page, List<Page>?>? = findPage(pages, truck) { page -> page.getRef() == ref }
 
     fun findPage(
         pages: List<Page>,

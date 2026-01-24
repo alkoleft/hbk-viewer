@@ -8,7 +8,6 @@
 package ru.alkoleft.v8.platform.hbk.model
 
 import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
-import ru.alkoleft.v8.platform.hbk.reader.toc.BookPage
 
 class PageBuilder(
     var book: BookInfo,

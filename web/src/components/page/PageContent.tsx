@@ -48,29 +48,37 @@ export function PageContent() {
   return (
     <Box 
       sx={{ 
+        flex: 1,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         maxWidth: isFullWidth ? 'none' : '1200px',
+        width: '100%',
         margin: isFullWidth ? 0 : '0 auto',
-        transition: 'max-width 0.3s ease, margin 0.3s ease'
+        transition: 'max-width 0.3s ease, margin 0.3s ease',
+        bgcolor: 'background.paper',
+        position: 'relative'
       }}
     >
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'flex-end', 
-          p: 1,
-          borderBottom: 1,
-          borderColor: 'divider'
-        }}
-      >
-        <Tooltip title={isFullWidth ? "Обычная ширина" : "На всю ширину"}>
-          <IconButton onClick={toggleFullWidth} size="small">
-            {isFullWidth ? <AspectRatio /> : <Fullscreen />}
-          </IconButton>
-        </Tooltip>
-      </Box>
+      <Tooltip title={isFullWidth ? "Обычная ширина" : "На всю ширину"}>
+        <IconButton 
+          onClick={toggleFullWidth} 
+          size="small"
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            zIndex: 10,
+            bgcolor: 'background.paper',
+            boxShadow: 1,
+            '&:hover': {
+              bgcolor: 'action.hover'
+            }
+          }}
+        >
+          {isFullWidth ? <AspectRatio /> : <Fullscreen />}
+        </IconButton>
+      </Tooltip>
 
       <Box 
         sx={{ 

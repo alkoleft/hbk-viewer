@@ -10,14 +10,20 @@ package ru.alkoleft.v8.platform.app.exceptions
 /**
  * Исключение при отсутствии книги
  */
-class BookNotFoundException(bookName: String) : RuntimeException("Книга '$bookName' не найдена")
+class BookNotFoundException(
+    bookName: String,
+) : RuntimeException("Книга '$bookName' не найдена")
 
 /**
  * Исключение при отсутствии страницы
  */
-class PageNotFoundException(pageLocation: String) : RuntimeException("Страница '$pageLocation' не найдена")
+class PageNotFoundException(
+    pageLocation: String,
+) : RuntimeException("Страница '$pageLocation' не найдена")
 
 /**
  * Исключение при неверном формате v8help ссылки
  */
-class InvalidV8HelpLinkException(link: String) : RuntimeException("Неверный формат v8help ссылки: '$link'")
+class InvalidV8HelpLinkException(
+    link: String,
+) : RuntimeException("Неверный формат v8help ссылки: '$link'")

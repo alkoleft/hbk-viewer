@@ -11,6 +11,7 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   const [selectedPagePath, setSelectedPagePath] = useState(searchParams.get('page') || '');
   const [v8helpLink, setV8helpLink] = useState<string>('');
   const [pendingV8helpResult, setPendingV8helpResult] = useState<any>(null);
+  const [processedContent, setProcessedContent] = useState<string>('');
   const processedRef = useRef(false);
   
   const { data: pageContent, isLoading, error } = usePageContentByPath(
@@ -21,6 +22,23 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   
   const { data: v8helpResult } = useResolveV8HelpLink(v8helpLink, locale, !!v8helpLink);
   
+  useEffect(() => {
+    if (pageContent) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(pageContent, 'text/html');
+      const images = doc.querySelectorAll('img[src^="v8help://"]');
+      
+      images.forEach((img) => {
+        const v8helpSrc = img.getAttribute('src');
+        if (v8helpSrc) {
+          const path = v8helpSrc.replace('v8help://', '');
+          img.setAttribute('src', `/api/v8help/content/${path}`);
+        }
+      });
+      
+      setProcessedContent(images.length > 0 ? doc.body.innerHTML : pageContent);
+    }
+  }, [pageContent]);
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
@@ -84,7 +102,7 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   
   return {
     selectedPagePath,
-    pageContent,
+    pageContent: processedContent,
     isLoading,
     error,
     handleLinkClick,

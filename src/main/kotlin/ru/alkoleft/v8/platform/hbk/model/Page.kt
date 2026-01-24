@@ -27,6 +27,7 @@ data class TocRecord(
     override fun getTitle() = title.get()
 
     override fun getChildren() = subRecords
+
     override fun getRef() = location
 }
 

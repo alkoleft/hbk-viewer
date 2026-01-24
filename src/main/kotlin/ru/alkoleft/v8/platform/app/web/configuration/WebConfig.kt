@@ -13,9 +13,11 @@ import org.springframework.core.io.Resource
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import org.springframework.web.servlet.resource.PathResourceResolver
+import ru.alkoleft.v8.platform.app.web.interceptor.LoggingInterceptor
 import java.io.IOException
 
 /**
@@ -27,7 +29,13 @@ import java.io.IOException
  * - SPA роутинг (fallback на index.html для всех не-API маршрутов)
  */
 @Configuration
-class WebConfig : WebMvcConfigurer {
+class WebConfig(
+    private val loggingInterceptor: LoggingInterceptor,
+) : WebMvcConfigurer {
+    override fun addInterceptors(registry: InterceptorRegistry) {
+        registry.addInterceptor(loggingInterceptor)
+    }
+
     @Bean
     fun corsFilter(): CorsFilter {
         val source = UrlBasedCorsConfigurationSource()

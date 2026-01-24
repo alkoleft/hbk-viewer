@@ -26,17 +26,34 @@ class BooksService(
     private val hbkContentReader = HbkContentReader()
     val books: List<BookInfo> = bookRegistry.books
 
+    fun findBook(
+        bookName: String,
+        locale: String,
+    ) = books.find { book ->
+        book.locale == locale && book.meta?.bookName == bookName
+    }
+
     fun getAvailableLocales(): List<String> = books.map { it.locale }.distinct().sorted()
 
-    fun getBookPageContent(
+    fun getBookPageContentAsString(
         hbkFile: String,
         pagePath: String,
-    ) = getBookPageContent(getBookInfo(hbkFile), pagePath)
+    ) = getBookPageContentAsString(getBookInfo(hbkFile), pagePath)
 
-    fun getBookPageContent(
+    fun getBookPageContentAsBinary(
+        hbkFile: String,
+        pagePath: String,
+    ) = getBookPageContentAsBinary(getBookInfo(hbkFile), pagePath)
+
+    fun getBookPageContentAsString(
         bookInfo: BookInfo,
         pagePath: String,
     ) = hbkContentReader.getPageText(Path(bookInfo.path), pagePath.normalizePath())
+
+    fun getBookPageContentAsBinary(
+        bookInfo: BookInfo,
+        pagePath: String,
+    ) = hbkContentReader.getPage(Path(bookInfo.path), pagePath.normalizePath())
 
     fun getBookPageInfo(
         hbkFile: String,

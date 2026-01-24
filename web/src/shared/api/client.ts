@@ -55,7 +55,7 @@ class ApiClient {
     locale: string, 
     signal?: AbortSignal
   ): Promise<V8HelpResolveResult> {
-    const url = new URL(`${API_BASE_URL}/toc/resolve/v8help`, window.location.origin);
+    const url = new URL(`${API_BASE_URL}/v8help/resolve`, window.location.origin);
     url.searchParams.set('link', link);
     
     const response = await fetch(url.toString(), { 
@@ -64,6 +64,19 @@ class ApiClient {
     });
     if (!response.ok) throw new Error(`Failed to resolve v8help link: ${response.statusText}`);
     return response.json();
+  }
+
+  async getV8HelpContent(
+    pagePath: string, 
+    locale: string, 
+    signal?: AbortSignal
+  ): Promise<string> {
+    const response = await fetch(`${API_BASE_URL}/v8help/content/${pagePath}`, { 
+      signal, 
+      headers: { 'Accept-Language': locale } 
+    });
+    if (!response.ok) throw new Error(`Failed to fetch v8help content: ${response.statusText}`);
+    return response.text();
   }
 }
 

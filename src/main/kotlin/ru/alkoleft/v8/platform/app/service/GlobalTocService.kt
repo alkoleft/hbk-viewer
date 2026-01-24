@@ -22,7 +22,7 @@ private val logger = KotlinLogging.logger { }
 class GlobalTocService(
     private val booksService: BooksService,
     private val bookRegistry: BookRegistry,
-    private val globalTocByLocale: MutableMap<String, GlobalToc> = mutableMapOf()
+    private val globalTocByLocale: MutableMap<String, GlobalToc> = mutableMapOf(),
 ) {
     @Synchronized
     fun getGlobalTocByLocale(locale: String) =
@@ -47,13 +47,17 @@ class GlobalTocService(
 
     fun getBooks() = booksService.books
 
-    fun getContent(
+    fun getContentAsString(page: BookPage) = booksService.getBookPageContentAsString(page.book, page.location)
+
+    fun getContentAsBinary(page: BookPage) = booksService.getBookPageContentAsBinary(page.book, page.location)
+
+    fun getContentAsString(
         pagePath: String,
         locale: String,
     ): String {
         val toc = getGlobalTocByLocale(locale)
         val page =
             toc.findPageByLocation(pagePath) as? BookPage ?: throw BookPageNotFoundException.byLocationOnly(pagePath)
-        return booksService.getBookPageContent(page.book, page.getRef())
+        return getContentAsString(page)
     }
 }
