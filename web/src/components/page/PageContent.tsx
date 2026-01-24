@@ -1,4 +1,4 @@
-import { Box, Typography, CircularProgress, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import { AspectRatio, Fullscreen } from '@mui/icons-material';
 import { useSectionNavigation } from '@features/navigation/hooks';
 import { useContentNavigation } from '@features/content/hooks';
@@ -17,14 +17,6 @@ export function PageContent() {
     setIsFullWidth(!isFullWidth);
   };
 
-  if (isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="200px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   if (error) {
     return (
       <Box p={3}>
@@ -35,7 +27,7 @@ export function PageContent() {
     );
   }
 
-  if (!selectedPagePath) {
+  if (!selectedPagePath && !isLoading) {
     return (
       <Box p={3}>
         <Typography variant="h6" color="text.secondary">
@@ -58,7 +50,9 @@ export function PageContent() {
         transition: 'max-width 0.3s ease, margin 0.3s ease',
         bgcolor: 'background.paper',
         position: 'relative',
-        p: 2
+        pt: 0,
+        px: 2,
+        pb: 2
       }}
     >
       <Tooltip title={isFullWidth ? "Обычная ширина" : "На всю ширину"}>
@@ -86,6 +80,8 @@ export function PageContent() {
           flex: 1,
           overflow: 'auto',
           p: 3,
+          opacity: isLoading ? 0.5 : 1,
+          transition: 'opacity 0.2s ease',
           '& img': {
             maxWidth: '100%',
             height: 'auto'

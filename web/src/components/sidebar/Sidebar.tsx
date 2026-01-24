@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Paper, Typography, CircularProgress } from '@mui/material';
 import { useSectionNavigation } from '@features/navigation/hooks';
 import { useSidebarResize } from '@shared/hooks';
@@ -12,12 +12,25 @@ export function Sidebar() {
   const [searchParams] = useSearchParams();
   const { locale, sectionPages, isLoading, error } = useSectionNavigation();
   const selectedPagePath = searchParams.get('page') || '';
+  const [optimisticSelection, setOptimisticSelection] = useState<string>('');
   
   const { sidebarWidth, isResizing, handleResizeStart } = useSidebarResize();
 
+  useEffect(() => {
+    if (selectedPagePath && optimisticSelection === selectedPagePath) {
+      setOptimisticSelection('');
+    }
+  }, [selectedPagePath, optimisticSelection]);
+
   const handlePageSelect = (pagePath: string) => {
-    urlManager.updatePageUrl(pagePath);
+    setOptimisticSelection(pagePath);
+    // Используем requestAnimationFrame для мгновенного обновления UI
+    requestAnimationFrame(() => {
+      urlManager.updatePageUrl(pagePath);
+    });
   };
+
+  const displayedSelection = optimisticSelection || selectedPagePath;
 
   return (
     <Box
@@ -72,7 +85,7 @@ export function Sidebar() {
           <NavigationTree
             pages={sectionPages}
             onPageSelect={handlePageSelect}
-            selectedPage={selectedPagePath}
+            selectedPage={displayedSelection}
             searchQuery={searchQuery}
             filename={`global-${locale}`}
             isSearchResult={false}

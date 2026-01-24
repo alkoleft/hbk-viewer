@@ -16,7 +16,7 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   const initialLoadRef = useRef(true);
   const expandingRef = useRef(false);
   
-  const { data: pageContent, isLoading, error } = usePageContentByPath(
+  const { data: pageContent, isFetching, error } = usePageContentByPath(
     selectedPagePath,
     locale,
     !!selectedPagePath
@@ -126,7 +126,7 @@ export function useContentNavigation(locale: string, section: string, sectionPag
   return {
     selectedPagePath,
     pageContent: processedContent,
-    isLoading,
+    isLoading: isFetching,
     error,
     handleLinkClick,
   };

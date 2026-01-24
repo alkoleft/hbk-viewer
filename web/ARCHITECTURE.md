@@ -190,3 +190,161 @@ export * from './hooks/useMyFeature';
 2. Implement code splitting with React.lazy
 3. Add performance monitoring
 4. Create component documentation with Storybook
+
+## Testing
+
+### Test Infrastructure
+
+The application uses **Vitest** with **React Testing Library** for unit and integration tests.
+
+**Configuration:** `vitest.config.ts`
+
+**Test utilities:** `src/shared/test/test-utils.tsx` provides custom render with all providers (QueryClient, Router, Theme)
+
+**API mocking:** MSW (Mock Service Worker) in `src/shared/test/mocks/`
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Test Structure
+
+```
+src/
+├── shared/
+│   ├── lib/
+│   │   ├── url-manager.ts
+│   │   └── url-manager.test.ts
+│   ├── hooks/
+│   │   ├── useSidebarResize.ts
+│   │   └── useSidebarResize.test.ts
+│   └── api/
+│       ├── client.ts
+│       └── client.test.ts
+├── features/
+│   └── navigation/
+│       ├── services/
+│       │   ├── tree-utils.service.ts
+│       │   └── tree-utils.service.test.ts
+│       └── hooks/
+│           ├── useTreeNavigation.ts
+│           └── useTreeNavigation.test.ts
+└── components/
+    └── sidebar/
+        ├── NavigationTree.tsx
+        └── NavigationTree.test.tsx
+```
+
+### Testing Best Practices
+
+1. **Unit Tests** - Test services and utilities in isolation
+2. **Integration Tests** - Test hooks with store and React Query
+3. **Component Tests** - Test UI with user interactions
+4. **API Mocking** - Use MSW for consistent API mocking
+5. **Coverage** - Aim for >75% coverage for critical paths
+
+### Example Test
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@shared/test/test-utils';
+import userEvent from '@testing-library/user-event';
+
+describe('MyComponent', () => {
+  it('should handle user interaction', async () => {
+    const user = userEvent.setup();
+    render(<MyComponent />);
+    
+    await user.click(screen.getByRole('button'));
+    expect(screen.getByText('Clicked')).toBeInTheDocument();
+  });
+});
+```
+
+## Performance Optimizations
+
+### Code Splitting
+
+The application uses React.lazy for route-based code splitting:
+
+```typescript
+const AppViewPage = lazy(() => import('./pages/AppViewPage'));
+```
+
+**Vendor chunks** are configured in `vite.config.ts`:
+- `react-vendor` - React core libraries
+- `mui-vendor` - Material-UI components
+- `query-vendor` - React Query
+
+### Bundle Size
+
+Target metrics:
+- Initial bundle: < 100KB gzipped
+- Total bundle: < 500KB
+- Lazy chunks: < 50KB each
+
+### React Query Configuration
+
+Optimized caching and retry logic:
+
+```typescript
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+```
+
+### Component Optimization
+
+- Use `React.memo` for expensive components
+- Use `useCallback` for event handlers passed as props
+- Use `useMemo` for expensive computations
+- Implement virtualization for long lists with `@tanstack/react-virtual`
+
+## Error Handling
+
+### Error Boundary
+
+Global error boundary catches React errors:
+
+```typescript
+<ErrorBoundary>
+  <App />
+</ErrorBoundary>
+```
+
+### Typed Errors
+
+Custom error classes in `shared/lib/error-handler.ts`:
+
+- `ApiError` - API request failures
+- `NetworkError` - Network connectivity issues
+
+### Error Display
+
+- `ErrorBoundary` - Full-page error fallback
+- `ErrorAlert` - Inline error messages
+- React Query error states - Per-query error handling
+
+## Documentation
+
+- **Architecture:** `ARCHITECTURE.md` (this file)
+- **Components:** `docs/components.md` - Detailed component documentation
+- **API:** JSDoc comments in source code
+- **Testing:** Test examples in `src/shared/test/`
+
+For component-specific documentation, see [docs/components.md](docs/components.md).

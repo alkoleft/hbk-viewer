@@ -10,16 +10,21 @@ export function LanguageSelector() {
   const setCurrentLocale = useStore((state) => state.setCurrentLocale);
   
   const availableLocales = appInfo?.availableLocales || [];
+  const currentLocale = locale || 'ru';
 
   const handleLocaleChange = (newLocale: string) => {
     setCurrentLocale(newLocale);
     navigate(`/${newLocale}`);
   };
 
+  if (availableLocales.length === 0) {
+    return null;
+  }
+
   return (
     <FormControl size="small" sx={{ minWidth: 80 }}>
       <Select
-        value={locale || 'ru'}
+        value={currentLocale}
         onChange={(e) => handleLocaleChange(e.target.value)}
         sx={{
           color: 'white',

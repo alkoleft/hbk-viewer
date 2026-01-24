@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo, useCallback } from 'react';
 import {
   Box,
   ListItemButton,
@@ -38,7 +38,7 @@ interface TreeNodeProps {
   isGlobalToc?: boolean;
 }
 
-export function TreeNode({
+function TreeNodeComponent({
   page,
   onPageSelect,
   selectedPage,
@@ -76,27 +76,29 @@ export function TreeNode({
 
   useEffect(() => {
     if (isSelected && nodeRef.current) {
-      const timer = setTimeout(() => {
-        nodeRef.current?.scrollIntoView({ 
+      const element = nodeRef.current;
+      const rect = element.getBoundingClientRect();
+      const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      
+      if (!isVisible) {
+        element.scrollIntoView({ 
           behavior: 'smooth', 
           block: 'center'
         });
-      }, 300);
-      
-      return () => clearTimeout(timer);
+      }
     }
   }, [isSelected]);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (page.pagePath) {
       onPageSelect(page.pagePath);
     }
-  };
+  }, [page.pagePath, onPageSelect]);
 
-  const handleToggle = (e: React.MouseEvent) => {
+  const handleToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     toggleNode(nodeId);
-  };
+  }, [nodeId, toggleNode]);
 
   return (
     <>
@@ -104,6 +106,7 @@ export function TreeNode({
         ref={nodeRef}
         selected={isSelected}
         onClick={handleClick}
+        disableRipple
         aria-selected={isSelected}
         aria-expanded={hasChildren ? isExpanded : undefined}
         aria-level={level + 1}
@@ -116,6 +119,11 @@ export function TreeNode({
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
+          transition: 'background-color 0.15s ease, color 0.15s ease',
+          '&:active': {
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+          },
           '&.Mui-selected': {
             bgcolor: 'primary.main',
             color: 'primary.contrastText',
@@ -256,3 +264,13 @@ export function TreeNode({
     </>
   );
 }
+
+export const TreeNode = memo(TreeNodeComponent, (prev, next) => {
+  return (
+    prev.page.pagePath === next.page.pagePath &&
+    prev.selectedPage === next.selectedPage &&
+    prev.level === next.level &&
+    prev.searchQuery === next.searchQuery &&
+    prev.isSearchResult === next.isSearchResult
+  );
+});

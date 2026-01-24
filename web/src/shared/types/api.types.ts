@@ -14,12 +14,6 @@ export interface AppInfo {
   availableLocales: string[];
 }
 
-export interface PageContent {
-  filename: string;
-  pageName: string;
-  content: string;
-}
-
 export interface V8HelpResolveResult {
   sectionTitle: string;
   pageLocation: string;
