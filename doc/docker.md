@@ -2,7 +2,25 @@
 
 Приложение можно запустить в Docker контейнере с монтированием каталога с HBK файлами.
 
+## Быстрый старт
+
+Используйте готовый образ из GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/alkoleft/hbk-viewer:latest
+
+docker run -d \
+  --name hbk-reader \
+  -p 8080:8080 \
+  -v /opt/1cv8/x86_64/8.3.25.1257:/data/hbk:ro \
+  ghcr.io/alkoleft/hbk-viewer:latest
+```
+
+Приложение будет доступно по адресу `http://localhost:8080`
+
 ## Сборка Docker образа
+
+Если вы хотите собрать образ самостоятельно:
 
 ```bash
 docker build -t hbk-reader:latest .
@@ -14,7 +32,7 @@ docker build -t hbk-reader:latest .
 docker run -d \
   --name hbk-reader \
   -p 8080:8080 \
-  -v /opt/1cv8/x86_64/8.5.1.189/:/data/hbk:ro \
+  -v /opt/1cv8/x86_64/8.3.25.1257:/data/hbk:ro \
   hbk-reader:latest
 ```
 
@@ -24,7 +42,7 @@ docker run -d \
 
    ```yaml
    volumes:
-     - /opt/1cv8/x86_64/8.5.1.189/:/data/hbk:ro
+     - /opt/1cv8/x86_64/8.3.25.1257:/data/hbk:ro
    ```
 
 2. Запустите контейнер:
@@ -49,9 +67,9 @@ docker run -d \
    docker run -d \
      --name hbk-reader \
      -p 8080:8080 \
-     -v /opt/1cv8/x86_64/8.5.1.189/:/1cv8/x86_64/8.5.1.189:ro \
-     -e HBK_FILES_DIRECTORY=/1cv8/x86_64/8.5.1.189 \
-     hbk-reader:latest
+     -v /opt/1cv8/x86_64/8.3.25.1257:/1cv8:ro \
+     -e HBK_FILES_DIRECTORY=/1cv8 \
+     ghcr.io/alkoleft/hbk-viewer:latest
    ```
 
 3. **Через аргументы командной строки**:
@@ -60,7 +78,7 @@ docker run -d \
    docker run -d \
      --name hbk-reader \
      -p 8080:8080 \
-     -v /opt/1cv8/x86_64/8.5.1.189/:/1cv8/x86_64/8.5.1.189:ro \
-     hbk-reader:latest \
-     --platform-path /1cv8/x86_64/8.5.1.189
+     -v /opt/1cv8/x86_64/8.3.25.1257:/1cv8:ro \
+     ghcr.io/alkoleft/hbk-viewer:latest \
+     server --path /1cv8
    ```

@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "io.github.alkoleft"
-version = "0.3.0"
+version = "0.3.1"
 
 gitVersioning.apply {
     refs {
@@ -163,11 +163,6 @@ val copyWebAssets =
         }
     }
 
-// // Настраиваем зависимость processResources от copyWebAssets
-// tasks.named("processResources") {
-//    dependsOn(copyWebAssets)
-// }
-
 tasks.bootJar {
     enabled = true
     archiveClassifier.set("")
@@ -226,4 +221,12 @@ tasks.jacocoTestReport {
         html.required.set(true)
         csv.required.set(false)
     }
+}
+
+tasks.named("build") {
+    dependsOn(copyWebAssets)
+}
+
+tasks.named("processResources") {
+    mustRunAfter(copyWebAssets)
 }

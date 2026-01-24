@@ -9,14 +9,16 @@ describe('NavigationTree', () => {
     {
       title: 'Page 1',
       pagePath: 'page1',
-      path: ['page1'],
+      path: [0],
       hasChildren: false,
+      children: null,
     },
     {
       title: 'Page 2',
       pagePath: 'page2',
-      path: ['page2'],
+      path: [1],
       hasChildren: false,
+      children: null,
     },
   ];
 

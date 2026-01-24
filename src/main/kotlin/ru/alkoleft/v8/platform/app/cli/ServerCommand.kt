@@ -31,8 +31,8 @@ class ServerCommand : Subcommand("server", "Запускает web сервер 
     private val platformPath by option(
         ArgType.String,
         shortName = "p",
-        fullName = "platform-path",
-        description = "Путь к каталогу платформы 1С",
+        fullName = "path",
+        description = "Директория с HBK файлами",
     ).required()
 
     private val verbose by option(

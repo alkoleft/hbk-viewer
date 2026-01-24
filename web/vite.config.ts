@@ -12,18 +12,8 @@ export default defineConfig({
       '@core': path.resolve(__dirname, './src/core'),
     },
   },
-  // Используем Rolldown для сборки
   build: {
     bundler: 'rolldown',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'mui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
-          'query-vendor': ['@tanstack/react-query'],
-        },
-      },
-    },
   },
   experimental: {
     rolldown: true,

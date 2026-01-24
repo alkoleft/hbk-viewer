@@ -64,4 +64,4 @@ ENV HBK_FILES_DIRECTORY=/data/hbk
 ENTRYPOINT ["java", "-jar", "/app/hbk-reader.jar"]
 
 # По умолчанию передаем путь к каталогу с HBK файлами
-CMD ["--platform-path", "/data/hbk"]
+CMD ["server", "--path", "/data/hbk"]

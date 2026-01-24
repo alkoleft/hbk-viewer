@@ -16,12 +16,13 @@ describe('TreeExpansionService', () => {
     const mockPage: PageDto = {
       title: 'Parent',
       pagePath: 'parent',
-      path: ['parent'],
+      path: [0],
       hasChildren: true,
+      children: [],
     };
 
     const mockChildren: PageDto[] = [
-      { title: 'Child', pagePath: 'parent/child', path: ['parent', 'child'], hasChildren: false },
+      { title: 'Child', pagePath: 'parent/child', path: [0, 1], hasChildren: false, children: null },
     ];
 
     vi.mocked(apiClient.getGlobalTocSection).mockResolvedValue(mockChildren);
@@ -37,8 +38,9 @@ describe('TreeExpansionService', () => {
     const mockPage: PageDto = {
       title: 'Page',
       pagePath: 'page',
-      path: ['page'],
+      path: [0],
       hasChildren: false,
+      children: null,
     };
 
     const onNodeExpanded = vi.fn();

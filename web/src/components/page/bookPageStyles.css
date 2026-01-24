@@ -13,6 +13,14 @@ body
 table
 {
 	font-size: 100%;
+	max-width: 100% !important;
+	width: auto !important;
+	display: table !important;
+	overflow-x: visible !important;
+}
+
+table td {
+	word-wrap: break-word;
 }
 
 div#V8TopicString 
@@ -437,4 +445,22 @@ table.V8TitleTable td.V8Product a
 		font-size: 85%;
 		padding: 4px;
 	}
+}
+
+.book-page-content table {
+	display: table;
+	width: auto !important;
+	max-width: 100%;
+}
+
+.book-page-content table tbody {
+	display: table-row-group;
+}
+
+.book-page-content table tr {
+	display: table-row;
+}
+
+.book-page-content table td {
+	display: table-cell;
 }

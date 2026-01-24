@@ -12,8 +12,9 @@ describe('tree-utils.service', () => {
   const mockPage: PageDto = {
     title: 'Test Page',
     pagePath: 'test/page',
-    path: ['test', 'page'],
+    path: [0, 1],
     hasChildren: false,
+    children: null,
   };
 
   describe('createNodeId', () => {
