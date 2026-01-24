@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useEffect, useRef } from 'react';
 import {
   Box,
@@ -17,11 +16,15 @@ import {
   FolderOpen,
   ArticleOutlined,
 } from '@mui/icons-material';
-import type { PageDto } from '../../types/api';
-import { useGlobalTocSection } from '../../hooks/useGlobalData';
-import { hasPageChildren, shouldLoadPageChildren, getPageTitle } from '../../utils/pageUtils';
-import { useTreeState } from '../../contexts/TreeStateContext';
-import { createNodeId } from '../../utils/treeUtils';
+import type { PageDto } from '@shared/types';
+import { useGlobalTocSection } from '@shared/api';
+import { useTreeNavigation } from '@features/navigation/hooks';
+import { 
+  hasPageChildren, 
+  shouldLoadPageChildren, 
+  getPageTitle,
+  createNodeId 
+} from '@features/navigation/services/tree-utils.service';
 
 interface TreeNodeProps {
   page: PageDto;
@@ -31,8 +34,8 @@ interface TreeNodeProps {
   searchQuery?: string;
   filename?: string;
   isSearchResult?: boolean;
-  locale?: string; // Для глобального TOC
-  isGlobalToc?: boolean; // Флаг для определения типа источника
+  locale?: string;
+  isGlobalToc?: boolean;
 }
 
 export function TreeNode({
@@ -46,27 +49,24 @@ export function TreeNode({
   locale,
   isGlobalToc,
 }: TreeNodeProps) {
-  const { isNodeExpanded, toggleNode } = useTreeState();
+  const { isNodeExpanded, toggleNode } = useTreeNavigation();
   const nodeId = createNodeId(page, level);
   const isExpanded = isNodeExpanded(nodeId) || (isSearchResult ?? false);
   const nodeRef = useRef<HTMLDivElement>(null);
   
-  // Определяем наличие дочерних элементов
   const hasChildren = hasPageChildren(page);
   const shouldLoad = shouldLoadPageChildren(page, isSearchResult ?? false);
   
-  // Используем React Query для загрузки дочерних элементов
   const {
     data: loadedChildren = [],
     isLoading: isLoadingChildren,
   } = useGlobalTocSection(
     locale || 'ru',
     page.pagePath,
-    undefined, // Не указываем depth - по умолчанию загружаем только первый уровень
-    isExpanded && shouldLoad // Загружаем только когда узел раскрыт и нужно загружать
+    undefined,
+    isExpanded && shouldLoad
   );
   
-  // Используем загруженные children или children из page
   const children = isExpanded && loadedChildren.length > 0 
     ? loadedChildren 
     : page.children || [];
@@ -74,7 +74,6 @@ export function TreeNode({
   const pageTitle = getPageTitle(page);
   const isSelected = selectedPage === page.pagePath;
 
-  // Автоскролл до выбранной страницы
   useEffect(() => {
     if (isSelected && nodeRef.current) {
       const timer = setTimeout(() => {
@@ -82,7 +81,7 @@ export function TreeNode({
           behavior: 'smooth', 
           block: 'center'
         });
-      }, 1000); // Увеличенная задержка для гарантированной загрузки
+      }, 1000);
       
       return () => clearTimeout(timer);
     }

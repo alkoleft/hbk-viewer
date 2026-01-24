@@ -1,44 +1,22 @@
-import { useState, useEffect } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
-import { useSectionNavigation } from '../../hooks/useSectionNavigation';
-import { useSidebarResize } from '../../hooks/ui/useSidebarResize';
+import { useState } from 'react';
+import { Box, Paper, Typography, CircularProgress } from '@mui/material';
+import { useSectionNavigation } from '@features/navigation/hooks';
+import { useSidebarResize } from '@shared/hooks';
 import { useSearchParams } from 'react-router-dom';
 import { SidebarSearch } from './SidebarSearch';
 import { NavigationTree } from './NavigationTree';
+import { urlManager } from '@shared/lib';
 
 export function Sidebar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchParams] = useSearchParams();
-  const { locale, section, sectionPages, currentSection, isLoading, error } = useSectionNavigation();
+  const { locale, sectionPages, isLoading, error } = useSectionNavigation();
   const selectedPagePath = searchParams.get('page') || '';
   
-  // Используем хук для изменения размера
   const { sidebarWidth, isResizing, handleResizeStart } = useSidebarResize();
 
-  // Отладочная информация
-  useEffect(() => {
-    console.log('Section changed:', { 
-      section, 
-      sectionPagesCount: sectionPages.length, 
-      currentSection: currentSection?.title,
-      isLoading,
-      error
-    });
-  }, [section, sectionPages, currentSection, isLoading, error]);
-
   const handlePageSelect = (pagePath: string) => {
-    // Обновляем URL с параметром page для загрузки содержимого
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('page', pagePath);
-    window.history.pushState({}, '', currentUrl.toString());
-    
-    // Принудительно обновляем компонент через событие
-    window.dispatchEvent(new PopStateEvent('popstate'));
+    urlManager.updatePageUrl(pagePath);
   };
 
   return (
@@ -104,7 +82,6 @@ export function Sidebar() {
         )}
       </Paper>
       
-      {/* Resize handle */}
       <Box
         onMouseDown={handleResizeStart}
         sx={{

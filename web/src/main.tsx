@@ -6,7 +6,7 @@ import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import App from './App.tsx'
 import { theme } from './theme.ts'
-import { queryClient } from './api/queryClient.ts'
+import { queryClient } from '@core/config'
 import { ErrorBoundary } from './components/common/ErrorBoundary.tsx'
 import './index.css'
 

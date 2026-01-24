@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { AppBar, Toolbar, Typography, Box, Chip, IconButton, Tooltip } from '@mui/material';
 import { GitHub } from '@mui/icons-material';
 import { useLocation } from 'react-router-dom';
-import { useAppInfo } from '../../api/queries';
+import { useAppInfo } from '@shared/api';
 import { SectionTabs } from '../header/SectionTabs';
 import { LanguageSelector } from '../header/LanguageSelector';
 import packageJson from '../../../package.json';

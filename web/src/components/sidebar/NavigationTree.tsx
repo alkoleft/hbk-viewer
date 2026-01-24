@@ -1,5 +1,5 @@
 import { Box, List, Typography } from '@mui/material';
-import type { PageDto } from '../../types/api';
+import type { PageDto } from '@shared/types';
 import { TreeNode } from './TreeNode';
 
 interface NavigationTreeProps {

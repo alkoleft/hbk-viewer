@@ -15,6 +15,22 @@
 - **TypeScript** - типизация
 - **Vite** - сборщик и dev-сервер
 - **React Router** - маршрутизация
+- **React Query** - управление серверным состоянием
+- **Zustand** - управление клиентским состоянием
+- **Material-UI** - UI компоненты
+
+## Архитектура
+
+Приложение использует **Feature-based архитектуру** с четким разделением ответственности:
+
+```
+src/
+├── features/      # Функциональные модули
+├── shared/        # Общие компоненты и утилиты
+└── core/          # Ядро приложения
+```
+
+Подробнее см. [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ## Установка
 
@@ -53,22 +69,50 @@ npm run preview
 ```
 web/
 ├── src/
-│   ├── api/           # API клиент
-│   ├── components/    # React компоненты
-│   ├── types/         # TypeScript типы
-│   ├── App.tsx        # Главный компонент
-│   ├── main.tsx       # Точка входа
-│   └── index.css      # Глобальные стили
+│   ├── features/          # Функциональные модули
+│   │   ├── navigation/    # Навигация и дерево TOC
+│   │   ├── content/       # Просмотр содержимого
+│   │   └── app/           # Глобальные настройки
+│   ├── shared/            # Общие компоненты и утилиты
+│   │   ├── api/           # API клиент и React Query
+│   │   ├── components/    # Переиспользуемые UI
+│   │   ├── hooks/         # Общие хуки
+│   │   ├── lib/           # Утилиты
+│   │   └── types/         # Общие типы
+│   ├── core/              # Ядро приложения
+│   │   ├── router/        # Конфигурация роутинга
+│   │   ├── store/         # Глобальный Zustand store
+│   │   └── config/        # Конфигурация
+│   ├── components/        # Legacy компоненты (будут мигрированы)
+│   ├── pages/             # Страницы приложения
+│   ├── App.tsx            # Главный компонент
+│   ├── main.tsx           # Точка входа
+│   └── index.css          # Глобальные стили
 ├── index.html
 ├── package.json
 ├── tsconfig.json
-└── vite.config.ts
+├── vite.config.ts
+└── ARCHITECTURE.md        # Документация по архитектуре
 ```
 
 ## API Endpoints
 
 Приложение использует следующие эндпоинты бэкенда:
 
-- `GET /api/hbk/files` - список файлов
-- `GET /api/hbk/files/{filename}/content?pageName=...` - содержимое страницы
-- `GET /api/hbk/files/{filename}/structure` - структура файла
+- `GET /api/app/info` - информация о приложении
+- `GET /api/toc/` - глобальное оглавление
+- `GET /api/toc/{sectionPath}` - дочерние элементы раздела
+- `GET /api/content/{pagePath}` - содержимое страницы
+- `GET /api/toc/resolve/v8help` - резолвинг v8help ссылок
+
+## Path Aliases
+
+Проект использует path aliases для удобного импорта:
+
+```typescript
+import { useStore } from '@core/store';
+import { useGlobalToc } from '@shared/api';
+import { useTreeNavigation } from '@features/navigation/hooks';
+```
+
+Конфигурация в `tsconfig.json` и `vite.config.ts`.

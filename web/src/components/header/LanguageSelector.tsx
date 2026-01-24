@@ -1,13 +1,15 @@
 import { FormControl, Select, MenuItem } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAvailableLocales } from '../../hooks/useGlobalData';
-import { useAppStore } from '../../store/useAppStore';
+import { useAppInfo } from '@shared/api';
+import { useStore } from '@core/store';
 
 export function LanguageSelector() {
   const { locale } = useParams<{ locale: string }>();
   const navigate = useNavigate();
-  const availableLocales = useAvailableLocales();
-  const { setCurrentLocale } = useAppStore();
+  const { data: appInfo } = useAppInfo();
+  const setCurrentLocale = useStore((state) => state.setCurrentLocale);
+  
+  const availableLocales = appInfo?.availableLocales || [];
 
   const handleLocaleChange = (newLocale: string) => {
     setCurrentLocale(newLocale);
@@ -33,7 +35,7 @@ export function LanguageSelector() {
           },
         }}
       >
-        {availableLocales.map((loc) => (
+        {availableLocales.map((loc: string) => (
           <MenuItem key={loc} value={loc}>
             {loc.toUpperCase()}
           </MenuItem>

@@ -1,13 +1,14 @@
 import { Tabs, Tab } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGlobalToc } from '../../hooks/useGlobalData';
-import { useAppStore } from '../../store/useAppStore';
+import { useGlobalToc } from '@shared/api';
+import { useStore } from '@core/store';
+import type { PageDto } from '@shared/types';
 
 export function SectionTabs() {
   const { locale, section } = useParams<{ locale: string; section: string }>();
   const navigate = useNavigate();
-  const { data: globalToc } = useGlobalToc(locale || 'ru'); // Убираем depth
-  const { setActiveSection } = useAppStore();
+  const { data: globalToc } = useGlobalToc(locale || 'ru');
+  const setActiveSection = useStore((state) => state.setActiveSection);
 
   if (!globalToc || !globalToc.length) {
     return null;
@@ -15,14 +16,13 @@ export function SectionTabs() {
 
   const handleSectionChange = (_: React.SyntheticEvent, newSection: string) => {
     setActiveSection(newSection);
-    // Найдем раздел и его страницу
-    const selectedSection = globalToc.find(page => page.title === newSection);
+    const selectedSection = globalToc.find((page: PageDto) => page.title === newSection);
     const pageParam = selectedSection?.pagePath ? `?page=${encodeURIComponent(selectedSection.pagePath)}` : '';
     navigate(`/${locale}/${encodeURIComponent(newSection)}${pageParam}`);
   };
 
   const currentSectionIndex = globalToc.findIndex(
-    page => page.title === decodeURIComponent(section || '')
+    (page: PageDto) => page.title === decodeURIComponent(section || '')
   );
 
   return (
@@ -47,7 +47,7 @@ export function SectionTabs() {
         }
       }}
     >
-      {globalToc.map((page, index) => (
+      {globalToc.map((page: PageDto, index: number) => (
         <Tab
           key={index}
           label={page.title}

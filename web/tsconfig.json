@@ -6,7 +6,6 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
@@ -14,7 +13,13 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    "baseUrl": ".",
+    "paths": {
+      "@features/*": ["src/features/*"],
+      "@shared/*": ["src/shared/*"],
+      "@core/*": ["src/core/*"]
+    },
+
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

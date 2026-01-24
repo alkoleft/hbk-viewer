@@ -5,28 +5,28 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AppHeader } from '../components/layout/AppHeader';
 import { Sidebar } from '../components/sidebar/Sidebar';
 import { PageContent } from '../components/page/PageContent';
-import { useAppStore } from '../store/useAppStore';
-import { useGlobalToc } from '../hooks/useGlobalData';
+import { useStore } from '@core/store';
+import { useGlobalToc } from '@shared/api';
 
 export function AppViewPage() {
   const { locale, section } = useParams<{ locale: string; section: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  const { currentLocale, setCurrentLocale, setActiveSection } = useAppStore();
+  const currentLocale = useStore((state) => state.currentLocale);
+  const setCurrentLocale = useStore((state) => state.setCurrentLocale);
+  const setActiveSection = useStore((state) => state.setActiveSection);
+  
   const { data: globalToc } = useGlobalToc(locale || 'ru');
 
-  // Update store when URL params change and clear cache on locale change
   useEffect(() => {
     if (locale && locale !== currentLocale) {
-      // Сбрасываем кэш при смене локали
       queryClient.clear();
       setCurrentLocale(locale);
     }
     if (section) setActiveSection(decodeURIComponent(section));
   }, [locale, section, currentLocale, setCurrentLocale, setActiveSection, queryClient]);
 
-  // Redirect to first section if no section specified
   useEffect(() => {
     if (globalToc && globalToc.length > 0 && !section) {
       const firstSection = globalToc[0];
