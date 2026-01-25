@@ -25,3 +25,11 @@ export const queryKeys = {
       [...queryKeys.v8help.all, 'resolve', link, locale] as const,
   },
 } as const;
+
+export const searchQueryKeys = {
+  all: ['search'] as const,
+  toc: (query: string, locale: string, sectionPath?: string) => 
+    [...searchQueryKeys.all, 'toc', query, locale, sectionPath] as const,
+  content: (query: string, locale: string, limit?: number) => 
+    [...searchQueryKeys.all, 'content', query, locale, limit] as const,
+};

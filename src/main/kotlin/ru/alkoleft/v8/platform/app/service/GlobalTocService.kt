@@ -33,9 +33,8 @@ class GlobalTocService(
     private fun collectGlobalTocByLocale(locale: String) =
         measureTimedValue {
             TocMergerService.merge(
-                booksService.books
-                    .asSequence()
-                    .filter { it.locale.equals(locale, true) }
+                booksService
+                    .findBooksByLocale(locale)
                     .mapNotNull { book ->
                         bookRegistry.getBookToc(book)?.let { Pair(book, it) }
                     }.toList(),
@@ -44,8 +43,6 @@ class GlobalTocService(
             .value
 
     fun getAvailableLocales() = booksService.getAvailableLocales()
-
-    fun getBooks() = booksService.books
 
     fun getContentAsString(page: BookPage) = booksService.getBookPageContentAsString(page.book, page.location)
 

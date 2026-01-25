@@ -52,3 +52,4 @@ tmp/
 
 # Генерируемые статические ресурсы (web UI)
 src/main/resources/static/
+/lucene-index/

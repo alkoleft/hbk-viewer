@@ -26,6 +26,11 @@ class BooksService(
     private val hbkContentReader = HbkContentReader()
     val books: List<BookInfo> = bookRegistry.books
 
+    fun findBooksByLocale(locale: String) =
+        books
+            .asSequence()
+            .filter { it.locale.equals(locale, true) }
+
     fun findBook(
         bookName: String,
         locale: String,

@@ -10,6 +10,7 @@ export default defineConfig({
       '@features': path.resolve(__dirname, './src/features'),
       '@shared': path.resolve(__dirname, './src/shared'),
       '@core': path.resolve(__dirname, './src/core'),
+      '@components': path.resolve(__dirname, './src/components'),
     },
   },
   build: {

@@ -1,5 +1,5 @@
 import { Box, LinearProgress } from '@mui/material';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppHeader } from '../components/layout/AppHeader';
@@ -13,7 +13,10 @@ import { useContentNavigation } from '@features/content/hooks';
 export function AppViewPage() {
   const { locale, section } = useParams<{ locale: string; section: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  
+  const currentPage = searchParams.get('page');
   
   const currentLocale = useStore((state) => state.currentLocale);
   const setCurrentLocale = useStore((state) => state.setCurrentLocale);
@@ -32,11 +35,11 @@ export function AppViewPage() {
   }, [locale, section, currentLocale, setCurrentLocale, setActiveSection, queryClient]);
 
   useEffect(() => {
-    if (globalToc && globalToc.length > 0 && !section) {
+    if (globalToc && globalToc.length > 0 && !section && !currentPage) {
       const firstSection = globalToc[0];
       navigate(`/${locale}/${encodeURIComponent(firstSection.title)}?page=${encodeURIComponent(firstSection.pagePath)}`, { replace: true });
     }
-  }, [globalToc, section, locale, navigate]);
+  }, [globalToc, section, locale, navigate, currentPage]);
 
   if (!locale) return null;
 

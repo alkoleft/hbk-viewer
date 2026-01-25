@@ -1,10 +1,11 @@
 import { memo } from 'react';
 import { AppBar, Toolbar, Typography, Box, Chip, IconButton, Tooltip } from '@mui/material';
 import { GitHub, Menu } from '@mui/icons-material';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useAppInfo } from '@shared/api';
 import { SectionTabs } from '../header/SectionTabs';
 import { LanguageSelector } from '../header/LanguageSelector';
+import { ModernSearch } from '../search/ModernSearch';
 import { useStore } from '@core/store';
 import packageJson from '../../../package.json';
 
@@ -16,7 +17,11 @@ export const AppHeader = memo(function AppHeader() {
   const versionInfo = appInfo?.version;
   const location = useLocation();
   const isAppView = location.pathname !== '/';
+  const [searchParams] = useSearchParams();
   const toggleMobileDrawer = useStore((state) => state.toggleMobileDrawer);
+  
+  // Получаем текущую локаль из URL или используем по умолчанию
+  const currentLocale = searchParams.get('locale') || 'ru';
 
   return (
     <AppBar
@@ -71,11 +76,16 @@ export const AppHeader = memo(function AppHeader() {
         
         <Box sx={{ flex: 1 }} />
         
+        {isAppView && (
+          <ModernSearch locale={currentLocale} />
+        )}
+        
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             gap: 2,
+            ml: isAppView ? 2 : 0,
           }}
         >
           {!isLoading && versionInfo?.platform && (

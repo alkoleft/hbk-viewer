@@ -1,4 +1,4 @@
-import type { PageDto, AppInfo, V8HelpResolveResult } from '@shared/types';
+import type { PageDto, AppInfo, V8HelpResolveResult, SearchResponse, IndexingStatus } from '@shared/types';
 import { API_BASE_URL } from './query-keys';
 
 class ApiClient {
@@ -93,6 +93,50 @@ class ApiClient {
     });
     if (!response.ok) throw new Error(`Failed to fetch v8help content: ${response.statusText}`);
     return response.text();
+  }
+
+  async searchToc(
+    query: string,
+    locale: string,
+    sectionPath?: string,
+    signal?: AbortSignal
+  ): Promise<PageDto[]> {
+    const url = new URL(`${API_BASE_URL}/toc/search`, window.location.origin);
+    url.searchParams.set("query", query);
+    if (sectionPath) url.searchParams.set("sectionPath", sectionPath);
+    
+    const response = await fetch(url.toString(), { 
+      signal, 
+      headers: { "Accept-Language": locale } 
+    });
+    if (!response.ok) throw new Error(`Failed to search TOC: ${response.statusText}`);
+    return response.json();
+  }
+
+  async searchContent(
+    query: string,
+    locale: string,
+    limit?: number,
+    signal?: AbortSignal
+  ): Promise<SearchResponse> {
+    const url = new URL(`${API_BASE_URL}/search`, window.location.origin);
+    url.searchParams.set("query", query);
+    if (limit) url.searchParams.set("limit", limit.toString());
+    
+    const response = await fetch(url.toString(), { 
+      signal, 
+      headers: { "Accept-Language": locale } 
+    });
+    if (!response.ok) throw new Error(`Failed to search content: ${response.statusText}`);
+    return response.json();
+  }
+
+  async getIndexingStatus(signal?: AbortSignal): Promise<IndexingStatus> {
+    const url = new URL(`${API_BASE_URL}/indexing/status`, window.location.origin);
+    
+    const response = await fetch(url.toString(), { signal });
+    if (!response.ok) throw new Error(`Failed to get indexing status: ${response.statusText}`);
+    return response.json();
   }
 }
 
