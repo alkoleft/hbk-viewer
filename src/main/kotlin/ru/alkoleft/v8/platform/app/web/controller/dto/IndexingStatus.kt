@@ -13,7 +13,7 @@ enum class IndexingState {
     NOT_STARTED,
     IN_PROGRESS,
     COMPLETED,
-    FAILED
+    FAILED,
 }
 
 data class LocaleIndexingStatus(
@@ -24,11 +24,11 @@ data class LocaleIndexingStatus(
     val indexedDocuments: Int = 0,
     val startTime: LocalDateTime? = null,
     val endTime: LocalDateTime? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )
 
 data class IndexingStatus(
     val locales: List<LocaleIndexingStatus>,
     val overallProgress: Int = 0,
-    val isIndexingInProgress: Boolean = false
+    val isIndexingInProgress: Boolean = false,
 )

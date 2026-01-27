@@ -17,11 +17,8 @@ import ru.alkoleft.v8.platform.app.web.controller.dto.IndexingStatus
 @RestController
 @RequestMapping("/api/indexing")
 class IndexingController(
-    private val luceneSearchService: LuceneSearchService
+    private val luceneSearchService: LuceneSearchService,
 ) {
-    
     @GetMapping("/status")
-    fun getIndexingStatus(): ResponseEntity<IndexingStatus> {
-        return ResponseEntity.ok(luceneSearchService.getIndexingStatus())
-    }
+    fun getIndexingStatus(): ResponseEntity<IndexingStatus> = ResponseEntity.ok(luceneSearchService.getIndexingStatus())
 }

@@ -8,7 +8,7 @@ import {
   Paper,
   Typography,
   CircularProgress,
-  Chip
+
 } from '@mui/material';
 import { Search, Clear } from '@mui/icons-material';
 import { useSearchContent, useResolvePageLocation } from '@shared/api';
@@ -208,7 +208,6 @@ export function GlobalSearch({ locale }: GlobalSearchProps) {
                 </Box>
               ),
             }}
-            onFocus={() => setOpen(true)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleSearch();
