@@ -1,6 +1,6 @@
 {
   "name": "hbk-reader-web",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.7.1",
@@ -16,32 +16,34 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@mui/icons-material": "^5.18.0",
-    "@mui/material": "^5.18.0",
-    "@tanstack/react-query": "^5.56.2",
+    "@mui/icons-material": "^6.2.0",
+    "@mui/material": "^6.2.0",
+    "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-virtual": "^3.13.18",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "zustand": "^4.5.5"
+    "framer-motion": "^10.16.16",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.3",
+    "zustand": "^5.0.10"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.1.5",
-    "@testing-library/react": "^14.1.2",
+    "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.5.1",
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^5.0.0",
-    "@vitest/ui": "^1.0.4",
+    "@vitest/ui": "^1.6.1",
     "eslint": "^9.39.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.5",
-    "jsdom": "^23.0.1",
+    "jsdom": "^25.0.1",
     "msw": "^2.0.11",
-    "typescript": "^5.2.2",
-    "typescript-eslint": "^8.0.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.53.1",
     "vite": "npm:rolldown-vite@^7.3.1",
-    "vitest": "^1.0.4"
+    "vitest": "^1.6.1"
   }
 }

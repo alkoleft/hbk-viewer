@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Paper, Typography, CircularProgress, Drawer } from '@mui/material';
 import { useSectionNavigation } from '@features/navigation/hooks';
 import { useSidebarResize, useIsMobile, useSwipeGesture } from '@shared/hooks';
+import { useDebouncedSearchToc } from '@shared/hooks/useDebouncedSearch';
 import { useSearchParams } from 'react-router-dom';
 import { SidebarSearch } from './SidebarSearch';
 import { NavigationTree } from './NavigationTree';
@@ -14,6 +15,12 @@ export function Sidebar() {
   const { locale, sectionPages, isLoading, error } = useSectionNavigation();
   const selectedPagePath = searchParams.get('page') || '';
   const [optimisticSelection, setOptimisticSelection] = useState<string>('');
+  
+  // Поиск по заголовкам с debounce
+  const { data: searchResults, isLoading: isSearching, error: searchError } = useDebouncedSearchToc(
+    searchQuery,
+    locale
+  );
   
   const { sidebarWidth, isResizing, handleResizeStart } = useSidebarResize();
   const isMobile = useIsMobile();
@@ -74,8 +81,8 @@ export function Sidebar() {
       <SidebarSearch
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        isSearching={false}
-        searchError={null}
+        isSearching={isSearching}
+        searchError={searchError?.message || null}
       />
 
       {isLoading && (
@@ -97,7 +104,7 @@ export function Sidebar() {
 
       {!isLoading && !error && (
         <NavigationTree
-          pages={sectionPages}
+          pages={searchQuery.trim() ? (searchResults || []) : sectionPages}
           onPageSelect={handlePageSelect}
           selectedPage={displayedSelection}
           searchQuery={searchQuery}

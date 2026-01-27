@@ -64,6 +64,19 @@ class HbkContentReader {
         }
     }
 
+    fun readWithoutExceptions(
+        path: Path,
+        block: Context.() -> Unit,
+    ) {
+        ContainerReader.readContainer(path) {
+            val toc = toc() ?: Toc.EMPTY
+            zipContent {
+                val context = Context(toc, it)
+                context.apply(block)
+            }
+        }
+    }
+
     fun readToc(path: Path): Toc? =
         ContainerReader.readContainer(path) {
             toc()

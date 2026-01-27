@@ -1,5 +1,6 @@
 export const routes = {
   root: '/',
+  search: '/search',
   app: (locale: string, section?: string) => {
     if (section) {
       return `/${locale}/${encodeURIComponent(section)}`;

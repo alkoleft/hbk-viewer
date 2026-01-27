@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.alkoleft.v8.platform.app.service.GlobalTocService
 import ru.alkoleft.v8.platform.app.web.controller.dto.PageDto
+import ru.alkoleft.v8.platform.hbk.reader.toc.BookPage
 
 private val logger = KotlinLogging.logger { }
 
@@ -107,5 +108,44 @@ class TocController(
                 page.getChildren()?.map { page -> PageDto.fromLite(page, truckRefs) }
             }
         return ResponseEntity.ok(pages)
+    }
+
+    /**
+     * Поиск по заголовкам в оглавлении
+     */
+    @GetMapping("/search")
+    fun searchToc(
+        @RequestParam query: String,
+        request: HttpServletRequest,
+    ): ResponseEntity<List<PageDto>> {
+        if (query.isBlank()) {
+            return ResponseEntity.ok(emptyList())
+        }
+
+        val locale = request.locale()
+        logger.debug { "Поиск в оглавлении: query='$query', locale='$locale'" }
+
+        tocService.checkLocale(locale)
+        val toc = tocService.getGlobalTocByLocale(locale)
+
+        // Простой поиск по заголовкам
+        val searchResults = mutableListOf<BookPage>()
+        val lowerQuery = query.lowercase()
+
+        fun searchInPages(pages: List<BookPage>) {
+            pages.forEach { page ->
+                if (page.getTitle().lowercase().contains(lowerQuery)) {
+                    searchResults.add(page)
+                }
+                page.getChildren()?.let { children ->
+                    searchInPages(children)
+                }
+            }
+        }
+
+        searchInPages(toc.pages)
+        val results = searchResults.map { PageDto.fromLite(it) }
+
+        return ResponseEntity.ok(results)
     }
 }

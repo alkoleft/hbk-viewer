@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from './client';
-import { queryKeys } from './query-keys';
+import { queryKeys, searchQueryKeys } from './query-keys';
 
 export function useAppInfo() {
   return useQuery({
@@ -57,5 +57,31 @@ export function useResolvePageLocation(pageLocation: string, locale: string = 'r
     queryFn: ({ signal }) => apiClient.resolvePageLocation(pageLocation, locale, signal),
     enabled: !!pageLocation && enabled,
     staleTime: 10 * 60 * 1000,
+  });
+}
+export function useSearchToc(query: string, locale: string = 'ru', sectionPath?: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: searchQueryKeys.toc(query, locale, sectionPath),
+    queryFn: ({ signal }) => apiClient.searchToc(query, locale, sectionPath, signal),
+    enabled: !!query.trim() && enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useSearchContent(query: string, locale: string = 'ru', limit?: number, enabled: boolean = true) {
+  return useQuery({
+    queryKey: searchQueryKeys.content(query, locale, limit),
+    queryFn: ({ signal }) => apiClient.searchContent(query, locale, limit, signal),
+    enabled: !!query.trim() && enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useIndexingStatus(refetchInterval?: number) {
+  return useQuery({
+    queryKey: ['indexing', 'status'],
+    queryFn: ({ signal }) => apiClient.getIndexingStatus(signal),
+    refetchInterval: refetchInterval || 2000, // Poll every 2 seconds by default
+    staleTime: 1000,
   });
 }

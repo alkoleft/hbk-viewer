@@ -10,6 +10,7 @@ package ru.alkoleft.v8.platform.hbk.reader
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
@@ -64,7 +65,7 @@ class ContainerReader {
     ): T {
         log.debug { "Reading container file: $path" }
         if (!path.toFile().exists()) {
-            throw IllegalArgumentException("File not exists '$path'")
+            throw FileNotFoundException("File not exists '$path'")
         }
         FileInputStream(path.toFile()).use { stream ->
             val channel = stream.channel
