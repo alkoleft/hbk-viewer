@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "io.github.alkoleft"
-version = "0.4.0"
+version = "0.4.1"
 
 gitVersioning.apply {
     refs {

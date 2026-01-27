@@ -122,13 +122,13 @@ java -jar hbk-reader-<версия>.jar server [опции]
 
 ```bash
 # Основной способ запуска
-java -jar hbk-reader-0.4.0.jar server --path "/opt/1cv8/x86_64/8.3.25.1257"
+java -jar hbk-reader-0.4.1.jar server --path "/opt/1cv8/x86_64/8.3.25.1257"
 
 # Сокращенная форма
-java -jar hbk-reader-0.4.0.jar server -p "/opt/1cv8/x86_64/8.3.25.1257"
+java -jar hbk-reader-0.4.1.jar server -p "/opt/1cv8/x86_64/8.3.25.1257"
 
 # С отладочным логированием
-java -jar hbk-reader-0.4.0.jar server -p "/opt/1cv8/x86_64/8.3.25.1257" --verbose
+java -jar hbk-reader-0.4.1.jar server -p "/opt/1cv8/x86_64/8.3.25.1257" --verbose
 ```
 
 После запуска откройте браузер и перейдите по адресу `http://localhost:8080`
@@ -155,25 +155,25 @@ java -jar hbk-reader-<версия>.jar export --file <путь-к-hbk> --output
 
 ```bash
 # Полный экспорт HBK файла
-java -jar hbk-reader-0.4.0.jar export \
+java -jar hbk-reader-0.4.1.jar export \
   --file "/path/to/platform.hbk" \
   --output "/path/to/output"
 
 # Экспорт только HTML страниц
-java -jar hbk-reader-0.4.0.jar export \
+java -jar hbk-reader-0.4.1.jar export \
   --file "/path/to/platform.hbk" \
   --output "/path/to/output" \
   --pages-only
 
 # Экспорт страниц без сохранения структуры каталогов
-java -jar hbk-reader-0.4.0.jar export \
+java -jar hbk-reader-0.4.1.jar export \
   --file "/path/to/platform.hbk" \
   --output "/path/to/output" \
   --pages-only \
   --preserve-structure false
 
 # Полный экспорт без оглавления
-java -jar hbk-reader-0.4.0.jar export \
+java -jar hbk-reader-0.4.1.jar export \
   --file "/path/to/platform.hbk" \
   --output "/path/to/output" \
   --include-toc false
@@ -182,7 +182,7 @@ java -jar hbk-reader-0.4.0.jar export \
 Для получения справки по конкретной команде используйте:
 
 ```bash
-java -jar hbk-reader-0.4.0.jar <команда> --help
+java -jar hbk-reader-0.4.1.jar <команда> --help
 ```
 
 ## Веб-приложение

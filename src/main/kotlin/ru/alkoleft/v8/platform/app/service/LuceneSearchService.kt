@@ -9,7 +9,12 @@ package ru.alkoleft.v8.platform.app.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.PreDestroy
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import org.apache.lucene.analysis.ru.RussianAnalyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
@@ -27,7 +32,12 @@ import org.apache.lucene.store.FSDirectory
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
-import ru.alkoleft.v8.platform.app.web.controller.dto.*
+import ru.alkoleft.v8.platform.app.web.controller.dto.BookInfo
+import ru.alkoleft.v8.platform.app.web.controller.dto.IndexingState
+import ru.alkoleft.v8.platform.app.web.controller.dto.IndexingStatus
+import ru.alkoleft.v8.platform.app.web.controller.dto.LocaleIndexingStatus
+import ru.alkoleft.v8.platform.app.web.controller.dto.SearchResponse
+import ru.alkoleft.v8.platform.app.web.controller.dto.SearchResult
 import ru.alkoleft.v8.platform.hbk.model.Page
 import ru.alkoleft.v8.platform.hbk.reader.HbkContentReader
 import ru.alkoleft.v8.platform.hbk.reader.toc.BookPage
@@ -54,12 +64,12 @@ class LuceneSearchService(
     @EventListener(ApplicationReadyEvent::class)
     fun startAsyncIndexing() {
         logger.info { "Запуск асинхронной индексации..." }
-        
+
         val locales = globalTocService.getAvailableLocales()
         locales.forEach { locale ->
             indexingStatuses[locale] = LocaleIndexingStatus(locale = locale, state = IndexingState.NOT_STARTED)
         }
-        
+
         indexingScope.launch {
             locales.forEach { locale ->
                 launch { buildIndexForLocaleAsync(locale) }
@@ -69,18 +79,19 @@ class LuceneSearchService(
 
     private suspend fun buildIndexForLocaleAsync(locale: String) {
         updateIndexingStatus(locale) { it.copy(state = IndexingState.IN_PROGRESS, startTime = LocalDateTime.now()) }
-        
+
         try {
             val localeIndexPath = indexBasePath.resolve(locale)
             val books = booksService.findBooksByLocale(locale).toList()
             updateIndexingStatus(locale) { it.copy(totalDocuments = books.size) }
 
             FSDirectory.open(localeIndexPath).use { directory ->
-                val config = IndexWriterConfig(analyzer).apply {
-                    setRAMBufferSizeMB(256.0)
-                    setUseCompoundFile(false)
-                }
-                
+                val config =
+                    IndexWriterConfig(analyzer).apply {
+                        setRAMBufferSizeMB(256.0)
+                        setUseCompoundFile(false)
+                    }
+
                 IndexWriter(directory, config).use { writer ->
                     writer.deleteAll()
                     indexLocaleAsync(writer, locale, books)
@@ -92,14 +103,17 @@ class LuceneSearchService(
 
             updateIndexingStatus(locale) { it.copy(state = IndexingState.COMPLETED, endTime = LocalDateTime.now(), progress = 100) }
             logger.info { "Индекс для локали $locale готов. Документов: ${indexSearchers[locale]?.indexReader?.numDocs()}" }
-            
         } catch (e: Exception) {
             logger.error(e) { "Ошибка индексации локали $locale" }
             updateIndexingStatus(locale) { it.copy(state = IndexingState.FAILED, endTime = LocalDateTime.now(), errorMessage = e.message) }
         }
     }
 
-    private suspend fun indexLocaleAsync(writer: IndexWriter, locale: String, books: List<BookInfo>) {
+    private suspend fun indexLocaleAsync(
+        writer: IndexWriter,
+        locale: String,
+        books: List<BookInfo>,
+    ) {
         val globalToc = globalTocService.getGlobalTocByLocale(locale)
         val reader = HbkContentReader()
         var processedBooks = 0
@@ -110,14 +124,17 @@ class LuceneSearchService(
                     indexPages(globalToc.pages, book, writer)
                 }
             }
-            
+
             processedBooks++
             updateIndexingStatus(locale) { it.copy(indexedDocuments = processedBooks, progress = (processedBooks * 100) / books.size) }
             yield()
         }
     }
 
-    private fun updateIndexingStatus(locale: String, update: (LocaleIndexingStatus) -> LocaleIndexingStatus) {
+    private fun updateIndexingStatus(
+        locale: String,
+        update: (LocaleIndexingStatus) -> LocaleIndexingStatus,
+    ) {
         indexingStatuses.compute(locale) { _, current ->
             update(current ?: LocaleIndexingStatus(locale, IndexingState.NOT_STARTED))
         }
@@ -127,7 +144,7 @@ class LuceneSearchService(
         val statuses = indexingStatuses.values.toList()
         val overallProgress = if (statuses.isNotEmpty()) statuses.sumOf { it.progress } / statuses.size else 0
         val isInProgress = statuses.any { it.state == IndexingState.IN_PROGRESS }
-        
+
         return IndexingStatus(locales = statuses, overallProgress = overallProgress, isIndexingInProgress = isInProgress)
     }
 
@@ -144,13 +161,14 @@ class LuceneSearchService(
                     val cleanContent = extractTextFromHtml(content)
                     val breadcrumbs = parentPath + page.getTitle()
 
-                    val doc = Document().apply {
-                        add(StringField("location", page.location, Field.Store.YES))
-                        add(StringField("bookName", page.book.meta?.bookName ?: "", Field.Store.YES))
-                        add(TextField("title", page.getTitle(), Field.Store.YES))
-                        add(TextField("content", cleanContent, Field.Store.YES))
-                        add(TextField("breadcrumbs", breadcrumbs.joinToString(" > "), Field.Store.YES))
-                    }
+                    val doc =
+                        Document().apply {
+                            add(StringField("location", page.location, Field.Store.YES))
+                            add(StringField("bookName", page.book.meta?.bookName ?: "", Field.Store.YES))
+                            add(TextField("title", page.getTitle(), Field.Store.YES))
+                            add(TextField("content", cleanContent, Field.Store.YES))
+                            add(TextField("breadcrumbs", breadcrumbs.joinToString(" > "), Field.Store.YES))
+                        }
 
                     writer.addDocument(doc)
                 } catch (e: Exception) {
@@ -184,51 +202,56 @@ class LuceneSearchService(
         locale: String = "ru",
         maxResults: Int = 50,
     ): SearchResponse {
-        val searcher = indexSearchers[locale] 
-            ?: return SearchResponse(query, emptyList(), 0, 0) // Graceful degradation
+        val searcher =
+            indexSearchers[locale]
+                ?: return SearchResponse(query, emptyList(), 0, 0) // Graceful degradation
 
         var results: List<SearchResult> = emptyList()
         var totalHits = 0L
 
-        val searchTime = measureTimeMillis {
-            try {
-                val parser = QueryParser("content", analyzer)
-                val luceneQuery = parser.parse(query)
-                val topDocs = searcher.search(luceneQuery, maxResults)
+        val searchTime =
+            measureTimeMillis {
+                try {
+                    val parser = QueryParser("content", analyzer)
+                    val luceneQuery = parser.parse(query)
+                    val topDocs = searcher.search(luceneQuery, maxResults)
 
-                val highlighter = Highlighter(
-                    SimpleHTMLFormatter("<mark>", "</mark>"),
-                    QueryScorer(luceneQuery),
-                )
+                    val highlighter =
+                        Highlighter(
+                            SimpleHTMLFormatter("<mark>", "</mark>"),
+                            QueryScorer(luceneQuery),
+                        )
 
-                results = topDocs.scoreDocs.map { scoreDoc ->
-                    val doc = searcher.doc(scoreDoc.doc)
-                    val content = doc.get("content")
+                    results =
+                        topDocs.scoreDocs.map { scoreDoc ->
+                            val doc = searcher.doc(scoreDoc.doc)
+                            val content = doc.get("content")
 
-                    val highlights = try {
-                        highlighter
-                            .getBestFragments(analyzer, "content", content, 5)
-                            .filter { it.isNotBlank() }
-                            .ifEmpty { listOf(content.take(300) + "...") }
-                    } catch (e: Exception) {
-                        listOf(content.take(300) + "...")
-                    }
+                            val highlights =
+                                try {
+                                    highlighter
+                                        .getBestFragments(analyzer, "content", content, 5)
+                                        .filter { it.isNotBlank() }
+                                        .ifEmpty { listOf(content.take(300) + "...") }
+                                } catch (e: Exception) {
+                                    listOf(content.take(300) + "...")
+                                }
 
-                    SearchResult(
-                        title = doc.get("title"),
-                        location = doc.get("location"),
-                        bookName = doc.get("bookName"),
-                        score = scoreDoc.score,
-                        highlights = highlights,
-                        breadcrumbs = doc.get("breadcrumbs")?.split(" > ") ?: emptyList(),
-                    )
+                            SearchResult(
+                                title = doc.get("title"),
+                                location = doc.get("location"),
+                                bookName = doc.get("bookName"),
+                                score = scoreDoc.score,
+                                highlights = highlights,
+                                breadcrumbs = doc.get("breadcrumbs")?.split(" > ") ?: emptyList(),
+                            )
+                        }
+
+                    totalHits = topDocs.totalHits.value
+                } catch (e: Exception) {
+                    logger.error(e) { "Ошибка поиска: $query" }
                 }
-
-                totalHits = topDocs.totalHits.value
-            } catch (e: Exception) {
-                logger.error(e) { "Ошибка поиска: $query" }
             }
-        }
 
         return SearchResponse(
             query = query,
@@ -238,10 +261,9 @@ class LuceneSearchService(
         )
     }
 
-    private fun extractTextFromHtml(html: String): String {
-        return html
+    private fun extractTextFromHtml(html: String): String =
+        html
             .replace(Regex("<[^>]+>"), " ")
             .replace(Regex("\\s+"), " ")
             .trim()
-    }
 }
