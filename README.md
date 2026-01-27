@@ -15,6 +15,7 @@
 ### Возможности
 
 - **Глобальное оглавление** — просмотр всех разделов документации в едином интерфейсе
+- **Полнотекстовый поиск** — глобальный поиск по всему содержимому документации с использованием Apache Lucene
 - **Навигация по вкладкам** — быстрое переключение между разделами документации
 - **Иерархическое дерево** — удобная навигация по структуре документации с автоматическим раскрытием пути к текущей странице
 - **Поиск по страницам** — быстрый поиск нужной информации
@@ -24,6 +25,19 @@
 - **История браузера** — осмысленные названия страниц в истории для удобной навигации
 - **Экспорт документации** — возможность экспорта HBK файлов в файловую систему или формат MkDocs
 - **Запуск в Docker** — [подробная информация о запуске приложения в Docker контейнере](doc/docker.md)
+
+### Глобальный полнотекстовый поиск
+Приложение включает мощную систему полнотекстового поиска, которая индексирует все содержимое HBK файлов и позволяет быстро находить нужную информацию:
+
+- **Автоматическая индексация** — все HBK файлы автоматически индексируются при запуске
+- **Быстрый поиск** — результаты поиска отображаются в реальном времени
+- **Подсветка результатов** — найденные фрагменты выделяются в тексте
+- **Детальные результаты** — отдельная страница с полной информацией о найденных документах
+![](doc/asserts/full-test-search.png)
+*Строка поиска*
+
+![](doc/asserts/full-test-search-all.png)
+*Все результаты поиска*
 
 ### Мобильная версия
 
@@ -108,13 +122,13 @@ java -jar hbk-reader-<версия>.jar server [опции]
 
 ```bash
 # Основной способ запуска
-java -jar hbk-reader-0.3.0.jar server --path "/opt/1cv8/x86_64/8.3.25.1257"
+java -jar hbk-reader-0.4.0.jar server --path "/opt/1cv8/x86_64/8.3.25.1257"
 
 # Сокращенная форма
-java -jar hbk-reader-0.3.0.jar server -p "/opt/1cv8/x86_64/8.3.25.1257"
+java -jar hbk-reader-0.4.0.jar server -p "/opt/1cv8/x86_64/8.3.25.1257"
 
 # С отладочным логированием
-java -jar hbk-reader-0.3.0.jar server -p "/opt/1cv8/x86_64/8.3.25.1257" --verbose
+java -jar hbk-reader-0.4.0.jar server -p "/opt/1cv8/x86_64/8.3.25.1257" --verbose
 ```
 
 После запуска откройте браузер и перейдите по адресу `http://localhost:8080`
@@ -141,25 +155,25 @@ java -jar hbk-reader-<версия>.jar export --file <путь-к-hbk> --output
 
 ```bash
 # Полный экспорт HBK файла
-java -jar hbk-reader-0.3.0.jar export \
+java -jar hbk-reader-0.4.0.jar export \
   --file "/path/to/platform.hbk" \
   --output "/path/to/output"
 
 # Экспорт только HTML страниц
-java -jar hbk-reader-0.3.0.jar export \
+java -jar hbk-reader-0.4.0.jar export \
   --file "/path/to/platform.hbk" \
   --output "/path/to/output" \
   --pages-only
 
 # Экспорт страниц без сохранения структуры каталогов
-java -jar hbk-reader-0.3.0.jar export \
+java -jar hbk-reader-0.4.0.jar export \
   --file "/path/to/platform.hbk" \
   --output "/path/to/output" \
   --pages-only \
   --preserve-structure false
 
 # Полный экспорт без оглавления
-java -jar hbk-reader-0.3.0.jar export \
+java -jar hbk-reader-0.4.0.jar export \
   --file "/path/to/platform.hbk" \
   --output "/path/to/output" \
   --include-toc false
@@ -168,7 +182,7 @@ java -jar hbk-reader-0.3.0.jar export \
 Для получения справки по конкретной команде используйте:
 
 ```bash
-java -jar hbk-reader-0.3.0.jar <команда> --help
+java -jar hbk-reader-0.4.0.jar <команда> --help
 ```
 
 ## Веб-приложение
